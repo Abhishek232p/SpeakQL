@@ -1,0 +1,21 @@
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Dependencies and generated output
+node_modules/
+dist/
+build/
+.next/
+.pytest_cache/
+__pycache__/
+.venv/
+coverage/
+*.tsbuildinfo
+
+# Local tooling and logs
+.opencode/node_modules/
+*.log
