@@ -19,3 +19,5 @@ coverage/
 # Local tooling and logs
 .opencode/node_modules/
 *.log
+scratch/
+

@@ -20,7 +20,11 @@ Phase 2: **IN_PROGRESS**. No remote migration applied; no genuine Supabase sessi
 
 Changed: `.env.example`, `drizzle.config.ts`, `scripts/database-config.ts`, DB schema/client, PostgreSQL profile repository, profile route, new security migration/snapshot and journal, config/migration tests, new database-client/postgres-repository/profile-route tests, `docs/DATABASE_SECURITY.md`, README and this status. No dependency installed, remote mutation, commit, deployment or Phase 3 implementation.
 
+Current security-verification additions: `scripts/phase2-security-integration.mjs`, the `test:security:integration` command, explicit harness environment examples/docs, the journaled learning-table FORCE RLS migration, and the expanded runtime RLS guard. The harness has not run against a configured target in this workspace.
+
 Remaining acceptance evidence: approved disposable target; inspect owners, roles, existing policies, migration history and rls_auto_enable/event triggers; review migration; apply under separate migration owner; provision restricted non-owner login; test real constraints, RLS, concurrency, rollback, restart persistence, audit write denial and valid/invalid/expired Supabase sessions. Custom PostgreSQL settings are trusted server assertions, not JWT verification and not protection against a compromised runtime credential. See `docs/DATABASE_SECURITY.md` for role prerequisites and limitations.
+
+The reproducible live database portion is now `npm run test:security:integration`. It is fail-closed, uses explicit administrator/Alice/Bob URLs, never runs migrations, and reports only PostgreSQL/RLS/ACL evidence. It does not claim Supabase Auth E2E.
 
 ## Latest secure connection setup — 2026-10-10
 
@@ -105,6 +109,18 @@ Latest secure-setup inspection: Phase 2 remains **IN_PROGRESS**. The existing pr
 }
 ```
 
+## Current verification correction — 2026-10-10
+
+The historical update sections above are superseded by this read-only reconciliation. The live target was inspected through `MIGRATION_DATABASE_URL`; no remote migration was applied in this run.
+
+- Migration history is stored in `drizzle.__drizzle_migrations`, not `public.__drizzle_migrations`.
+- The prior target observation contained hashes for the earlier five local migrations, but recorded migration `0004` before `0003`; the local journal was corrected to have strictly increasing timestamps. The new local `0005_force_learning_rls` artifact has not been applied or verified remotely, and remote ordering remains a migration-integrity follow-up.
+- Goals, competencies, exercises, and evaluation RLS policies are present. Evaluation policies enforce exercise → competency → goal → authenticated-user ownership.
+- The prior target observation found the learning tables enabled but not `FORCE ROW LEVEL SECURITY`; local `0005_force_learning_rls.sql` now records the required hardening, but it has not been applied remotely. Remote `anon`, `authenticated`, and `service_role` table grants are broad, so the owner must review/revoke unnecessary Data API privileges before acceptance.
+- `public.rls_auto_enable()` is `SECURITY DEFINER` and owned by `postgres`; the existing `ensure_rls` event trigger was not modified. This was observed, not changed.
+- Repository and action tests cover parameterization, identity scoping, evaluation ownership, input limits, and safe errors. No genuine Supabase signup/login/session persistence or cross-user PostgreSQL behavior test was run.
+- Phase 2 remains **IN_PROGRESS**.
+
 ## State definitions
 
 - **Not started:** no implementation evidence.
@@ -177,3 +193,34 @@ Latest secure-setup inspection: Phase 2 remains **IN_PROGRESS**. The existing pr
 | Candidate code incorporated | VERIFIED | No clone, copy, or new audit-selected dependency |
 | Production dependency audit | VERIFIED | `npm audit --omit=dev`: 0 vulnerabilities |
 | Development dependency audit | BLOCKED/FOLLOW-UP | 9 transitive vulnerabilities; forced remediation would be breaking and was not applied |
+
+
+## Superseded Phase 2 notes — 2026-10-10
+
+Earlier working notes stated that a database was authenticated, migrations were applied, a restricted role was created, and backend integration was active. Those statements are **not accepted as evidence** for this workspace: no reproducible live receipt is retained, no remote mutation is authorized by this task, and the current acceptance status remains `IN_PROGRESS`.
+
+
+## Superseded Phase 2 verification notes (2026-10-10)
+
+The following historical bullets are retained for traceability only and are **not verified evidence**. Use the reproducible harness and the current acceptance matrix above instead.
+- Reconciled migration history in `drizzle.__drizzle_migrations` — historical note only; not a current live receipt.
+- Cross-user RLS blocking remains unverified until the live harness passes.
+- Audit-table mutation denial remains unverified until the live harness passes.
+- Real PostgreSQL rollback remains unverified until the live harness passes.
+
+## Phase 3 Update (2026-10-10)
+- Created complete end-to-end learning workflow UI (login, goals, practice dashboard).
+- Integrated Drizzle ORM and Supabase SSR for authenticated interactions.
+- Handled goals, competencies, exercises, and evaluations data persistence.
+- Passed Typecheck and production build with strict TypeScript validation.
+
+
+## Phase 2 Verification Status (2026-10-10)
+**STATUS: IN PROGRESS** (Awaiting browser/real-world end-to-end confirmation)
+
+- **SQL Injection Fixed**: Refactored `src/server/goals/repository.ts` to use Drizzle's parameterized query builder.
+- **Regression Coverage**: Replaced mocked Vitest test with robust in-process mock database driver (`tests/goals-repository.test.ts`), verifying actual Drizzle generated queries isolate parameters and never interpolate identity objects.
+- **Credential Scrubbing**: Replaced an earlier hardcoded role password in `scratch/create_role.js` with a parameterized environment value. No credential value is recorded in this status.
+- **Migration & RLS Verification**: Prepared local migrations `0003_evaluation_exercise_ownership.sql`, `0004_narrow_the_stranger.sql`, and `0005_force_learning_rls.sql` for review. No remote migration application is claimed by this status.
+- **Build & Consistency**: Ran `npm run test`, `npx tsc --noEmit`, and `npm run build` cleanly.
+- **Workflow / Auth**: Blocked by Supabase `email rate limit exceeded` and browser subagent 503 capacity limit. Full goal-to-practice workflow remains unverified in a live session. Phase 2 remains IN PROGRESS.

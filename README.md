@@ -35,7 +35,7 @@ The current configuration accepts `NODE_ENV`, `LOG_LEVEL`, and optional Phase 2 
 
 ## Phase 2 persistence and identity
 
-Phase 2 uses Drizzle ORM with PostgreSQL and defines SQL migrations for `users`, `user_profiles`, and `audit_events`. Supabase Auth is the selected production identity-provider boundary; it is not connected in this workspace because no project URL, key, or database was provided. Until those values exist, protected profile routes deny access rather than using a development bypass.
+Phase 2 uses Drizzle ORM with PostgreSQL and defines SQL migrations for `users`, `user_profiles`, and `audit_events`. Supabase Auth is the selected production identity-provider boundary. Its server boundary is implemented, but genuine Supabase signup/login/session behavior is not integration-verified here; until a verified session and database target exist, protected profile routes deny access rather than using a development bypass.
 
 With a disposable PostgreSQL database configured in `DATABASE_URL`, apply migrations with:
 
@@ -44,6 +44,14 @@ npm run db:migrate
 ```
 
 The profile API is `GET /api/profile` and `PUT /api/profile`. It derives identity from the server-side Supabase session and never accepts a client-supplied user ID. Live database migration and persistence tests remain blocked until PostgreSQL is available.
+
+For a separately authorized disposable PostgreSQL target, the Phase 2 security harness is:
+
+```bash
+npm run test:security:integration
+```
+
+It requires three private connection URLs in `.env.local` (`SPEAKQL_SECURITY_TEST_ADMIN_DATABASE_URL`, `SPEAKQL_SECURITY_TEST_ALICE_DATABASE_URL`, and `SPEAKQL_SECURITY_TEST_BOB_DATABASE_URL`) plus `SPEAKQL_SECURITY_TEST_ALLOW_MUTATION=1`. The harness never applies migrations and proves database/RLS behavior only; it does not claim Supabase Auth signup, login, cookie, JWT, or session E2E.
 
 ## Development and verification commands
 
@@ -76,6 +84,7 @@ The next implementation target is a deterministic, text-first learning loop:
 - `docs/BASELINE_AUDIT.md`
 - `docs/TOOL_AND_MCP_INVENTORY.md`
 - `docs/ARCHITECTURE.md`
+- `docs/EVALUATION_BOUNDARY.md`
 - `docs/IMPLEMENTATION_STATUS.md`
 
 No production deployment, external provider, paid resource, or regulated-profession certification claim is implied by this repository.

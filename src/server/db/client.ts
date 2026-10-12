@@ -20,7 +20,7 @@ export function getDb() {
 }
 
 type Database = ReturnType<typeof getDb>;
-type Transaction = Parameters<Parameters<Database["transaction"]>[0]>[0];
+export type DatabaseTransaction = Parameters<Parameters<Database["transaction"]>[0]>[0];
 
 /**
  * Only verified server identities belong here. Custom PostgreSQL settings are
@@ -30,7 +30,7 @@ type Transaction = Parameters<Parameters<Database["transaction"]>[0]>[0];
 export async function withIdentityTransaction<T>(
   db: Database,
   identity: AuthenticatedIdentity,
-  operation: (tx: Transaction) => Promise<T>,
+  operation: (tx: DatabaseTransaction) => Promise<T>,
 ): Promise<T> {
   if (!identity.issuer?.trim() || !identity.subject?.trim() || identity.issuer.includes("\0") || identity.subject.includes("\0")) {
     throw new Error("A verified issuer and subject are required for database access.");
@@ -57,9 +57,12 @@ export async function withIdentityTransaction<T>(
         and not pg_catalog.has_schema_privilege(runtime.oid, 'public', 'CREATE')
         and not pg_catalog.has_database_privilege(login.oid, pg_catalog.current_database(), 'CREATE')
         and not pg_catalog.has_database_privilege(runtime.oid, pg_catalog.current_database(), 'CREATE')
-        and (select count(*) = 3 from pg_catalog.pg_class c
+        and (select count(*) = 7 from pg_catalog.pg_class c
           join pg_catalog.pg_namespace n on n.oid = c.relnamespace
-          where n.nspname = 'public' and c.relname in ('users', 'user_profiles', 'audit_events')
+          where n.nspname = 'public' and c.relname in (
+            'users', 'user_profiles', 'audit_events', 'learning_goals',
+            'competencies', 'practice_exercises', 'practice_evaluations'
+          )
             and c.relrowsecurity and c.relforcerowsecurity)
       ) as allowed
       from pg_catalog.pg_roles login, pg_catalog.pg_roles runtime

@@ -1,15 +1,28 @@
+import { createSupabaseAuthProvider } from "@/src/server/auth/supabase";
+
 const capabilities = [
   { number: "01", title: "Define the outcome", text: "Start with the role, environment, and real-world performance you want to unlock." },
   { number: "02", title: "Build the capability map", text: "Separate language, domain knowledge, communication, judgment, and practical performance." },
   { number: "03", title: "Practice with evidence", text: "Turn lessons and simulations into observable evidence, useful feedback, and a next action." },
 ];
 
-export default function Home() {
+export default async function Home() {
+  const authProvider = createSupabaseAuthProvider();
+  const identity = await authProvider.getIdentity();
+
   return (
     <main>
       <nav className="nav shell" aria-label="Primary navigation">
         <a className="wordmark" href="#top" aria-label="SpeakQL home"><span>Speak</span>QL</a>
-        <div className="nav-links"><a href="#method">Method</a><a href="#status">Status</a><a className="nav-cta" href="#status">Early foundation</a></div>
+        <div className="nav-links">
+          <a href="#method">Method</a>
+          <a href="#status">Status</a>
+          {identity ? (
+            <a className="nav-cta" href="/dashboard">Go to Dashboard</a>
+          ) : (
+            <a className="nav-cta" href="/login">Sign In</a>
+          )}
+        </div>
       </nav>
 
       <section className="hero shell" id="top">

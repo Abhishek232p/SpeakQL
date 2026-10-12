@@ -26,12 +26,14 @@ describe("journaled runtime security artifacts (not integration verification)", 
   const snapshot = JSON.parse(readFileSync("drizzle/migrations/meta/0001_snapshot.json", "utf8"));
   const initial = JSON.parse(readFileSync("drizzle/migrations/meta/0000_snapshot.json", "utf8"));
 
-  it("adds a second journal entry linked to the original snapshot", () => {
+  it("keeps the original journal entry and links the runtime security snapshot", () => {
     const journal = JSON.parse(readFileSync("drizzle/migrations/meta/_journal.json", "utf8"));
-    expect(journal.entries).toHaveLength(2);
+    expect(journal.entries.length).toBeGreaterThanOrEqual(2);
     expect(journal.entries[0]).toEqual({ idx: 0, version: "7", when: 1791573646763, tag: "0000_identity-foundation", breakpoints: true });
-    expect(journal.entries[1]).toMatchObject({ idx: 1, tag: "0001_runtime-security", breakpoints: true });
-    expect(journal.entries[1].when).toBeGreaterThan(journal.entries[0].when);
+    const runtimeEntry = journal.entries.find((entry: { tag: string }) => entry.tag === "0001_runtime-security");
+    expect(runtimeEntry).toMatchObject({ idx: 1, tag: "0001_runtime-security", breakpoints: true });
+    expect(runtimeEntry.when).toBeGreaterThan(journal.entries[0].when);
+    expect(journal.entries.map((entry: { idx: number }) => entry.idx)).toEqual(journal.entries.map((_: unknown, index: number) => index));
     expect(snapshot.prevId).toBe(initial.id);
     expect(snapshot.id).not.toBe(initial.id);
   });
@@ -89,5 +91,14 @@ describe("journaled runtime security artifacts (not integration verification)", 
     expect(statements).toContain("pg_catalog.pg_policy");
     expect(statements).toContain("RAISE EXCEPTION 'Existing application RLS policies require review");
     expect(statements).not.toMatch(/(?:CREATE|ALTER|DROP)\s+EVENT\s+TRIGGER|rls_auto_enable|DROP POLICY/i);
+  });
+
+  it("keeps the learning tables behind forced RLS before integration use", () => {
+    const learningMigration = readFileSync("drizzle/migrations/0005_force_learning_rls.sql", "utf8");
+    const journal = JSON.parse(readFileSync("drizzle/migrations/meta/_journal.json", "utf8"));
+    expect(journal.entries.at(-1)).toEqual({ idx: 5, version: "7", when: 1791630000002, tag: "0005_force_learning_rls", breakpoints: true });
+    for (const name of ["learning_goals", "competencies", "practice_exercises", "practice_evaluations"]) {
+      expect(learningMigration).toContain(`ALTER TABLE "public"."${name}" FORCE ROW LEVEL SECURITY`);
+    }
   });
 });

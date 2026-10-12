@@ -22,7 +22,7 @@ Start as a modular monolith with one web/API application and one relational data
 - `providers`: provider-neutral AI and speech interfaces with usage/cost records.
 - `operations`: health checks, structured logs, correlation IDs, and audit trails.
 
-Phase 1 implemented the `operations` foundation. Phase 2 adds the identity boundary, Drizzle schema/migration artifacts, profile contract/service, PostgreSQL repository, and audit-event insert path. Goals, competencies, curriculum, sessions, evaluation, memory, and provider adapters remain unimplemented.
+Phase 1 implemented the `operations` foundation. Phase 2 adds the identity boundary, Drizzle schema/migration artifacts, profile contract/service, PostgreSQL repository, and audit-event insert path. The current learning slice adds goal-owned exercises, a provider-neutral evaluation boundary with an explicit non-AI fallback, and analytics derived from stored evaluations; richer curriculum, sessions, and external provider adapters remain deferred.
 
 ## Technology recommendation
 
@@ -63,7 +63,7 @@ The first implementation should be deterministic and text-first:
 
 `create goal -> resolve seeded competencies -> create session -> persist turns -> complete -> produce structured evaluation fixture -> record mistake/evidence -> compute next action`.
 
-An external LLM is not required for this first slice. If introduced later, its adapter must support timeouts, schema validation, redacted logging, usage recording, and controlled fallback.
+An external LLM is not required for this first slice. The current slice uses a deterministic non-AI fallback and stores its source/criteria in the existing evaluation feedback column. If an external provider is introduced later, its adapter must support timeouts, schema validation, redacted logging, usage recording, and controlled fallback.
 
 ## Phase 1 runtime behavior
 

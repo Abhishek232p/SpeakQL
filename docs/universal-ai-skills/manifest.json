@@ -1,0 +1,179 @@
+{
+  "schemaVersion": 1,
+  "pack": "universal-ai-skills",
+  "version": "0.1.0",
+  "reviewedAt": "2026-10-10",
+  "license": "Project-local original instructions; no third-party code copied",
+  "sourceRoot": "docs/universal-ai-skills/skills",
+  "defaultTargetRoot": ".opencode/skills",
+  "skills": [
+    {
+      "name": "portable-repository-recon",
+      "mode": "local",
+      "reviewed": true,
+      "reuse": "none",
+      "sha256": "d167e537914a12cda201c7348273159cf4a794f791ad363cd84365d5b5a48af7"
+    },
+    {
+      "name": "portable-environment-audit",
+      "mode": "local",
+      "reviewed": true,
+      "reuse": "none",
+      "sha256": "f92f44f787bfc1d642e8195a92fed5c190e6f0a74ce2c4e431304d1e8b522ae7"
+    },
+    {
+      "name": "portable-requirements",
+      "mode": "local-wrapper",
+      "reviewed": true,
+      "reuse": "omnirush-feature",
+      "sha256": "6066e64b331797f59fc534b2509e68fc448e9078a6b7db7780646f1a2e9f85c9"
+    },
+    {
+      "name": "portable-architecture",
+      "mode": "local",
+      "reviewed": true,
+      "reuse": "none",
+      "sha256": "0834fa5d8c28952dfd4273553339370bdc1e4421da255d4ad3bdd38d077f0788"
+    },
+    {
+      "name": "portable-implementation",
+      "mode": "local-wrapper",
+      "reviewed": true,
+      "reuse": "omnirush-feature",
+      "sha256": "ec43d38b97de913d200b86a62ac686db5fac54a7fa52b7009ff23c09302c6b52"
+    },
+    {
+      "name": "portable-refactor",
+      "mode": "local-wrapper",
+      "reviewed": true,
+      "reuse": "omnirush-refactor",
+      "sha256": "435fb57e82b927ffb19754ca4c3841f1c17ac0728e0bf79a139f703a75358273"
+    },
+    {
+      "name": "portable-debug",
+      "mode": "local-wrapper",
+      "reviewed": true,
+      "reuse": "omnirush-debug",
+      "sha256": "3d674661efec557cd3b12b4417407e5406086d47b8d0ac02e2d08d611f5d6ab1"
+    },
+    {
+      "name": "portable-build-repair",
+      "mode": "local-wrapper",
+      "reviewed": true,
+      "reuse": "omnirush-build",
+      "sha256": "2da244ca16dad28bfc2e1c821771003d56b2a2e7645765692794f5c57aef299a"
+    },
+    {
+      "name": "portable-testing",
+      "mode": "local-wrapper",
+      "reviewed": true,
+      "reuse": "omnirush-test",
+      "sha256": "2bd43e4411d9e9df956868e85e9db20a01ff43074b8cb6776e039a0023f84b21"
+    },
+    {
+      "name": "portable-browser-qa",
+      "mode": "local-wrapper",
+      "reviewed": true,
+      "reuse": "browser-automation",
+      "sha256": "d8d93027671d04ef6eae9fcd1f608b453e71201e28b4bf9b7433432519f87000"
+    },
+    {
+      "name": "portable-performance",
+      "mode": "local-wrapper",
+      "reviewed": true,
+      "reuse": "omnirush-performance",
+      "sha256": "a124e4d43c4ed109d3c83cd550d9309849eaa7d403a2b0606c0783a71c751dcc"
+    },
+    {
+      "name": "portable-review",
+      "mode": "local-wrapper",
+      "reviewed": true,
+      "reuse": "omnirush-review",
+      "sha256": "c839fd244be0f678eab7c2802549e88e789a4d96bb05f0ae902ba1285068ed59"
+    },
+    {
+      "name": "portable-documentation",
+      "mode": "local",
+      "reviewed": true,
+      "reuse": "none",
+      "sha256": "bc81f9e899bdfa511d15c3fc980804a1d3bbbadbc52a2c18fb396828809069ae"
+    },
+    {
+      "name": "portable-dependency-audit",
+      "mode": "local",
+      "reviewed": true,
+      "reuse": "none",
+      "sha256": "691749fa82ba8d6578bc666cb03ecb60ea584a6fa650c1f802e286410d8a0fe1"
+    },
+    {
+      "name": "portable-web-research",
+      "mode": "local",
+      "reviewed": true,
+      "reuse": "none",
+      "sha256": "0c91d5ad768c0c33df3816c84508f280642a7fb2299997c1a161ca27747456c8"
+    },
+    {
+      "name": "portable-git-audit",
+      "mode": "local",
+      "reviewed": true,
+      "reuse": "none",
+      "sha256": "332cc2ad9ace147269e355ca37d012ea30e7ae7eef3a6fc5e0ed01701149433c"
+    },
+    {
+      "name": "portable-mcp-integration",
+      "mode": "local",
+      "reviewed": true,
+      "reuse": "none",
+      "sha256": "c3d7c54256d643ff15809b7e711ac0a63424514aab1bf2f10d8098d276413280"
+    },
+    {
+      "name": "portable-provider-adapter",
+      "mode": "local",
+      "reviewed": true,
+      "reuse": "none",
+      "sha256": "0055e3bca70f336421e45d395faadc1e2cb9c81b1259cb8960b623880d346e8c"
+    },
+    {
+      "name": "portable-prompt-contracts",
+      "mode": "local",
+      "reviewed": true,
+      "reuse": "none",
+      "sha256": "f2e1db39531d763fb53f3710497926d436936f4f52dd92e29abc1552e1ebabd7"
+    },
+    {
+      "name": "portable-structured-output",
+      "mode": "local",
+      "reviewed": true,
+      "reuse": "none",
+      "sha256": "a58c6a7cc85e36c2bd9d060eba78811453077c39d49e36aa8d4ce129d63ea502"
+    },
+    {
+      "name": "portable-evidence-provenance",
+      "mode": "local",
+      "reviewed": true,
+      "reuse": "none",
+      "sha256": "5075f75d44ce23f35d3050fb42c055b32e117e5df255b53f38c276bf43cce3e1"
+    },
+    {
+      "name": "portable-privacy-boundary",
+      "mode": "local",
+      "reviewed": true,
+      "reuse": "supabase; supabase-postgres-best-practices",
+      "sha256": "c7824e0e583386886449182f6948976e8a0b9e8d4e244a2650030a4a085f096d"
+    },
+    {
+      "name": "portable-automation-design",
+      "mode": "local",
+      "reviewed": true,
+      "reuse": "omnirush automation affordances",
+      "sha256": "6526197ab6a73fcc81abbd01cb21682e7cd24a7a4ccbd702890066ac2f0a873c"
+    },
+    {
+      "name": "portable-handoff",
+      "mode": "local-wrapper",
+      "reviewed": true,
+      "reuse": "omnirush-handoff",
+      "sha256": "1d6285b5234a50a4583e1901c8f29ca1a42500b201dc155efb12f45d8344b2a2"
+    }
+  ]
+}

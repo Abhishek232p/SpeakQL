@@ -143,3 +143,15 @@ Once CLI login succeeds, initialize only if config remains absent (`npx supabase
 | Drizzle environment loading | FOLLOW-UP | Explicitly load `.env.local` before approved migration; avoid localhost fallback |
 
 Source: https://supabase.com/docs/guides/local-development/cli/getting-started (retrieved 2026-10-10). Phase 2 remains IN_PROGRESS. No regression run was repeated: this inspection changed documentation only and preserved prior generated migrations.
+
+## Current security verification harness — 2026-10-10
+
+The repository now contains `scripts/phase2-security-integration.mjs`, invoked with:
+
+```bash
+npm run test:security:integration
+```
+
+This command is intentionally separate from `npm test`. It requires an explicit disposable-target acknowledgement and three private URLs: `SPEAKQL_SECURITY_TEST_ADMIN_DATABASE_URL`, `SPEAKQL_SECURITY_TEST_ALICE_DATABASE_URL`, and `SPEAKQL_SECURITY_TEST_BOB_DATABASE_URL`. Alice and Bob must be distinct LOGIN members of `speakql_runtime`; the administrator is a third role on the same target. Missing or malformed values, mismatched targets, missing catalog access, unsafe role attributes/memberships, missing privileges, missing policies, or non-forced RLS stop the run before fixture setup. The harness never runs Drizzle migrations and never uses `DATABASE_URL` or `MIGRATION_DATABASE_URL` as a fallback.
+
+The live checks create uniquely marked disposable rows, verify two-login ownership isolation, empty identity-context denial, cross-owner evaluation denial, and a real transaction rollback, then delete the fixture identities in an administrator transaction and verify marker cleanup. A passing run is PostgreSQL/RLS/ACL evidence only. It is **not** Supabase Auth E2E: it does not create users through Supabase Auth, validate JWTs, refresh cookies, or prove signup/login/session persistence. A missing target remains a blocker rather than a skipped or successful integration result.

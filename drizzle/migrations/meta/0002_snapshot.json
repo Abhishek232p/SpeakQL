@@ -1,0 +1,777 @@
+{
+  "id": "2a1abacd-f164-49ac-b86b-7f20a73ad67d",
+  "prevId": "68359f64-8786-437f-8929-cdd3e40d6893",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.audit_events": {
+      "name": "audit_events",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "actor_user_id": {
+          "name": "actor_user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "action": {
+          "name": "action",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "resource_type": {
+          "name": "resource_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "resource_id": {
+          "name": "resource_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "metadata": {
+          "name": "metadata",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'"
+        },
+        "occurred_at": {
+          "name": "occurred_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "audit_events_actor_user_id_idx": {
+          "name": "audit_events_actor_user_id_idx",
+          "columns": [
+            {
+              "expression": "actor_user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "audit_events_action_idx": {
+          "name": "audit_events_action_idx",
+          "columns": [
+            {
+              "expression": "action",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "audit_events_actor_user_id_users_id_fk": {
+          "name": "audit_events_actor_user_id_users_id_fk",
+          "tableFrom": "audit_events",
+          "tableTo": "users",
+          "columnsFrom": [
+            "actor_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "audit_insert_own_profile": {
+          "name": "audit_insert_own_profile",
+          "as": "PERMISSIVE",
+          "for": "INSERT",
+          "to": [
+            "speakql_runtime"
+          ],
+          "withCheck": "exists (select 1 from \"public\".\"users\" as identity_user where identity_user.id = \"audit_events\".\"actor_user_id\" and identity_user.auth_issuer = nullif(pg_catalog.current_setting('speakql.auth_issuer', true), '') and identity_user.auth_subject = nullif(pg_catalog.current_setting('speakql.auth_subject', true), '')) and \"audit_events\".\"resource_type\" = 'user_profile' and \"audit_events\".\"resource_id\" = \"audit_events\".\"actor_user_id\"::text and \"audit_events\".\"action\" in ('profile.created', 'profile.updated')"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "public.competencies": {
+      "name": "competencies",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "goal_id": {
+          "name": "goal_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "competencies_goal_id_idx": {
+          "name": "competencies_goal_id_idx",
+          "columns": [
+            {
+              "expression": "goal_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "competencies_goal_id_learning_goals_id_fk": {
+          "name": "competencies_goal_id_learning_goals_id_fk",
+          "tableFrom": "competencies",
+          "tableTo": "learning_goals",
+          "columnsFrom": [
+            "goal_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "competencies_select_own": {
+          "name": "competencies_select_own",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": [
+            "speakql_runtime"
+          ],
+          "using": "exists (select 1 from \"public\".\"learning_goals\" g join \"public\".\"users\" as identity_user on g.user_id = identity_user.id where g.id = \"competencies\".\"goal_id\" and identity_user.auth_issuer = nullif(pg_catalog.current_setting('speakql.auth_issuer', true), '') and identity_user.auth_subject = nullif(pg_catalog.current_setting('speakql.auth_subject', true), ''))"
+        },
+        "competencies_insert_own": {
+          "name": "competencies_insert_own",
+          "as": "PERMISSIVE",
+          "for": "INSERT",
+          "to": [
+            "speakql_runtime"
+          ],
+          "withCheck": "exists (select 1 from \"public\".\"learning_goals\" g join \"public\".\"users\" as identity_user on g.user_id = identity_user.id where g.id = \"competencies\".\"goal_id\" and identity_user.auth_issuer = nullif(pg_catalog.current_setting('speakql.auth_issuer', true), '') and identity_user.auth_subject = nullif(pg_catalog.current_setting('speakql.auth_subject', true), ''))"
+        },
+        "competencies_update_own": {
+          "name": "competencies_update_own",
+          "as": "PERMISSIVE",
+          "for": "UPDATE",
+          "to": [
+            "speakql_runtime"
+          ],
+          "using": "exists (select 1 from \"public\".\"learning_goals\" g join \"public\".\"users\" as identity_user on g.user_id = identity_user.id where g.id = \"competencies\".\"goal_id\" and identity_user.auth_issuer = nullif(pg_catalog.current_setting('speakql.auth_issuer', true), '') and identity_user.auth_subject = nullif(pg_catalog.current_setting('speakql.auth_subject', true), ''))",
+          "withCheck": "exists (select 1 from \"public\".\"learning_goals\" g join \"public\".\"users\" as identity_user on g.user_id = identity_user.id where g.id = \"competencies\".\"goal_id\" and identity_user.auth_issuer = nullif(pg_catalog.current_setting('speakql.auth_issuer', true), '') and identity_user.auth_subject = nullif(pg_catalog.current_setting('speakql.auth_subject', true), ''))"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "public.learning_goals": {
+      "name": "learning_goals",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'active'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "learning_goals_user_id_idx": {
+          "name": "learning_goals_user_id_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "learning_goals_user_id_users_id_fk": {
+          "name": "learning_goals_user_id_users_id_fk",
+          "tableFrom": "learning_goals",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "goals_select_own": {
+          "name": "goals_select_own",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": [
+            "speakql_runtime"
+          ],
+          "using": "exists (select 1 from \"public\".\"users\" as identity_user where identity_user.id = \"learning_goals\".\"user_id\" and identity_user.auth_issuer = nullif(pg_catalog.current_setting('speakql.auth_issuer', true), '') and identity_user.auth_subject = nullif(pg_catalog.current_setting('speakql.auth_subject', true), ''))"
+        },
+        "goals_insert_own": {
+          "name": "goals_insert_own",
+          "as": "PERMISSIVE",
+          "for": "INSERT",
+          "to": [
+            "speakql_runtime"
+          ],
+          "withCheck": "exists (select 1 from \"public\".\"users\" as identity_user where identity_user.id = \"learning_goals\".\"user_id\" and identity_user.auth_issuer = nullif(pg_catalog.current_setting('speakql.auth_issuer', true), '') and identity_user.auth_subject = nullif(pg_catalog.current_setting('speakql.auth_subject', true), ''))"
+        },
+        "goals_update_own": {
+          "name": "goals_update_own",
+          "as": "PERMISSIVE",
+          "for": "UPDATE",
+          "to": [
+            "speakql_runtime"
+          ],
+          "using": "exists (select 1 from \"public\".\"users\" as identity_user where identity_user.id = \"learning_goals\".\"user_id\" and identity_user.auth_issuer = nullif(pg_catalog.current_setting('speakql.auth_issuer', true), '') and identity_user.auth_subject = nullif(pg_catalog.current_setting('speakql.auth_subject', true), ''))",
+          "withCheck": "exists (select 1 from \"public\".\"users\" as identity_user where identity_user.id = \"learning_goals\".\"user_id\" and identity_user.auth_issuer = nullif(pg_catalog.current_setting('speakql.auth_issuer', true), '') and identity_user.auth_subject = nullif(pg_catalog.current_setting('speakql.auth_subject', true), ''))"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "public.practice_evaluations": {
+      "name": "practice_evaluations",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "exercise_id": {
+          "name": "exercise_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_response": {
+          "name": "user_response",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "feedback": {
+          "name": "feedback",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "score": {
+          "name": "score",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "practice_evaluations_exercise_id_idx": {
+          "name": "practice_evaluations_exercise_id_idx",
+          "columns": [
+            {
+              "expression": "exercise_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "practice_evaluations_user_id_idx": {
+          "name": "practice_evaluations_user_id_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "practice_evaluations_exercise_id_practice_exercises_id_fk": {
+          "name": "practice_evaluations_exercise_id_practice_exercises_id_fk",
+          "tableFrom": "practice_evaluations",
+          "tableTo": "practice_exercises",
+          "columnsFrom": [
+            "exercise_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "practice_evaluations_user_id_users_id_fk": {
+          "name": "practice_evaluations_user_id_users_id_fk",
+          "tableFrom": "practice_evaluations",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "evaluations_select_own": {
+          "name": "evaluations_select_own",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": [
+            "speakql_runtime"
+          ],
+          "using": "exists (select 1 from \"public\".\"users\" as identity_user where identity_user.id = \"practice_evaluations\".\"user_id\" and identity_user.auth_issuer = nullif(pg_catalog.current_setting('speakql.auth_issuer', true), '') and identity_user.auth_subject = nullif(pg_catalog.current_setting('speakql.auth_subject', true), ''))"
+        },
+        "evaluations_insert_own": {
+          "name": "evaluations_insert_own",
+          "as": "PERMISSIVE",
+          "for": "INSERT",
+          "to": [
+            "speakql_runtime"
+          ],
+          "withCheck": "exists (select 1 from \"public\".\"users\" as identity_user where identity_user.id = \"practice_evaluations\".\"user_id\" and identity_user.auth_issuer = nullif(pg_catalog.current_setting('speakql.auth_issuer', true), '') and identity_user.auth_subject = nullif(pg_catalog.current_setting('speakql.auth_subject', true), ''))"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "public.practice_exercises": {
+      "name": "practice_exercises",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "competency_id": {
+          "name": "competency_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "scenario_prompt": {
+          "name": "scenario_prompt",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expected_structure": {
+          "name": "expected_structure",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "practice_exercises_competency_id_idx": {
+          "name": "practice_exercises_competency_id_idx",
+          "columns": [
+            {
+              "expression": "competency_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "practice_exercises_competency_id_competencies_id_fk": {
+          "name": "practice_exercises_competency_id_competencies_id_fk",
+          "tableFrom": "practice_exercises",
+          "tableTo": "competencies",
+          "columnsFrom": [
+            "competency_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "exercises_select_own": {
+          "name": "exercises_select_own",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": [
+            "speakql_runtime"
+          ],
+          "using": "exists (select 1 from \"public\".\"competencies\" c join \"public\".\"learning_goals\" g on c.goal_id = g.id join \"public\".\"users\" as identity_user on g.user_id = identity_user.id where c.id = \"practice_exercises\".\"competency_id\" and identity_user.auth_issuer = nullif(pg_catalog.current_setting('speakql.auth_issuer', true), '') and identity_user.auth_subject = nullif(pg_catalog.current_setting('speakql.auth_subject', true), ''))"
+        },
+        "exercises_insert_own": {
+          "name": "exercises_insert_own",
+          "as": "PERMISSIVE",
+          "for": "INSERT",
+          "to": [
+            "speakql_runtime"
+          ],
+          "withCheck": "exists (select 1 from \"public\".\"competencies\" c join \"public\".\"learning_goals\" g on c.goal_id = g.id join \"public\".\"users\" as identity_user on g.user_id = identity_user.id where c.id = \"practice_exercises\".\"competency_id\" and identity_user.auth_issuer = nullif(pg_catalog.current_setting('speakql.auth_issuer', true), '') and identity_user.auth_subject = nullif(pg_catalog.current_setting('speakql.auth_subject', true), ''))"
+        },
+        "exercises_update_own": {
+          "name": "exercises_update_own",
+          "as": "PERMISSIVE",
+          "for": "UPDATE",
+          "to": [
+            "speakql_runtime"
+          ],
+          "using": "exists (select 1 from \"public\".\"competencies\" c join \"public\".\"learning_goals\" g on c.goal_id = g.id join \"public\".\"users\" as identity_user on g.user_id = identity_user.id where c.id = \"practice_exercises\".\"competency_id\" and identity_user.auth_issuer = nullif(pg_catalog.current_setting('speakql.auth_issuer', true), '') and identity_user.auth_subject = nullif(pg_catalog.current_setting('speakql.auth_subject', true), ''))",
+          "withCheck": "exists (select 1 from \"public\".\"competencies\" c join \"public\".\"learning_goals\" g on c.goal_id = g.id join \"public\".\"users\" as identity_user on g.user_id = identity_user.id where c.id = \"practice_exercises\".\"competency_id\" and identity_user.auth_issuer = nullif(pg_catalog.current_setting('speakql.auth_issuer', true), '') and identity_user.auth_subject = nullif(pg_catalog.current_setting('speakql.auth_subject', true), ''))"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "public.user_profiles": {
+      "name": "user_profiles",
+      "schema": "",
+      "columns": {
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "display_name": {
+          "name": "display_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "locale": {
+          "name": "locale",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'en-US'"
+        },
+        "timezone": {
+          "name": "timezone",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'UTC'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "user_profiles_user_id_users_id_fk": {
+          "name": "user_profiles_user_id_users_id_fk",
+          "tableFrom": "user_profiles",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "profiles_select_own": {
+          "name": "profiles_select_own",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": [
+            "speakql_runtime"
+          ],
+          "using": "exists (select 1 from \"public\".\"users\" as identity_user where identity_user.id = \"user_profiles\".\"user_id\" and identity_user.auth_issuer = nullif(pg_catalog.current_setting('speakql.auth_issuer', true), '') and identity_user.auth_subject = nullif(pg_catalog.current_setting('speakql.auth_subject', true), ''))"
+        },
+        "profiles_insert_own": {
+          "name": "profiles_insert_own",
+          "as": "PERMISSIVE",
+          "for": "INSERT",
+          "to": [
+            "speakql_runtime"
+          ],
+          "withCheck": "exists (select 1 from \"public\".\"users\" as identity_user where identity_user.id = \"user_profiles\".\"user_id\" and identity_user.auth_issuer = nullif(pg_catalog.current_setting('speakql.auth_issuer', true), '') and identity_user.auth_subject = nullif(pg_catalog.current_setting('speakql.auth_subject', true), ''))"
+        },
+        "profiles_update_own": {
+          "name": "profiles_update_own",
+          "as": "PERMISSIVE",
+          "for": "UPDATE",
+          "to": [
+            "speakql_runtime"
+          ],
+          "using": "exists (select 1 from \"public\".\"users\" as identity_user where identity_user.id = \"user_profiles\".\"user_id\" and identity_user.auth_issuer = nullif(pg_catalog.current_setting('speakql.auth_issuer', true), '') and identity_user.auth_subject = nullif(pg_catalog.current_setting('speakql.auth_subject', true), ''))",
+          "withCheck": "exists (select 1 from \"public\".\"users\" as identity_user where identity_user.id = \"user_profiles\".\"user_id\" and identity_user.auth_issuer = nullif(pg_catalog.current_setting('speakql.auth_issuer', true), '') and identity_user.auth_subject = nullif(pg_catalog.current_setting('speakql.auth_subject', true), ''))"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "public.users": {
+      "name": "users",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "auth_issuer": {
+          "name": "auth_issuer",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "auth_subject": {
+          "name": "auth_subject",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "users_auth_identity_unique": {
+          "name": "users_auth_identity_unique",
+          "columns": [
+            {
+              "expression": "auth_issuer",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "auth_subject",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "users_select_own": {
+          "name": "users_select_own",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": [
+            "speakql_runtime"
+          ],
+          "using": "\"users\".\"auth_issuer\" = nullif(pg_catalog.current_setting('speakql.auth_issuer', true), '') and \"users\".\"auth_subject\" = nullif(pg_catalog.current_setting('speakql.auth_subject', true), '')"
+        },
+        "users_insert_own": {
+          "name": "users_insert_own",
+          "as": "PERMISSIVE",
+          "for": "INSERT",
+          "to": [
+            "speakql_runtime"
+          ],
+          "withCheck": "\"users\".\"auth_issuer\" = nullif(pg_catalog.current_setting('speakql.auth_issuer', true), '') and \"users\".\"auth_subject\" = nullif(pg_catalog.current_setting('speakql.auth_subject', true), '')"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

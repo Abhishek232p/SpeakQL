@@ -13,7 +13,7 @@ The transaction wrapper checks role flags, membership, ownership dependencies, s
 
 ## Grants and RLS
 
-Drizzle's `src/server/db/schema.ts` is the source of truth for tables and policies. The new migration and `0001_snapshot.json` are journaled after the untouched initial migration. The security migration additionally manages role attributes, grants, and `FORCE ROW LEVEL SECURITY`, which Drizzle's schema API does not model; retain those SQL clauses in future migration reviews.
+Drizzle's `src/server/db/schema.ts` is the source of truth for tables and policies. The journaled security artifacts include the core runtime migration and the later learning-table FORCE RLS hardening; `0001_snapshot.json` remains linked after the untouched initial migration. These SQL migrations additionally manage role attributes, grants, and `FORCE ROW LEVEL SECURITY`, which Drizzle's schema API does not model; retain those SQL clauses in future migration reviews.
 
 | Table | Runtime privileges | RLS boundary |
 |---|---|---|
@@ -45,3 +45,35 @@ The first test/typecheck run found a malformed table-driven fixture; it was fixe
 Before separately authorizing migration on the designated target, inspect its migration history, owners, roles/memberships/default ACLs, policies, functions, and existing event triggers. In particular, inspect `rls_auto_enable` rather than disabling or replacing it blindly. The security migration deliberately fails on conflicting role/policy state.
 
 Still unverified: migration execution/SQL compatibility on the target; runtime login and pooler behavior; genuine Supabase sessions; missing/empty/spoofed-context and cross-user SQL isolation; forbidden audit UPDATE/DELETE/TRUNCATE and identity/profile ownership changes; context reset after success and rollback on reused physical connections; profile/audit atomic rollback; and real concurrent same-identity first saves producing exactly one create followed by updates. Run those checks with a non-owner runtime login in a separately authorized disposable test database. Phase 2 remains IN_PROGRESS until that evidence exists.
+
+## Reproducible Phase 2 database security harness
+
+`npm run test:security:integration` runs the live PostgreSQL checks that are safe to run against a separately designated disposable database. It does **not** apply migrations, inspect or create Supabase Auth users, call the Supabase Auth API, or claim Supabase session E2E coverage.
+
+The harness requires all of the following process/local-environment values and fails before opening a connection when any is missing or malformed:
+
+- `SPEAKQL_SECURITY_TEST_ALLOW_MUTATION=1` — an explicit acknowledgement that the target may receive disposable fixture rows.
+- `SPEAKQL_SECURITY_TEST_ADMIN_DATABASE_URL` — a third, separate administrator connection used only to insert and delete the fixture graph.
+- `SPEAKQL_SECURITY_TEST_ALICE_DATABASE_URL` — a LOGIN role that is a member of `speakql_runtime`.
+- `SPEAKQL_SECURITY_TEST_BOB_DATABASE_URL` — a different LOGIN role that is a member of `speakql_runtime`.
+
+The three URLs must identify the same database and three distinct login names. Put them in the ignored `.env.local` file or provide them through the process environment; they are never printed. The runtime URLs are used directly, so `DATABASE_URL` and `MIGRATION_DATABASE_URL` are not fallbacks.
+
+Exact command after the target has already been migrated and independently reviewed:
+
+```bash
+npm run test:security:integration
+```
+
+The preflight fails closed unless `speakql_runtime` is `NOLOGIN`, `NOINHERIT`, non-privileged, non-owning, has no unexpected memberships, and can assume the role from both runtime logins. It also requires all seven application tables to have enabled **and forced** RLS, the expected policy names with no extras, and the intended table/database/schema privileges. The local `0005_force_learning_rls.sql` artifact supplies the learning-table FORCE RLS hardening; it is not applied by the harness.
+
+When preflight passes, the harness creates two uniquely marked user/goal/competency/exercise/profile graphs with the administrator, then runs these probes through the two restricted logins:
+
+1. Alice and Bob can see only their own user, profile, goal, and exercise rows.
+2. An empty transaction-local identity context sees no rows and cannot create a goal.
+3. Bob cannot create an evaluation for Alice's exercise.
+4. A real runtime transaction inserts a disposable goal, reaches an intentional database error, rolls back, and verifies that the row was not committed.
+
+Fixture setup is committed only long enough for the two runtime connections to observe it. Cleanup deletes the two marked identities in an administrator transaction; foreign-key cascades remove dependent rows, and the harness verifies that its marker rows are gone. If the process or target fails before cleanup, stop and inspect the disposable database before reusing it. Exit code `0` is a pass; exit code `2` is a blocked or failed verification. Output contains test labels and generic PostgreSQL error codes only, never connection strings, passwords, tokens, or row identifiers.
+
+This harness is database/RLS/ACL evidence only. It does not verify that a Supabase JWT was issued, that cookies refresh, that signup/login works, or that a genuine Supabase user maps to either fixture identity. Those remain separate auth integration work and must not be reported as completed by a passing harness run.
