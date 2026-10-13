@@ -59,6 +59,64 @@ The current project dependency audit found 0 production vulnerabilities but 9 de
 
 Do not add an adaptive-learning or voice dependency yet. The highest-value next step is to obtain a disposable PostgreSQL environment, run the existing Drizzle migration, and verify profile persistence, transactional audit behavior, and authorization against the real schema. That evidence is prerequisite to safely adding goals, competencies, or AI/speech services.
 
+## High-priority candidate deep audit & rubric evaluation
+
+**Evaluation date:** 2026-10-12
+**Evaluation Rubric (Score 0–5 per dimension):**
+1. License suitability for commercial product
+2. Maintenance and release activity
+3. Security posture and dependency health
+4. Fit with current TypeScript / Next.js 16 foundation
+5. Test quality & automated coverage
+6. Ability to extract a small component without adopting entire monolith
+7. Language coverage and evidence quality
+8. Local / offline support and cost profile
+9. Clear separation of observed evidence vs AI inference
+10. Operational burden (hosting, GPU, compute)
+
+### Rubric Scorecard
+
+| Candidate Repository | License | 1. Lic | 2. Maint | 3. Sec | 4. Stack | 5. Test | 6. Extr | 7. Lang | 8. Local | 9. Sep | 10. Ops | **Total / 50** | Strategic Recommendation |
+|---|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|---|
+| **Cadence** (`pstepanovum/Cadence`) | MIT | 5 | 4 | 4 | 5 | 4 | 4 | 3 | 4 | 4 | 4 | **41 / 50** | **INSPECT DEEPLY; SELECTIVELY REUSE COMPONENTS** (Pronunciation UI & Next.js/Supabase patterns). |
+| **faster-whisper** (`SYSTRAN/faster-whisper`) | MIT | 5 | 5 | 4 | 3 | 4 | 5 | 5 | 5 | 4 | 3 | **43 / 50** | **EVALUATE AS SPEECH-TO-TEXT ADAPTER** (CTranslate2 quantization for local/worker transcription). |
+| **FreeLingo** (`ArtCC/freelingo`) | AGPL-3.0 | 2 | 4 | 3 | 3 | 3 | 2 | 4 | 4 | 3 | 2 | **30 / 50** | **ARCHITECTURE REFERENCE ONLY** (Spaced repetition, CEFR curriculum concepts; AGPL boundary). |
+| **Sotto** (`affromero/Sotto`) | AGPL-3.0 | 2 | 3 | 3 | 3 | 3 | 2 | 4 | 4 | 3 | 2 | **29 / 50** | **STUDY PRODUCT LOOP & DATA MODEL** (Learner memory graph, self-hosted deployment). |
+| **ADL LRS** (`adlnet/ADL_LRS`) | Apache-2.0 | 5 | 3 | 4 | 2 | 4 | 3 | 5 | 3 | 5 | 2 | **36 / 50** | **STUDY EVENT / LEARNING-RECORD MODEL** (xAPI statement schema; do not deploy separate LRS). |
+
+### Detailed Candidate Audits
+
+#### 1. Cadence (`pstepanovum/Cadence`)
+- **License:** MIT (Permissive, commercially compatible).
+- **Stack Alignment:** Next.js 16, React 19, Supabase integration, Python model boundaries. High compatibility with SpeakQL's current architecture.
+- **Reusable Elements:** Guided pronunciation sound modules, audio recording wrappers, transcript display components.
+- **Decision:** Selectively inspect and adapt client-side audio/pronunciation interaction patterns. Do not import the entire product shell.
+
+#### 2. faster-whisper (`SYSTRAN/faster-whisper`)
+- **License:** MIT (Commercially compatible).
+- **Capabilities:** Fast Whisper transcription via CTranslate2 with INT8/FP16 quantization, up to 4x faster with reduced VRAM.
+- **Role in SpeakQL:** Bounded STT ingestion adapter for spoken practice sessions. Transcription must feed into SpeakQL's competency rubrics, not serve as the evaluation judgment itself.
+- **Decision:** Retain Web Speech API on the client for zero-latency browser practice; evaluate faster-whisper as a self-hosted worker adapter when server-side audio persistence is needed.
+
+#### 3. FreeLingo (`ArtCC/freelingo`)
+- **License:** AGPL-3.0 (Copyleft network disclosure obligations).
+- **Capabilities:** CEFR-aligned progression, placement diagnostic, FastAPI/PostgreSQL/Redis, local Ollama integration, Kokoro TTS.
+- **Legal & Technical Boundary:** Do not copy code into SpeakQL's codebase due to AGPL network-use implications.
+- **Decision:** Reference architecture only for spaced-repetition scheduling intervals and prerequisite competency chaining.
+
+#### 4. Sotto (`affromero/Sotto`)
+- **License:** AGPL-3.0.
+- **Capabilities:** Pronunciation rubric structure, learner memory graph, self-hosted container configuration.
+- **Decision:** Study the learner memory graph data model and error decay functions. Implement proprietary TypeScript equivalents within `src/server/goals/analytics.ts` and `src/server/evaluation/boundary.ts`.
+
+#### 5. ADL LRS (`adlnet/ADL_LRS`)
+- **License:** Apache-2.0.
+- **Capabilities:** IEEE standard xAPI statement storage (Actor, Verb, Object, Result, Context).
+- **Decision:** Model SpeakQL's evaluation persistence (`practice_evaluations`, `audit_events`) on xAPI statement structures without running a separate Java/Python LRS container.
+
+---
+
 ## Sources and retrieval date
 
-GitHub repository metadata and canonical READMEs were retrieved on 2026-10-10 via the public GitHub API/raw repository URLs. Examples inspected include each repository's README and license metadata; no repository was cloned.
+GitHub repository metadata and canonical READMEs were retrieved on 2026-10-10 and updated on 2026-10-12 via the public GitHub API and repository documentation.
+

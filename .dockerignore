@@ -1,0 +1,17 @@
+.git
+.gitignore
+.env*
+!.env.example
+node_modules
+.next
+coverage
+dist
+build
+scratch
+*.log
+*.pem
+*.key
+tests
+.agents
+.opencode
+.uix

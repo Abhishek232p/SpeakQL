@@ -74,8 +74,36 @@ function significantWords(value: string): Set<string> {
   );
 }
 
+function extractPromptText(request: EvaluationRequest): { scenario: string; instructions: string; expected: string } {
+  let scenario = request.scenarioPrompt;
+  let instructions = "";
+  if (request.scenarioPrompt.startsWith("{") && request.scenarioPrompt.endsWith("}")) {
+    try {
+      const parsed = JSON.parse(request.scenarioPrompt);
+      if (typeof parsed.scenario === "string") scenario = parsed.scenario;
+      if (typeof parsed.instructions === "string") instructions = parsed.instructions;
+    } catch {
+      // keep raw
+    }
+  }
+  return { scenario, instructions, expected: request.expectedStructure };
+}
+
+function extractKeyExcerpts(response: string): { opening: string; body: string; sentences: string[] } {
+  const sentences = response.split(/(?<=[.!?])\s+|\n+/).map(s => s.trim()).filter(Boolean);
+  const firstSentence = sentences[0] || response.trim();
+  const opening = firstSentence.length > 80 ? firstSentence.slice(0, 77) + "…" : firstSentence;
+  const body = sentences.slice(1).join(" ");
+  return { opening, body, sentences };
+}
+
 function hasContextSignal(request: EvaluationRequest): boolean {
-  const promptWords = new Set([...significantWords(request.scenarioPrompt), ...significantWords(request.expectedStructure)]);
+  const { scenario, instructions, expected } = extractPromptText(request);
+  const promptWords = new Set([
+    ...significantWords(scenario),
+    ...significantWords(instructions),
+    ...significantWords(expected),
+  ]);
   if (promptWords.size === 0) return true;
   const responseWords = significantWords(request.response);
   return [...promptWords].some((word) => responseWords.has(word));
@@ -92,47 +120,76 @@ function criterionEvidence(criterion: EvaluationCriterion): string {
 function fallbackResult(request: EvaluationRequest): EvaluationResult {
   const response = request.response.trim();
   const wordCount = countWords(response);
+  const { opening, sentences } = extractKeyExcerpts(response);
+  const contextPassed = hasContextSignal(request);
+  const structurePassed = hasStructureSignal(response) && sentences.length >= 1;
+  const specificityPassed = wordCount >= 8 && sentences.length >= 1;
+
+  const contextEvidence = contextPassed
+    ? `Engaged situational context effectively with relevant phrasing: "${opening}".`
+    : "The response does not explicitly incorporate situational terminology or scenario details.";
+
+  const structureEvidence = structurePassed
+    ? `Organized message across ${sentences.length} cohesive ${sentences.length === 1 ? "sentence" : "sentences"} with clear boundaries.`
+    : "Add clear sentence boundaries, punctuation, or paragraph division to structure your message.";
+
+  const specificityEvidence = specificityPassed
+    ? `Provided substantive communication with sufficient detail (${wordCount} words) rather than a brief assertion.`
+    : `Response is too brief or general (${wordCount} words); expand with concrete actions, reasoning, or next steps.`;
+
   const criteria: EvaluationCriterion[] = [
     {
       id: "context",
       label: "Context signal",
-      passed: hasContextSignal(request),
-      evidence: hasContextSignal(request)
-        ? "The response includes a signal from the scenario or expected structure."
-        : "No meaningful term from the scenario or expected structure was found in the response.",
+      passed: contextPassed,
+      evidence: contextEvidence,
     },
     {
       id: "structure",
       label: "Clear structure",
-      passed: hasStructureSignal(response),
-      evidence: hasStructureSignal(response)
-        ? "The response contains a sentence boundary or a separated line."
-        : "Add a sentence boundary or separate the response into clear parts.",
+      passed: structurePassed,
+      evidence: structureEvidence,
     },
     {
       id: "specificity",
       label: "Specific detail",
-      passed: wordCount >= 8,
-      evidence: wordCount >= 8
-        ? `The response contains ${wordCount} words; the deterministic baseline requires at least 8.`
-        : `The response contains ${wordCount} words; the deterministic baseline requires at least 8.`,
+      passed: specificityPassed,
+      evidence: specificityEvidence,
     },
   ];
+
   const failedCriteria = criteria.filter((criterion) => !criterion.passed);
   const score = failedCriteria.length === 0 ? "mastered" : "needs_work";
   const mistakes = failedCriteria.map((criterion) => criterionEvidence(criterion));
 
+  const whatWentWell = score === "mastered"
+    ? `Clear communicative delivery: Your response directly addresses the situation ("${opening}") with appropriate structure and substantive detail.`
+    : `Communicative attempt recorded: You initiated your response with "${opening}".`;
+
+  const areasToImprove = failedCriteria.length > 0
+    ? `Focus on: ${failedCriteria.map((c) => c.label.toLowerCase() + " (" + c.evidence + ")").join("; ")}.`
+    : "To further develop natural fluency, practice delivering this response conversationally within real-time pacing.";
+
+  const nextAction = score === "mastered"
+    ? "Try this scenario again with an added constraint (e.g. tighter time limit or unexpected peer follow-up)."
+    : `Revise your response: address ${failedCriteria.map((c) => c.label.toLowerCase()).join(" and ")} to complete a robust baseline.`;
+
+  const feedback = [
+    score === "mastered"
+      ? "Mastered baseline criteria for this practice scenario."
+      : "Needs work to satisfy all baseline communicative criteria.",
+    `Strengths: ${whatWentWell}`,
+    `Areas to refine: ${areasToImprove}`,
+    "Notice: Evaluated using deterministic non-AI baseline analysis (checks communicative structure, context keywords, and substantive detail; does not evaluate subtle pragmatic nuance).",
+  ].join("\n");
+
   return {
     schemaVersion: EVALUATION_SCHEMA_VERSION,
     score,
-    feedback: score === "mastered"
-      ? "The response met the deterministic baseline across context, structure, and specificity."
-      : "The response is a useful baseline, but one or more deterministic criteria still need attention.",
+    feedback,
     criteria,
     mistakes,
-    nextAction: score === "mastered"
-      ? "Try the same scenario with a new constraint or a more precise example."
-      : `Revise the response to address: ${failedCriteria.map((criterion) => criterion.label.toLocaleLowerCase()).join(", ")}.`,
+    nextAction,
     usage: {
       inputTokens: estimateTokens(`${request.scenarioPrompt}\n${request.expectedStructure}\n${response}`),
       outputTokens: estimateTokens(criteria.map(criterionEvidence).join("\n")),
@@ -315,9 +372,13 @@ export type StoredEvaluationMetadata = Readonly<{
   source: "provider" | "fallback" | "unknown";
   mistakes: readonly string[];
   nextAction: string | null;
+  strengths: string | null;
+  areasToRefine: string | null;
+  criteriaEvidence: readonly string[];
+  summaryFeedback: string;
 }>;
 
-/** Read only the metadata written by serializeEvaluationFeedback. */
+/** Read structured metadata written by serializeEvaluationFeedback. */
 export function parseStoredEvaluationFeedback(feedback: string | null | undefined): StoredEvaluationMetadata {
   const value = feedback ?? "";
   const source = value.startsWith("Evaluation source: deterministic fallback (non-AI).")
@@ -325,15 +386,63 @@ export function parseStoredEvaluationFeedback(feedback: string | null | undefine
     : value.startsWith("Evaluation source: configured provider (")
       ? "provider"
       : "unknown";
+
   const mistakesStart = value.indexOf("Mistake memory:\n");
   const nextActionStart = value.indexOf("\nNext action: ");
+  const criteriaStart = value.indexOf("Criteria:\n");
+
   const mistakes = mistakesStart >= 0
     ? value.slice(mistakesStart + "Mistake memory:\n".length, nextActionStart >= 0 ? nextActionStart : value.length)
         .split("\n")
         .map((line) => line.replace(/^-\s*/, "").trim())
         .filter(Boolean)
     : [];
-  const nextAction = nextActionStart >= 0 ? value.slice(nextActionStart + "\nNext action: ".length).trim() || null : null;
 
-  return { source, mistakes, nextAction };
+  const nextAction = nextActionStart >= 0
+    ? value.slice(nextActionStart + "\nNext action: ".length).trim() || null
+    : null;
+
+  const criteriaEvidence = criteriaStart >= 0
+    ? value.slice(criteriaStart + "Criteria:\n".length, mistakesStart >= 0 ? mistakesStart : value.length)
+        .split("\n")
+        .map((line) => line.replace(/^-\s*/, "").trim())
+        .filter(Boolean)
+    : [];
+
+  // Extract strengths and areas to refine
+  let strengths: string | null = null;
+  let areasToRefine: string | null = null;
+
+  const strengthsMatch = value.match(/Strengths:\s*([\s\S]+?)(?=\nAreas to refine:|\nCriteria:|\nMistake memory:|$)/);
+  if (strengthsMatch && strengthsMatch[1]) {
+    strengths = strengthsMatch[1].trim();
+  }
+
+  const areasMatch = value.match(/Areas to refine:\s*([\s\S]+?)(?=\nNotice:|\nCriteria:|\nMistake memory:|$)/);
+  if (areasMatch && areasMatch[1]) {
+    areasToRefine = areasMatch[1].trim();
+  }
+
+  // Extract summary feedback
+  const contractIdx = value.indexOf("Contract: speakql.evaluation.v1.");
+  let summaryFeedback = "";
+  if (contractIdx >= 0) {
+    const afterContract = value.slice(contractIdx + "Contract: speakql.evaluation.v1.".length).trim();
+    const criteriaOrMistakesIdx = afterContract.search(/\n(?:Criteria:|Mistake memory:|Strengths:)/);
+    summaryFeedback = criteriaOrMistakesIdx >= 0
+      ? afterContract.slice(0, criteriaOrMistakesIdx).trim()
+      : afterContract.split("\n")[0] || "";
+  } else {
+    summaryFeedback = value.split("\n")[0] || "";
+  }
+
+  return {
+    source,
+    mistakes,
+    nextAction,
+    strengths,
+    areasToRefine,
+    criteriaEvidence,
+    summaryFeedback,
+  };
 }

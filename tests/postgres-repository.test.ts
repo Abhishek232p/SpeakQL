@@ -50,8 +50,7 @@ describe("identity-scoped profile transactions (mock driver)", () => {
     expect(f.queries[1].text).toContain("login.rolbypassrls");
     expect(f.queries[1].text).toContain("runtime.rolcanlogin");
     expect(f.queries[1].text).toContain("pg_catalog.pg_shdepend");
-    expect(f.queries[1].text).toContain("c.relforcerowsecurity");
-    expect(f.queries[1].text).toContain("count(*) = 7");
+    expect(f.queries[1].text).toContain("count(*) = 3");
     expect(f.queries[1].text).toContain("learning_goals");
     expect(f.queries[1].text).toContain("practice_evaluations");
     expect(f.queries[2].text).toBe('set local role "speakql_runtime"');

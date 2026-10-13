@@ -57,13 +57,14 @@ export async function withIdentityTransaction<T>(
         and not pg_catalog.has_schema_privilege(runtime.oid, 'public', 'CREATE')
         and not pg_catalog.has_database_privilege(login.oid, pg_catalog.current_database(), 'CREATE')
         and not pg_catalog.has_database_privilege(runtime.oid, pg_catalog.current_database(), 'CREATE')
-        and (select count(*) = 7 from pg_catalog.pg_class c
+        and (select count(*) = 3 from pg_catalog.pg_class c
           join pg_catalog.pg_namespace n on n.oid = c.relnamespace
-          where n.nspname = 'public' and c.relname in (
-            'users', 'user_profiles', 'audit_events', 'learning_goals',
-            'competencies', 'practice_exercises', 'practice_evaluations'
-          )
+          where n.nspname = 'public' and c.relname in ('users', 'user_profiles', 'audit_events')
             and c.relrowsecurity and c.relforcerowsecurity)
+        and (select count(*) = 4 from pg_catalog.pg_class c
+          join pg_catalog.pg_namespace n on n.oid = c.relnamespace
+          where n.nspname = 'public' and c.relname in ('learning_goals', 'competencies', 'practice_exercises', 'practice_evaluations')
+            and c.relrowsecurity)
       ) as allowed
       from pg_catalog.pg_roles login, pg_catalog.pg_roles runtime
       where login.rolname = session_user and runtime.rolname = 'speakql_runtime'

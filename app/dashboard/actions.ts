@@ -76,6 +76,18 @@ export async function createLearningGoal(formData: FormData) {
   }, GOAL_WRITE_FAILED);
 }
 
+export async function updateLearningGoal(goalId: string, formData: FormData) {
+  const identity = await requireIdentity();
+  const validatedGoalId = readExerciseId(goalId);
+  const description = readSingleString(formData, 'description', MAX_GOAL_DESCRIPTION_LENGTH);
+
+  await runDatabaseWrite(async () => {
+    const db = getDb();
+    const repo = createGoalsRepository(db);
+    return repo.updateGoal(identity, validatedGoalId, { description });
+  }, GOAL_WRITE_FAILED);
+}
+
 export async function submitPracticeEvaluation(exerciseId: string, formData: FormData) {
   const identity = await requireIdentity();
   const validatedExerciseId = readExerciseId(exerciseId);

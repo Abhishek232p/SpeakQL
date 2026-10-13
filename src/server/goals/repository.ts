@@ -8,6 +8,7 @@ import {
   type EvaluationBoundary,
 } from "@/src/server/evaluation/boundary";
 import { eq, and, desc } from "drizzle-orm";
+import { generateGoalCurriculum } from "./curriculum";
 
 type Database = ReturnType<typeof import("@/src/server/db/client").getDb>;
 
@@ -274,10 +275,14 @@ export function createGoalsRepository(db: Database, options: GoalsRepositoryOpti
           .where(and(eq(users.authIssuer, identity.issuer), eq(users.authSubject, identity.subject)))
           .limit(1);
           
-        const userId = userRes[0]?.id;
+        let userId = userRes[0]?.id;
 
         if (!userId) {
-          throw new Error('User not found. Identity missing.');
+          const [newUser] = await tx.insert(users).values({
+            authIssuer: identity.issuer,
+            authSubject: identity.subject,
+          }).returning({ id: users.id });
+          userId = newUser.id;
         }
 
         const [goal] = await tx.insert(learningGoals).values({
@@ -285,31 +290,89 @@ export function createGoalsRepository(db: Database, options: GoalsRepositoryOpti
           description: input.description,
         }).returning();
         
-        // Stub: Create structured competency plan immediately based on the goal
-        const comp1 = await tx.insert(competencies).values({
-          goalId: goal.id,
-          description: 'Basic vocabulary and phrasing for this goal',
-        }).returning();
+        const curriculum = generateGoalCurriculum(input.description);
 
-        const comp2 = await tx.insert(competencies).values({
-          goalId: goal.id,
-          description: 'Scenario-based application and judgment',
-        }).returning();
+        for (const plan of curriculum) {
+          const [comp] = await tx.insert(competencies).values({
+            goalId: goal.id,
+            description: plan.competencyDescription,
+          }).returning();
 
-        // Stub: Create exercises for these competencies
-        await tx.insert(practiceExercises).values({
-          competencyId: comp1[0].id,
-          scenarioPrompt: 'Translate this concept into a practical sentence.',
-          expectedStructure: 'A single, clear sentence using the target vocabulary.',
-        });
-
-        await tx.insert(practiceExercises).values({
-          competencyId: comp2[0].id,
-          scenarioPrompt: 'You are in the specific situation. How do you respond?',
-          expectedStructure: 'A professional and context-appropriate response.',
-        });
+          for (const ex of plan.exercises) {
+            await tx.insert(practiceExercises).values({
+              competencyId: comp.id,
+              scenarioPrompt: ex.scenarioPrompt,
+              expectedStructure: ex.expectedStructure,
+            });
+          }
+        }
 
         return goal;
+      });
+    },
+
+    async updateGoal(identity: AuthenticatedIdentity, goalId: string, input: GoalInput) {
+      return withIdentityTransaction(db, identity, async (tx: DatabaseTransaction) => {
+        const userRes = await tx.select({ id: users.id })
+          .from(users)
+          .where(and(eq(users.authIssuer, identity.issuer), eq(users.authSubject, identity.subject)))
+          .limit(1);
+
+        const userId = userRes[0]?.id;
+        if (!userId) throw new Error("User not found.");
+
+        const ownedGoal = await tx.select({ id: learningGoals.id })
+          .from(learningGoals)
+          .where(and(eq(learningGoals.id, goalId), eq(learningGoals.userId, userId)))
+          .limit(1);
+
+        if (!ownedGoal[0]) throw new Error("Goal not found or not owned by user.");
+
+        const [updatedGoal] = await tx.update(learningGoals)
+          .set({
+            description: input.description,
+            updatedAt: new Date(),
+          })
+          .where(eq(learningGoals.id, goalId))
+          .returning();
+
+        // Check if evaluations exist for this goal
+        const existingEvaluations = await tx.select({ id: practiceEvaluations.id })
+          .from(practiceEvaluations)
+          .innerJoin(practiceExercises, eq(practiceEvaluations.exerciseId, practiceExercises.id))
+          .innerJoin(competencies, eq(practiceExercises.competencyId, competencies.id))
+          .where(eq(competencies.goalId, goalId))
+          .limit(1);
+
+        if (existingEvaluations.length === 0) {
+          const existingComps = await tx.select({ id: competencies.id })
+            .from(competencies)
+            .where(eq(competencies.goalId, goalId));
+
+          const existingExs = await tx.select({ id: practiceExercises.id, competencyId: practiceExercises.competencyId })
+            .from(practiceExercises)
+            .innerJoin(competencies, eq(practiceExercises.competencyId, competencies.id))
+            .where(eq(competencies.goalId, goalId));
+
+          const curriculum = generateGoalCurriculum(input.description);
+          for (let i = 0; i < existingComps.length && i < curriculum.length; i++) {
+            await tx.update(competencies)
+              .set({ description: curriculum[i].competencyDescription, updatedAt: new Date() })
+              .where(eq(competencies.id, existingComps[i].id));
+
+            const compExs = existingExs.filter(e => e.competencyId === existingComps[i].id);
+            for (let j = 0; j < compExs.length && j < curriculum[i].exercises.length; j++) {
+              await tx.update(practiceExercises)
+                .set({
+                  scenarioPrompt: curriculum[i].exercises[j].scenarioPrompt,
+                  expectedStructure: curriculum[i].exercises[j].expectedStructure,
+                })
+                .where(eq(practiceExercises.id, compExs[j].id));
+            }
+          }
+        }
+
+        return updatedGoal;
       });
     },
 
@@ -351,11 +414,11 @@ export function createGoalsRepository(db: Database, options: GoalsRepositoryOpti
 
         const activeGoal = goals[0];
         
-        const compRes = await tx.select()
+        let compRes = await tx.select()
           .from(competencies)
           .where(eq(competencies.goalId, activeGoal.id));
           
-        const exRes = await tx.select({
+        let exRes = await tx.select({
           id: practiceExercises.id,
           competencyId: practiceExercises.competencyId,
           scenarioPrompt: practiceExercises.scenarioPrompt,
@@ -380,6 +443,38 @@ export function createGoalsRepository(db: Database, options: GoalsRepositoryOpti
         .innerJoin(competencies, eq(practiceExercises.competencyId, competencies.id))
         .where(eq(competencies.goalId, activeGoal.id))
         .orderBy(desc(practiceEvaluations.createdAt));
+
+        // Upgrade legacy generic stub exercises if no evaluations have been recorded yet
+        if (evRes.length === 0 && exRes.some(e => e.scenarioPrompt.includes("Translate this concept into a practical sentence."))) {
+          const curriculum = generateGoalCurriculum(activeGoal.description);
+          for (let i = 0; i < compRes.length && i < curriculum.length; i++) {
+            await tx.update(competencies)
+              .set({ description: curriculum[i].competencyDescription, updatedAt: new Date() })
+              .where(eq(competencies.id, compRes[i].id));
+
+            const compExercises = exRes.filter(e => e.competencyId === compRes[i].id);
+            for (let j = 0; j < compExercises.length && j < curriculum[i].exercises.length; j++) {
+              await tx.update(practiceExercises)
+                .set({
+                  scenarioPrompt: curriculum[i].exercises[j].scenarioPrompt,
+                  expectedStructure: curriculum[i].exercises[j].expectedStructure,
+                })
+                .where(eq(practiceExercises.id, compExercises[j].id));
+            }
+          }
+
+          compRes = await tx.select().from(competencies).where(eq(competencies.goalId, activeGoal.id));
+          exRes = await tx.select({
+            id: practiceExercises.id,
+            competencyId: practiceExercises.competencyId,
+            scenarioPrompt: practiceExercises.scenarioPrompt,
+            expectedStructure: practiceExercises.expectedStructure,
+            createdAt: practiceExercises.createdAt
+          })
+          .from(practiceExercises)
+          .innerJoin(competencies, eq(practiceExercises.competencyId, competencies.id))
+          .where(eq(competencies.goalId, activeGoal.id));
+        }
 
         const evaluations = evRes.map((evaluation) => ({
           ...evaluation,
