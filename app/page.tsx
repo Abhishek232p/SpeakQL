@@ -2,22 +2,26 @@ import Link from "next/link";
 import { createSupabaseAuthProvider } from "@/src/server/auth/supabase";
 import { WhaleMascot, SpeakQLLogo } from "@/src/client/components/whale-mascot";
 import ScaleWithUsSection from "@/src/client/components/scale-with-us-section";
+import InteractiveDemoShowcase from "@/src/client/components/interactive-demo-showcase";
 
 const capabilities = [
   {
     number: "01",
     title: "Define Real-World Context",
     text: "Start with your genuine professional role, high-stakes scenarios, and everyday communication goals—not sterile textbook grammar.",
+    href: "/method",
   },
   {
     number: "02",
     title: "Navigate The Island World",
     text: "Journey across luminous ocean islands with step-by-step interactive lessons, word-bank token builders, and spoken practice drills.",
+    href: "/world",
   },
   {
     number: "03",
     title: "Practice With Immediate Feedback",
     text: "Receive instant linguistic evaluation on every response, review mistakes to earn back hearts, and watch your fluency surge.",
+    href: "/method",
   },
 ];
 
@@ -62,14 +66,14 @@ export default async function Home() {
     <main style={{ minHeight: "100vh", position: "relative", overflowX: "hidden" }}>
       {/* 1. Global Ocean Navigation Bar */}
       <nav className="nav shell" aria-label="Primary navigation">
-        <Link className="wordmark" href="#top" aria-label="SpeakQL home">
+        <Link className="wordmark" href="/" aria-label="SpeakQL home">
           <SpeakQLLogo size={38} showText={true} />
         </Link>
         <div className="nav-links">
-          <a href="#islands">World</a>
-          <a href="#method">Method</a>
-          <a href="#scale-with-us">Scale &amp; Partners</a>
-          <a href="#status">Status</a>
+          <Link href="/world">World</Link>
+          <Link href="/method">Method</Link>
+          <Link href="/manifesto">Philosophy</Link>
+          <Link href="/scale">Scale &amp; Partners</Link>
           {identity ? (
             <Link className="nav-cta" href="/dashboard">
               Go to Dashboard <span>→</span>
@@ -100,8 +104,8 @@ export default async function Home() {
             <Link className="button button-primary" href={startLearningHref}>
               Start Learning <span>▶</span>
             </Link>
-            <a className="button button-secondary" href="#islands">
-              Explore SpeakQL <span>↓</span>
+            <a className="button button-secondary" href="#live-demo">
+              Experience Interactive Demo <span>↓</span>
             </a>
           </div>
         </div>
@@ -128,13 +132,34 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* 3. The Islands of Fluency - Signature Ocean World Preview */}
+      {/* 3. Live Interactive Product Simulator & Video Showcase */}
+      <InteractiveDemoShowcase />
+
+      {/* 4. The Islands of Fluency - Signature Ocean World Preview */}
       <section className="statement shell" id="islands">
-        <p className="section-kicker">THE ISLANDS OF FLUENCY</p>
-        <h2>
-          A living ocean journey.<br />
-          <span>Connected by glowing pathways.</span>
-        </h2>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: "20px" }}>
+          <div>
+            <p className="section-kicker">THE ISLANDS OF FLUENCY</p>
+            <h2>
+              A living ocean journey.<br />
+              <span>Connected by glowing pathways.</span>
+            </h2>
+          </div>
+          <Link
+            href="/world"
+            style={{
+              color: "#38bdf8",
+              fontSize: "14px",
+              fontWeight: 700,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+            }}
+          >
+            Explore all 4 islands in detail →
+          </Link>
+        </div>
+
         <div style={{ marginTop: "40px" }}>
           <p style={{ color: "var(--muted)", maxWidth: "700px", fontSize: "16px", lineHeight: "1.7", margin: "0 0 32px" }}>
             Progression in SpeakQL is not a boring checklist. It is an adventurous path through
@@ -149,8 +174,9 @@ export default async function Home() {
             }}
           >
             {islandDestinations.map((island) => (
-              <div
+              <Link
                 key={island.name}
+                href="/world"
                 style={{
                   background: "rgba(18, 24, 62, 0.75)",
                   backdropFilter: "blur(16px)",
@@ -161,8 +187,10 @@ export default async function Home() {
                   display: "flex",
                   flexDirection: "column",
                   gap: "12px",
+                  textDecoration: "none",
                   transition: "transform 0.2s ease, border-color 0.2s ease",
                 }}
+                className="island-preview-card"
               >
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span style={{ fontSize: "32px" }}>{island.icon}</span>
@@ -187,13 +215,16 @@ export default async function Home() {
                 <p style={{ margin: 0, fontSize: "13px", color: "var(--muted)", lineHeight: "1.6" }}>
                   {island.desc}
                 </p>
-              </div>
+                <span style={{ fontSize: "11px", fontWeight: 700, color: island.accent, marginTop: "auto", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                  View curriculum <span>→</span>
+                </span>
+              </Link>
             ))}
           </div>
         </div>
       </section>
 
-      {/* 4. Connected Practice Method */}
+      {/* 5. Connected Practice Method */}
       <section className="method shell" id="method">
         <div className="section-heading">
           <p className="section-kicker">A connected practice system</p>
@@ -204,22 +235,76 @@ export default async function Home() {
         </div>
         <div className="capability-list">
           {capabilities.map((capability) => (
-            <article className="capability" key={capability.number}>
+            <Link
+              href={capability.href}
+              className="capability"
+              key={capability.number}
+              style={{ textDecoration: "none" }}
+            >
               <span className="capability-number">{capability.number}</span>
               <div>
                 <h3>{capability.title}</h3>
                 <p>{capability.text}</p>
               </div>
               <span className="arrow">↗</span>
-            </article>
+            </Link>
           ))}
+        </div>
+
+        <div style={{ textAlign: "center", marginTop: "32px" }}>
+          <Link
+            href="/method"
+            style={{
+              color: "#c084fc",
+              fontSize: "14px",
+              fontWeight: 700,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+            }}
+          >
+            Learn about our 4 Cognitive Pillars of Fluency →
+          </Link>
         </div>
       </section>
 
-      {/* 5. Scale With Us & Partnerships Section */}
+      {/* 6. Human Philosophy Teaser */}
+      <section
+        className="shell"
+        style={{
+          margin: "40px auto 80px",
+          padding: "40px",
+          background: "linear-gradient(135deg, rgba(88, 28, 135, 0.25), rgba(15, 23, 58, 0.85))",
+          border: "1.5px solid rgba(168, 85, 247, 0.35)",
+          borderRadius: "24px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: "32px",
+          flexWrap: "wrap",
+        }}
+      >
+        <div style={{ maxWidth: "600px" }}>
+          <span style={{ fontSize: "11px", fontWeight: 800, color: "#38bdf8", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+            HUMAN BRAIN PHILOSOPHY
+          </span>
+          <h2 style={{ fontSize: "28px", fontWeight: 800, margin: "8px 0 12px", color: "#ffffff" }}>
+            Why language is presence, not cartoon points.
+          </h2>
+          <p style={{ margin: 0, fontSize: "15px", color: "#cbd5e1", lineHeight: 1.6 }}>
+            Discover why sterile flashcards fail under real conversational pressure, and how our psychological
+            sanctuary model liberates people to speak with authentic authority.
+          </p>
+        </div>
+        <Link className="button button-primary" href="/manifesto">
+          Read The Philosophy <span>→</span>
+        </Link>
+      </section>
+
+      {/* 7. Scale With Us & Partnerships Section */}
       <ScaleWithUsSection />
 
-      {/* 6. Platform Status & Foundation Assurance */}
+      {/* 8. Platform Status & Foundation Assurance */}
       <section className="status shell" id="status">
         <div className="status-card">
           <p className="section-kicker">Platform status · Active Learning System</p>
@@ -243,13 +328,20 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* 6. Ocean Footer with Mascot */}
+      {/* 9. Ocean Footer with Links */}
       <footer className="footer shell">
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <SpeakQLLogo size={28} showText={true} />
         </div>
+        <div style={{ display: "flex", gap: "24px", flexWrap: "wrap", fontSize: "13px" }}>
+          <Link href="/world" style={{ color: "#c4b5fd" }}>Living Ocean World</Link>
+          <Link href="/method" style={{ color: "#c4b5fd" }}>Cognitive Method</Link>
+          <Link href="/manifesto" style={{ color: "#c4b5fd" }}>Human Philosophy</Link>
+          <Link href="/scale" style={{ color: "#c4b5fd" }}>Institutions &amp; Scale</Link>
+          <Link href={startLearningHref} style={{ color: "#38bdf8" }}>Learner Platform</Link>
+        </div>
         <p>Natural language &amp; capability, practiced in context.</p>
-        <p>© 2026 SpeakQL · Ocean World</p>
+        <p>© {new Date().getFullYear()} SpeakQL · Ocean World</p>
       </footer>
     </main>
   );

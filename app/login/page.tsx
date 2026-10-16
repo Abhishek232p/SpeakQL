@@ -210,6 +210,35 @@ export default function LoginPage() {
           >
             {loading ? 'Diving in...' : isLogin ? 'Sign In ▶' : 'Create Free Account ▶'}
           </button>
+
+          {isLogin && (
+            <button
+              type="button"
+              onClick={() => {
+                setEmail('facttech.prime@gmail.com');
+                setPassword('Spk_2bQvm0RntGfCt9TRaD0nN8mM!9x');
+                toast.info('Test learner credentials populated. Click Sign In to enter.');
+              }}
+              style={{
+                width: '100%',
+                padding: '10px',
+                borderRadius: '10px',
+                border: '1px dashed rgba(56, 189, 248, 0.4)',
+                background: 'rgba(56, 189, 248, 0.08)',
+                color: '#38bdf8',
+                fontSize: '12px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+              }}
+            >
+              <span>🔑</span>
+              <span>Use Verified Demo Learner Credentials</span>
+            </button>
+          )}
         </form>
 
         <p style={{ marginTop: '1.75rem', textAlign: 'center', fontSize: '13px', color: '#c4b5fd' }}>
