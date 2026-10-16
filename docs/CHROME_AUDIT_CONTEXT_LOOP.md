@@ -18,9 +18,9 @@ Therefore this run did **not** render the actual dashboard or verify live UI, co
 | ID | Severity | Finding | Evidence | Expected behavior / acceptance test |
 |---|---|---|---|---|
 | SQ-CTX-001 | P1 | Selected starting point is UI-only. `selectedPoint` is used to display a preview; goal submission sends only `description`. The server curriculum generator never receives a structured starting-point field. | `app/dashboard/onboarding-goal-form.tsx`; `app/dashboard/actions.ts:createLearningGoal`; `src/server/goals/repository.ts:createGoal` | Choose each starting point, submit in a test account, and prove the generated curriculum differs according to verified prerequisites. Prefer a server-owned structured onboarding contract rather than trusting UI state. |
-| SQ-CTX-002 | P1 | Speech recognition language is hard-coded to Spanish only when the scenario text contains “spanish”; all other languages fall back to `en-US`. Japanese/Hindi/German/French voice input will be misconfigured. | `app/dashboard/speakql-lesson-modal.tsx`, around the recognition setup | Use a persisted target-language BCP-47 locale. Verify the selected locale reaches the browser speech engine and is shown to the learner; test supported and unsupported browsers. |
+| SQ-CTX-002 | P1 | **Patch applied on audit branch, not yet runtime-verified.** Speech recognition now derives a BCP-47 locale from the parsed exercise's language/context cues (Japanese, Hindi, Spanish, German, French, Mandarin, Italian, Portuguese; English fallback). A persisted onboarding locale is still the stronger final design. | `app/dashboard/speakql-lesson-modal.tsx` | Unit-test locale selection; verify the selected locale reaches browser speech recognition and test supported/unsupported browsers. |
 | SQ-CTX-003 | P1 | Curriculum generation is based on keyword matching the free-text goal, not a structured combination of native language, target language, proficiency, profession, and learning evidence. | `src/server/goals/curriculum.ts:detectTargetLanguage` and `generateGoalCurriculum` | Generate a deterministic structured plan from explicit onboarding fields. Test ambiguous goals, edits, unsupported languages, and professional domain combinations. |
-| SQ-CTX-004 | P1 | Current main-branch learning path unlocks the next lesson after any previous attempt, even if the latest result is `needs_work`. A separate draft PR changes this to mastery-gated progression, but it is not merged. | `src/server/goals/learning-path.ts`; draft PR #1 | Keep the next lesson locked after `needs_work`; unlock only after the latest prerequisite result is `mastered`. Run regression tests and ensure server actions enforce the same rule, not only visual state. |
+| SQ-CTX-004 | P1 | **Draft branch contains mastery-gated path logic, but main remains unchanged.** The lesson modal now removes the Skip action, prevents Continue after a failed/unknown evaluation, offers Try Again, and fails closed when the server returns no recognized score. | `src/server/goals/learning-path.ts`; `app/dashboard/speakql-lesson-modal.tsx`; draft PR #1 | Run tests for needs-work, missing evaluation, network error, retry, and mastered progression. Confirm server-side access also rejects locked exercise IDs. |
 | SQ-CTX-005 | P1 | The generic professional track list does not include Law or Healthcare, despite these being intended professional pathways. | `app/dashboard/onboarding-goal-form.tsx:PROFESSIONAL_TRACKS` | Add Law and Healthcare only when each has a domain-specific curriculum, evidence-based rubrics, safe scope, and professional-domain simulation. Do not imply legal/clinical qualification or certification. |
 | SQ-CTX-006 | P1 | The whiteboard exports a PNG, but its component text instructs the learner to transcribe notes into the response field for rubric evaluation. The drawing itself is not evaluated as handwriting/character correctness. | `src/client/components/digital-practice-whiteboard.tsx`, export action and instructional copy | Either implement handwriting/script recognition with confidence and feedback, or explicitly label the board as freehand notes and require typed/manual verification. Never count a drawn attempt as mastered without evidence. |
 | SQ-CTX-007 | P2 | The curriculum is sparse for a “zero to professional” journey: language-specific examples show one foundation exercise and then jump to a professional scenario. | `src/server/goals/curriculum.ts`, Japanese and Hindi branches | Add ordered stages: sound/script recognition → guided stroke/character writing → recall → syllables/words → phrases → sentence construction → short reading → paragraphs → speaking → roleplay → profession simulations. Each stage needs measurable mastery criteria. |
@@ -34,7 +34,12 @@ Therefore this run did **not** render the actual dashboard or verify live UI, co
 - **Probable:** these defects will cause mismatches in a real learner journey, depending on the exact language/goal selected.
 - **Unknown:** the current live Chrome appearance, actual console/network failures, current database behavior, and physical-device behavior. These were not verified in this run.
 
-## 3. Context loop — mandatory workflow for every audit/build cycle
+## 3. Changes written in the draft branch (not yet tested in a local runtime)
+
+- `app/dashboard/speakql-lesson-modal.tsx`: added cue-based speech locale selection for Japanese, Hindi, Spanish, German, French, Mandarin, Italian, and Portuguese; removed the Skip control; prevents progression unless the evaluation score is `mastered`; missing/unknown score no longer gets heuristic mastery; failed answers offer Try Again and preserve the response.
+- These are source changes only. Typecheck, unit tests, CI, and actual Chrome behavior have **not** been verified in this tool session. Treat the patch as awaiting validation, not release-ready.
+
+## 4. Context loop — mandatory workflow for every audit/build cycle
 
 Use one loop at a time. Never mark a stage “verified” without saved evidence.
 
@@ -51,7 +56,7 @@ Use one loop at a time. Never mark a stage “verified” without saved evidence
 
 Loop exit criteria: the original defect is reproduced, fixed, regression-tested, and re-observed in Chrome. If the browser cannot reach the target, record **BLOCKED** and do not infer visual success from source code.
 
-## 4. Required Chrome route matrix
+## 5. Required Chrome route matrix
 
 - `/` — purpose, primary CTA, navigation, responsive overflow.
 - `/signup` and `/login` — validation, auth errors, password visibility, keyboard behavior, session creation.
@@ -64,7 +69,7 @@ Loop exit criteria: the original defect is reproduced, fixed, regression-tested,
 - Offline / slow network — draft preservation, explicit save status, no false success.
 - Viewports — 320×568, 375×667, 768×1024, 1280×800, 1440×900. Check horizontal overflow, visible controls, keyboard focus, touch targets, reduced motion.
 
-## 5. End-to-end golden learner test
+## 6. End-to-end golden learner test
 
 Test scenario: a learner selects German as their native language, Japanese as target language, “complete beginner”, and “law” as professional goal.
 
@@ -82,7 +87,7 @@ Expected path:
 11. Later introduce legal vocabulary, client roleplay, and professional simulations with domain-appropriate rubrics.
 12. Reload and sign in on another device; the server-backed learning state must remain consistent.
 
-## 6. Next actions, ordered
+## 7. Next actions, ordered
 
 1. Make local Chrome available to the test runner or provide a reachable preview URL; then perform the real visual audit before making UI-specific claims.
 2. Merge only after review/testing the draft mastery-gating PR; verify server-side authorization of lesson access.
@@ -92,6 +97,6 @@ Expected path:
 6. Add Law/Healthcare tracks only after their curriculum and evaluation rubrics are reviewed.
 7. Re-run the Playwright suite and publish an evidence artifact. Update any “verified” status only from the run output.
 
-## 7. Audit safety
+## 8. Audit safety
 
 Read-only browser inspection by default. Use disposable test accounts for signup, goal creation, and evaluation. Do not use real patient/client data, do not expose credentials in logs, and do not deploy or migrate databases during the audit loop.
