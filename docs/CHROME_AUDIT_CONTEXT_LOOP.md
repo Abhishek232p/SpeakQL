@@ -34,12 +34,18 @@ Therefore this run did **not** render the actual dashboard or verify live UI, co
 - **Probable:** these defects will cause mismatches in a real learner journey, depending on the exact language/goal selected.
 - **Unknown:** the current live Chrome appearance, actual console/network failures, current database behavior, and physical-device behavior. These were not verified in this run.
 
-## 3. Changes written in the draft branch (not yet tested in a local runtime)
+## 3. Product-wide learning and engineering contract
+
+The authoritative product-wide implementation contract is now documented in [ASD_STE100_CONTEXT_LOOP_ENGINEERING.md](./ASD_STE100_CONTEXT_LOOP_ENGINEERING.md). It defines the multimodal learning experience (typing, speaking, listening, reading, and writing), evidence-based mastery, accessibility and failure states, learner agency, ethical application of learning psychology, privacy boundaries, acceptance criteria, and the required Observe → Specify → Design → Implement → Test → Verify → Audit → Document → Release Gate → Learn workflow.
+
+This document is ASD-STE100-inspired for clear, controlled instructions; it is not a claim of official ASD-STE100 compliance. The new specification is a product contract, not evidence that every listed capability is already implemented.
+
+## 4. Changes written in the draft branch (not yet tested in a local runtime)
 
 - `app/dashboard/speakql-lesson-modal.tsx`: added cue-based speech locale selection for Japanese, Hindi, Spanish, German, French, Mandarin, Italian, and Portuguese; removed the Skip control; prevents progression unless the evaluation score is `mastered`; missing/unknown score no longer gets heuristic mastery; failed answers offer Try Again and preserve the response.
 - These are source changes only. Typecheck, unit tests, CI, and actual Chrome behavior have **not** been verified in this tool session. Treat the patch as awaiting validation, not release-ready.
 
-## 4. Context loop — mandatory workflow for every audit/build cycle
+## 5. Context loop — mandatory workflow for every audit/build cycle
 
 Use one loop at a time. Never mark a stage “verified” without saved evidence.
 
@@ -56,7 +62,7 @@ Use one loop at a time. Never mark a stage “verified” without saved evidence
 
 Loop exit criteria: the original defect is reproduced, fixed, regression-tested, and re-observed in Chrome. If the browser cannot reach the target, record **BLOCKED** and do not infer visual success from source code.
 
-## 5. Required Chrome route matrix
+## 6. Required Chrome route matrix
 
 - `/` — purpose, primary CTA, navigation, responsive overflow.
 - `/signup` and `/login` — validation, auth errors, password visibility, keyboard behavior, session creation.
@@ -69,7 +75,7 @@ Loop exit criteria: the original defect is reproduced, fixed, regression-tested,
 - Offline / slow network — draft preservation, explicit save status, no false success.
 - Viewports — 320×568, 375×667, 768×1024, 1280×800, 1440×900. Check horizontal overflow, visible controls, keyboard focus, touch targets, reduced motion.
 
-## 6. End-to-end golden learner test
+## 7. End-to-end golden learner test
 
 Test scenario: a learner selects German as their native language, Japanese as target language, “complete beginner”, and “law” as professional goal.
 
@@ -87,7 +93,7 @@ Expected path:
 11. Later introduce legal vocabulary, client roleplay, and professional simulations with domain-appropriate rubrics.
 12. Reload and sign in on another device; the server-backed learning state must remain consistent.
 
-## 7. Next actions, ordered
+## 8. Next actions, ordered
 
 1. Make local Chrome available to the test runner or provide a reachable preview URL; then perform the real visual audit before making UI-specific claims.
 2. Merge only after review/testing the draft mastery-gating PR; verify server-side authorization of lesson access.
@@ -97,6 +103,6 @@ Expected path:
 6. Add Law/Healthcare tracks only after their curriculum and evaluation rubrics are reviewed.
 7. Re-run the Playwright suite and publish an evidence artifact. Update any “verified” status only from the run output.
 
-## 8. Audit safety
+## 9. Audit safety
 
 Read-only browser inspection by default. Use disposable test accounts for signup, goal creation, and evaluation. Do not use real patient/client data, do not expose credentials in logs, and do not deploy or migrate databases during the audit loop.
