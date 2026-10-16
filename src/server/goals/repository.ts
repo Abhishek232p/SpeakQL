@@ -7,7 +7,7 @@ import {
   serializeEvaluationFeedback,
   type EvaluationBoundary,
 } from "@/src/server/evaluation/boundary";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, asc } from "drizzle-orm";
 import { generateGoalCurriculum } from "./curriculum";
 import { deriveLearningPath } from "./learning-path";
 
@@ -21,6 +21,7 @@ export type DashboardCompetencyRecord = Readonly<{
   goalId: string;
   description: string;
   status: string;
+  createdAt?: Date | string | number | null;
 }>;
 
 export type DashboardExerciseRecord = Readonly<{
@@ -431,7 +432,8 @@ export function createGoalsRepository(db: Database, options: GoalsRepositoryOpti
         
         let compRes = await tx.select()
           .from(competencies)
-          .where(eq(competencies.goalId, activeGoal.id));
+          .where(eq(competencies.goalId, activeGoal.id))
+          .orderBy(asc(competencies.createdAt), asc(competencies.id));
           
         let exRes = await tx.select({
           id: practiceExercises.id,
@@ -442,7 +444,8 @@ export function createGoalsRepository(db: Database, options: GoalsRepositoryOpti
         })
         .from(practiceExercises)
         .innerJoin(competencies, eq(practiceExercises.competencyId, competencies.id))
-        .where(eq(competencies.goalId, activeGoal.id));
+        .where(eq(competencies.goalId, activeGoal.id))
+        .orderBy(asc(practiceExercises.createdAt), asc(practiceExercises.id));
 
         const evRes = await tx.select({
           id: practiceEvaluations.id,
@@ -524,6 +527,7 @@ export function createGoalsRepository(db: Database, options: GoalsRepositoryOpti
           expectedStructure: practiceExercises.expectedStructure,
           competencyId: practiceExercises.competencyId,
           goalId: competencies.goalId,
+          goalDescription: learningGoals.description,
         })
           .from(practiceExercises)
           .innerJoin(competencies, eq(practiceExercises.competencyId, competencies.id))
@@ -547,9 +551,11 @@ export function createGoalsRepository(db: Database, options: GoalsRepositoryOpti
           goalId: competencies.goalId,
           description: competencies.description,
           status: competencies.status,
+          createdAt: competencies.createdAt,
         })
           .from(competencies)
-          .where(eq(competencies.goalId, ownedExercise[0].goalId));
+          .where(eq(competencies.goalId, ownedExercise[0].goalId))
+          .orderBy(asc(competencies.createdAt), asc(competencies.id));
 
         const goalExercises = await tx.select({
           id: practiceExercises.id,
@@ -560,7 +566,8 @@ export function createGoalsRepository(db: Database, options: GoalsRepositoryOpti
         })
           .from(practiceExercises)
           .innerJoin(competencies, eq(practiceExercises.competencyId, competencies.id))
-          .where(eq(competencies.goalId, ownedExercise[0].goalId));
+          .where(eq(competencies.goalId, ownedExercise[0].goalId))
+          .orderBy(asc(practiceExercises.createdAt), asc(practiceExercises.id));
 
         const goalEvaluations = await tx.select({
           id: practiceEvaluations.id,
@@ -577,7 +584,13 @@ export function createGoalsRepository(db: Database, options: GoalsRepositoryOpti
           .where(eq(competencies.goalId, ownedExercise[0].goalId));
 
         if (goalCompetencies.length > 0 && goalExercises.length > 0) {
-          const learningPath = deriveLearningPath(goalCompetencies, goalExercises, goalEvaluations);
+          const learningPath = deriveLearningPath(
+            goalCompetencies,
+            goalExercises,
+            goalEvaluations,
+            null,
+            { goalDescription: ownedExercise[0].goalDescription }
+          );
           const currentLesson = learningPath.modules
             .flatMap((m) => m.lessons)
             .find((l) => l.id === exerciseId);

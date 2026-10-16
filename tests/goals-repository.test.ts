@@ -52,8 +52,8 @@ const isEvaluationInsert = (query: Query) => query.text.startsWith('insert into 
 
 function writeRows(query: Query): Rows | undefined {
   if (isUserRead(query)) return [[userId]];
-  if (isOwnershipCheck(query)) return [[exerciseId, "Respond to the customer with context.", "A professional response with context.", competencyId, goalId]];
-  if (isCompetenciesRead(query)) return [[competencyId, goalId, "Core competency", "pending"]];
+  if (isOwnershipCheck(query)) return [[exerciseId, "Respond to the customer with context.", "A professional response with context.", competencyId, goalId, "Practice goal description"]];
+  if (isCompetenciesRead(query)) return [[competencyId, goalId, "Core competency", "pending", timestamp]];
   if (isGoalExercisesRead(query)) return [[exerciseId, competencyId, "Respond to the customer with context.", "A professional response with context.", timestamp]];
   if (isGoalEvaluationsRead(query)) return [];
   if (query.text.startsWith('insert into "learning_goals"')) return [[goalId, ...query.params, "active", timestamp, timestamp]];
@@ -192,8 +192,8 @@ describe("Goals Repository Security & Parameterization (mock driver)", () => {
     const exercise2Id = "00000000-0000-4000-8000-000000000009";
     const f = fixture((query) => {
       if (isUserRead(query)) return [[userId]];
-      if (isOwnershipCheck(query)) return [[exercise2Id, "Scenario 2", "Structure 2", competencyId, goalId]];
-      if (isCompetenciesRead(query)) return [[competencyId, goalId, "Core competency", "pending"]];
+      if (isOwnershipCheck(query)) return [[exercise2Id, "Scenario 2", "Structure 2", competencyId, goalId, "Goal Description"]];
+      if (isCompetenciesRead(query)) return [[competencyId, goalId, "Core competency", "pending", timestamp]];
       if (isGoalExercisesRead(query)) return [
         [exerciseId, competencyId, "Scenario 1", "Structure 1", timestamp],
         [exercise2Id, competencyId, "Scenario 2", "Structure 2", timestamp],
@@ -214,8 +214,8 @@ describe("Goals Repository Security & Parameterization (mock driver)", () => {
     const exercise2Id = "00000000-0000-4000-8000-000000000009";
     const f = fixture((query) => {
       if (isUserRead(query)) return [[userId]];
-      if (isOwnershipCheck(query)) return [[exercise2Id, "Scenario 2", "Structure 2", competencyId, goalId]];
-      if (isCompetenciesRead(query)) return [[competencyId, goalId, "Core competency", "pending"]];
+      if (isOwnershipCheck(query)) return [[exercise2Id, "Scenario 2", "Structure 2", competencyId, goalId, "Goal Description"]];
+      if (isCompetenciesRead(query)) return [[competencyId, goalId, "Core competency", "pending", timestamp]];
       if (isGoalExercisesRead(query)) return [
         [exerciseId, competencyId, "Scenario 1", "Structure 1", timestamp],
         [exercise2Id, competencyId, "Scenario 2", "Structure 2", timestamp],
@@ -236,8 +236,8 @@ describe("Goals Repository Security & Parameterization (mock driver)", () => {
     const exercise2Id = "00000000-0000-4000-8000-000000000009";
     const f = fixture((query) => {
       if (isUserRead(query)) return [[userId]];
-      if (isOwnershipCheck(query)) return [[exercise2Id, "Scenario 2", "Structure 2", competencyId, goalId]];
-      if (isCompetenciesRead(query)) return [[competencyId, goalId, "Core competency", "pending"]];
+      if (isOwnershipCheck(query)) return [[exercise2Id, "Scenario 2", "Structure 2", competencyId, goalId, "Goal Description"]];
+      if (isCompetenciesRead(query)) return [[competencyId, goalId, "Core competency", "pending", timestamp]];
       if (isGoalExercisesRead(query)) return [
         [exerciseId, competencyId, "Scenario 1", "Structure 1", timestamp],
         [exercise2Id, competencyId, "Scenario 2", "Structure 2", timestamp],
@@ -254,6 +254,127 @@ describe("Goals Repository Security & Parameterization (mock driver)", () => {
     ).rejects.toThrow(ExerciseAccessLockedError);
 
     expect(f.queries.some(isEvaluationInsert)).toBe(false);
+  });
+
+  it("blocks direct requests for EVERY dependent exercise across multiple competencies when an earlier prerequisite is unmastered", async () => {
+    const comp1Id = "00000000-0000-4000-8000-000000000003";
+    const comp2Id = "00000000-0000-4000-8000-000000000013";
+    const ex1Id = "00000000-0000-4000-8000-000000000004";
+    const ex2Id = "00000000-0000-4000-8000-000000000005";
+    const ex3Id = "00000000-0000-4000-8000-000000000006";
+    const ex4Id = "00000000-0000-4000-8000-000000000007";
+
+    const makeFixture = (targetId: string) =>
+      fixture((query) => {
+        if (isUserRead(query)) return [[userId]];
+        if (isOwnershipCheck(query)) {
+          const targetComp = targetId === ex1Id || targetId === ex2Id ? comp1Id : comp2Id;
+          return [[targetId, `Scenario for ${targetId}`, `Structure for ${targetId}`, targetComp, goalId, "Goal Description"]];
+        }
+        if (isCompetenciesRead(query)) {
+          return [
+            [comp1Id, goalId, "Competency 1", "pending", "2026-10-10T12:00:00.000Z"],
+            [comp2Id, goalId, "Competency 2", "pending", "2026-10-10T12:01:00.000Z"],
+          ];
+        }
+        if (isGoalExercisesRead(query)) {
+          return [
+            [ex1Id, comp1Id, "Scenario 1", "Structure 1", "2026-10-10T12:00:00.000Z"],
+            [ex2Id, comp1Id, "Scenario 2", "Structure 2", "2026-10-10T12:00:10.000Z"],
+            [ex3Id, comp2Id, "Scenario 3", "Structure 3", "2026-10-10T12:01:00.000Z"],
+            [ex4Id, comp2Id, "Scenario 4", "Structure 4", "2026-10-10T12:01:10.000Z"],
+          ];
+        }
+        // Ex 1 received needs_work; no subsequent exercise has been evaluated
+        if (isGoalEvaluationsRead(query)) {
+          return [[evaluationId, ex1Id, userId, "Incomplete attempt", "Feedback", "needs_work", timestamp]];
+        }
+        if (isEvaluationInsert(query)) return [[evaluationId, ...query.params, timestamp]];
+      });
+
+    // Dependent exercise in same competency is blocked
+    const f2 = makeFixture(ex2Id);
+    await expect(f2.repository.evaluateExercise(identity, ex2Id, "Direct attempt on ex 2")).rejects.toThrow(
+      ExerciseAccessLockedError
+    );
+    expect(f2.queries.some(isEvaluationInsert)).toBe(false);
+
+    // Dependent exercise in next competency is blocked
+    const f3 = makeFixture(ex3Id);
+    await expect(f3.repository.evaluateExercise(identity, ex3Id, "Direct attempt on ex 3")).rejects.toThrow(
+      ExerciseAccessLockedError
+    );
+    expect(f3.queries.some(isEvaluationInsert)).toBe(false);
+
+    // Final dependent exercise is also blocked
+    const f4 = makeFixture(ex4Id);
+    await expect(f4.repository.evaluateExercise(identity, ex4Id, "Direct attempt on ex 4")).rejects.toThrow(
+      ExerciseAccessLockedError
+    );
+    expect(f4.queries.some(isEvaluationInsert)).toBe(false);
+  });
+
+  it("enforces deterministic lesson ordering and access checks even when database results are returned in shuffled order", async () => {
+    const comp1Id = "00000000-0000-4000-8000-000000000003";
+    const comp2Id = "00000000-0000-4000-8000-000000000013";
+    const ex1Id = "00000000-0000-4000-8000-000000000004";
+    const ex2Id = "00000000-0000-4000-8000-000000000005";
+    const ex3Id = "00000000-0000-4000-8000-000000000006";
+
+    // DB returns competencies in reverse order (comp2 before comp1) and exercises in reverse order
+    const f = fixture((query) => {
+      if (isUserRead(query)) return [[userId]];
+      if (isOwnershipCheck(query)) return [[ex3Id, "Scenario 3", "Structure 3", comp2Id, goalId, "Goal Description"]];
+      if (isCompetenciesRead(query)) {
+        return [
+          [comp2Id, goalId, "Competency 2", "pending", "2026-10-10T12:02:00.000Z"],
+          [comp1Id, goalId, "Competency 1", "pending", "2026-10-10T12:00:00.000Z"],
+        ];
+      }
+      if (isGoalExercisesRead(query)) {
+        return [
+          [ex3Id, comp2Id, "Scenario 3", "Structure 3", "2026-10-10T12:02:00.000Z"],
+          [ex2Id, comp1Id, "Scenario 2", "Structure 2", "2026-10-10T12:00:30.000Z"],
+          [ex1Id, comp1Id, "Scenario 1", "Structure 1", "2026-10-10T12:00:00.000Z"],
+        ];
+      }
+      // ex1 was mastered, but ex2 has not been attempted yet
+      if (isGoalEvaluationsRead(query)) {
+        return [[evaluationId, ex1Id, userId, "Good attempt", "Feedback", "mastered", timestamp]];
+      }
+      if (isEvaluationInsert(query)) return [[evaluationId, ...query.params, timestamp]];
+    });
+
+    // ex3 is locked because ex2 is unmastered, despite shuffled DB return order
+    await expect(f.repository.evaluateExercise(identity, ex3Id, "Attempt on ex 3")).rejects.toThrow(
+      ExerciseAccessLockedError
+    );
+    expect(f.queries.some(isEvaluationInsert)).toBe(false);
+  });
+
+  it("confirms that retrying a failed lesson (needs_work) remains permitted and records the retry evaluation", async () => {
+    const f = fixture((query) => {
+      if (isUserRead(query)) return [[userId]];
+      if (isOwnershipCheck(query)) return [[exerciseId, "Scenario 1", "Structure 1", competencyId, goalId, "Goal Description"]];
+      if (isCompetenciesRead(query)) return [[competencyId, goalId, "Core competency", "pending", timestamp]];
+      if (isGoalExercisesRead(query)) return [[exerciseId, competencyId, "Scenario 1", "Structure 1", timestamp]];
+      // Lesson 1 received needs_work on initial attempt
+      if (isGoalEvaluationsRead(query)) {
+        return [[evaluationId, exerciseId, userId, "Initial flawed response", "Feedback", "needs_work", timestamp]];
+      }
+      if (isEvaluationInsert(query)) return [[evaluationId, ...query.params, timestamp]];
+    });
+
+    // Retrying a failed lesson must be permitted (state is review_recommended, not locked)
+    const retryEvaluation = await f.repository.evaluateExercise(
+      identity,
+      exerciseId,
+      "Yesterday I resolved the service latency issue. Today I am addressing the caching layer."
+    );
+
+    expect(retryEvaluation).toBeDefined();
+    expect(retryEvaluation.userResponse).toContain("resolved the service latency issue");
+    expect(f.queries.some(isEvaluationInsert)).toBe(true);
   });
 
   it("rejects unauthorized access if identity is missing", async () => {
