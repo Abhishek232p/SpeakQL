@@ -97,11 +97,18 @@ The curriculum must be generated from structured inputs, not free-text keyword m
 - Learning goal / desired real-world outcome
 - Native or preferred explanation language
 - Target language, when relevant
+- Starting level selection: `Fresher`, `Intermediate`, or `Advanced`
 - Current proficiency (self-reported, diagnostic only)
 - Professional or everyday context
 - Target environment/country/culture when relevant
 - Preferred practice modes: type, speak, listen, read, write
 - Session duration and accessibility preferences
+
+### Starting-level behavior
+- **Fresher:** begin with the first foundational sequence and verify each prerequisite.
+- **Intermediate:** begin with an intermediate-appropriate placement task; identify and assign missing prerequisites based on evidence.
+- **Advanced:** begin with advanced diagnostic tasks; focus on demonstrated gaps rather than repeating mastered material.
+- The selected level is an initial preference, not proof of mastery. A diagnostic must validate the starting point. If diagnostic/branching support is not implemented for a language, disclose that limitation and do not pretend the learner has been automatically placed.
 
 ### Curriculum hierarchy
 1. Orientation and diagnostic baseline
