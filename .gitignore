@@ -15,6 +15,10 @@ __pycache__/
 .venv/
 coverage/
 *.tsbuildinfo
+.open-next/
+.worker-next/
+.wrangler/
+.dev.vars
 
 # Local tooling and logs
 .opencode/node_modules/
