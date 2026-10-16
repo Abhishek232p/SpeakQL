@@ -19,11 +19,11 @@ const LANGUAGES: LanguageOption[] = [
   { code: "fr", name: "French", flag: "🇫🇷", scriptNote: "Nuanced dialogue & diplomacy" },
 ];
 
-const STARTING_POINTS = [
-  { id: "foundation", label: "Script Foundations", desc: "Start with letters, characters, stroke orders, and sounds" },
-  { id: "words", label: "Core Vocabulary", desc: "Build essential high-frequency words and basic phrases" },
-  { id: "sentences", label: "Sentence Construction", desc: "Form coherent ideas and participate in daily syncs" },
-  { id: "professional", label: "Professional Fluency", desc: "Practice high-stakes trade-offs, negotiations, and presentations" },
+const EXPERIENCE_LEVELS = [
+  { id: "beginner", label: "Complete beginner", desc: "Start with the target language's script, characters, and sounds." },
+  { id: "basic", label: "I know a few words", desc: "The placement check will verify reading and writing before advancing." },
+  { id: "intermediate", label: "I can form sentences", desc: "The placement check still verifies each foundation; self-report never skips mastery gates." },
+  { id: "advanced", label: "I can already communicate", desc: "A short diagnostic can identify demonstrated skills; locked stages stay locked until verified." },
 ];
 
 const PROFESSIONAL_TRACKS = [
@@ -31,11 +31,13 @@ const PROFESSIONAL_TRACKS = [
   { id: "business", label: "Client Negotiation & Leadership", icon: "🤝", defaultGoal: "Negotiate client contract scope and handle spontaneous stakeholder feedback" },
   { id: "academic", label: "Research & Presentations", icon: "🎓", defaultGoal: "Defend research methodology and data trade-offs in front of peer review committees" },
   { id: "networking", label: "Everyday Networking & Culture", icon: "☕", defaultGoal: "Participate in casual networking mixers and explain complex work simply" },
+  { id: "law", label: "Law & Legal Practice", icon: "⚖️", defaultGoal: "Communicate with clients, explain legal concepts, and discuss documents in a legal workplace" },
+  { id: "healthcare", label: "Healthcare & Clinical Communication", icon: "🩺", defaultGoal: "Communicate clearly with patients and colleagues in a healthcare setting" },
 ];
 
 export default function OnboardingGoalForm() {
   const [selectedLang, setSelectedLang] = useState<string>("Japanese");
-  const [selectedPoint, setSelectedPoint] = useState<string>("foundation");
+  const [selectedExperience, setSelectedExperience] = useState<string>("beginner");
   const [selectedTrack, setSelectedTrack] = useState<string>("engineering");
   const [customDescription, setCustomDescription] = useState<string>(
     "Lead daily engineering standups and explain architecture dependencies in Japanese"
@@ -63,7 +65,13 @@ export default function OnboardingGoalForm() {
       action={async (formData) => {
         setIsSubmitting(true);
         try {
-          await createLearningGoal(formData);
+          // Self-reported experience personalizes the diagnostic only; it cannot bypass the foundation mastery gate.
+          const enriched = new FormData(formData);
+          enriched.set(
+            "description",
+            `${String(formData.get("description") ?? "").trim()} | Self-reported level: ${selectedExperience}. Begin with foundational diagnostic; unlock later stages only after mastery.`
+          );
+          await createLearningGoal(enriched);
         } finally {
           setIsSubmitting(false);
         }
@@ -143,20 +151,24 @@ export default function OnboardingGoalForm() {
         </div>
       )}
 
-      {/* STEP 2: STARTING POINT & PROFICIENCY */}
+      {/* STEP 2: SELF-REPORTED EXPERIENCE — NEVER A BYPASS */}
       {step === 2 && (
         <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
           <label style={{ fontSize: "14px", fontWeight: 700, color: "#ffffff" }}>
-            2. Choose Your Starting Point in {selectedLang}
+            2. How comfortable are you with {selectedLang} today?
           </label>
+          <p style={{ margin: 0, color: "#94a3b8", fontSize: "12px", lineHeight: 1.5 }}>
+            This helps tailor the first diagnostic. It does not unlock advanced lessons. SpeakQL verifies demonstrated skills before each new stage.
+          </p>
           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            {STARTING_POINTS.map((pt) => {
-              const isSelected = selectedPoint === pt.id;
+            {EXPERIENCE_LEVELS.map((level) => {
+              const isSelected = selectedExperience === level.id;
               return (
                 <button
-                  key={pt.id}
+                  key={level.id}
                   type="button"
-                  onClick={() => setSelectedPoint(pt.id)}
+                  onClick={() => setSelectedExperience(level.id)}
+                  aria-pressed={isSelected}
                   style={{
                     display: "flex",
                     flexDirection: "column",
@@ -167,35 +179,24 @@ export default function OnboardingGoalForm() {
                     background: isSelected ? "rgba(56, 189, 248, 0.12)" : "rgba(22, 28, 70, 0.5)",
                     cursor: "pointer",
                     textAlign: "left",
-                    transition: "all 0.15s ease",
                   }}
                 >
                   <span style={{ fontSize: "14px", fontWeight: 700, color: isSelected ? "#38bdf8" : "#ffffff" }}>
-                    {pt.label}
+                    {level.label}
                   </span>
                   <span style={{ fontSize: "12px", color: "#94a3b8", marginTop: "2px" }}>
-                    {pt.desc}
+                    {level.desc}
                   </span>
                 </button>
               );
             })}
           </div>
-
           <div style={{ display: "flex", justifyContent: "space-between", marginTop: "12px" }}>
-            <button
-              type="button"
-              onClick={() => setStep(1)}
-              style={{ background: "transparent", border: "none", color: "#94a3b8", cursor: "pointer", fontSize: "13px" }}
-            >
+            <button type="button" onClick={() => setStep(1)} style={{ background: "transparent", border: "none", color: "#94a3b8", cursor: "pointer", fontSize: "13px" }}>
               ← Back
             </button>
-            <button
-              type="button"
-              onClick={() => setStep(3)}
-              className="button button-primary"
-              style={{ padding: "10px 20px" }}
-            >
-              Next: Goal &amp; Scenario →
+            <button type="button" onClick={() => setStep(3)} className="button button-primary" style={{ padding: "10px 20px" }}>
+              Next: Goal &amp; Profession →
             </button>
           </div>
         </div>
@@ -284,10 +285,10 @@ export default function OnboardingGoalForm() {
               🗺️ Personalized Island Roadmap Preview
             </span>
             <span style={{ fontSize: "13px", color: "#e2e8f0" }}>
-              Target: <strong>{selectedLang}</strong> · Starting: <strong>{STARTING_POINTS.find(p => p.id === selectedPoint)?.label}</strong>
+              Target: <strong>{selectedLang}</strong> · Start: <strong>Foundations + mastery check</strong>
             </span>
             <span style={{ fontSize: "12px", color: "#94a3b8" }}>
-              Multimodal practice active: Typing, Digital Whiteboard Script Tracing, and Spoken Communication.
+              Initial access: character-by-character whiteboard and typing practice. Voice, paragraphs, and professional simulations unlock only after their prerequisite stages are mastered.
             </span>
           </div>
 
