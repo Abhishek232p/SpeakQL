@@ -32,6 +32,16 @@ describe("Canonical End-to-End Learner Journey (ASD-STE100 Spec)", () => {
     expect(standupPlan.exercises[0].scenarioPrompt).toContain("お疲れ様です");
   });
 
+  it("uses the selected starting level to configure the initial Japanese exercise difficulty", () => {
+    const fresher = generateGoalCurriculum("Learn Japanese", "fresher");
+    const intermediate = generateGoalCurriculum("Learn Japanese", "intermediate");
+    const advanced = generateGoalCurriculum("Learn Japanese", "advanced");
+
+    expect(parseExerciseDetails(fresher[0].exercises[0].scenarioPrompt, fresher[0].exercises[0].expectedStructure).difficulty).toBe("Foundational");
+    expect(parseExerciseDetails(intermediate[0].exercises[0].scenarioPrompt, intermediate[0].exercises[0].expectedStructure).difficulty).toBe("Intermediate");
+    expect(parseExerciseDetails(advanced[0].exercises[0].scenarioPrompt, advanced[0].exercises[0].expectedStructure).difficulty).toBe("Advanced");
+  });
+
   it("generates language-aware curriculum for Hindi with Devanagari script foundations", () => {
     const plans = generateGoalCurriculum("Deliver technical status updates in Hindi");
     expect(plans.length).toBeGreaterThanOrEqual(2);
