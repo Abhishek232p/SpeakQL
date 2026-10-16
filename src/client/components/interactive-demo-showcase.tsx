@@ -86,7 +86,10 @@ export default function InteractiveDemoShowcase() {
   const scenario = SCENARIOS[selectedScenarioIndex];
 
   const [selectedTokens, setSelectedTokens] = useState<string[]>([]);
-  const [availableTokens, setAvailableTokens] = useState<string[]>([]);
+  const [availableTokens, setAvailableTokens] = useState<string[]>(() => [
+    ...SCENARIOS[0].targetTokens,
+    ...SCENARIOS[0].distractorTokens,
+  ]);
   const [isPlayingAuto, setIsPlayingAuto] = useState<boolean>(false);
   const [isEvaluated, setIsEvaluated] = useState<boolean>(false);
   const [activeStep, setActiveStep] = useState<"intro" | "building" | "evaluating" | "celebrating">("intro");
@@ -94,16 +97,17 @@ export default function InteractiveDemoShowcase() {
 
   const autoPlayTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Initialize tokens when scenario changes
-  useEffect(() => {
-    const combined = [...scenario.targetTokens, ...scenario.distractorTokens].sort(() => 0.5 - Math.random());
+  const handleSelectScenario = (idx: number) => {
+    setSelectedScenarioIndex(idx);
+    const target = SCENARIOS[idx];
+    const combined = [...target.targetTokens, ...target.distractorTokens].sort(() => 0.5 - Math.random());
     setAvailableTokens(combined);
     setSelectedTokens([]);
     setIsEvaluated(false);
     setActiveStep("intro");
     if (autoPlayTimerRef.current) clearTimeout(autoPlayTimerRef.current);
     setIsPlayingAuto(false);
-  }, [selectedScenarioIndex, scenario]);
+  };
 
   // Clean up timers on unmount
   useEffect(() => {
@@ -277,7 +281,7 @@ export default function InteractiveDemoShowcase() {
                 type="button"
                 onClick={() => {
                   sound.playPop();
-                  setSelectedScenarioIndex(idx);
+                  handleSelectScenario(idx);
                 }}
                 style={{
                   background:

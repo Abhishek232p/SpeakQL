@@ -1,7 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import type { Metadata } from "next";
-import { SpeakQLLogo, WhaleMascot } from "@/src/client/components/whale-mascot";
+import { SpeakQLLogo } from "@/src/client/components/whale-mascot";
 import { createSupabaseAuthProvider } from "@/src/server/auth/supabase";
 
 export const metadata: Metadata = {

@@ -57,6 +57,10 @@ jobs:
         run: npm ci
 
       - name: Run Vitest Suite (Unit, Integration, Secret Scan)
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: "https://placeholder-ci.supabase.co"
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: "placeholder-ci-anon-key"
+          DATABASE_URL: "postgresql://speakql_app:ci-secret@localhost:5432/speakql_ci"
         run: npm test
 
   build:
