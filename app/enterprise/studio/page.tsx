@@ -237,7 +237,7 @@ export default function ScenarioAuthoringStudioPage() {
       </header>
 
       {/* Main Studio Workspace */}
-      <div style={{ display: "grid", gridTemplateColumns: "340px 1fr", flex: 1 }}>
+      <div className="studio-workspace-grid">
         {/* Left Column: Scenario Registry */}
         <aside
           style={{
@@ -429,7 +429,7 @@ export default function ScenarioAuthoringStudioPage() {
 
           {/* TAB 1: Metadata */}
           {activeTab === "metadata" && (
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+            <div className="studio-2col-grid">
               <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                 <div>
                   <label style={{ fontSize: "12px", fontWeight: 700, color: "#94a3b8", display: "block", marginBottom: "6px" }}>
@@ -576,7 +576,7 @@ export default function ScenarioAuthoringStudioPage() {
                   Define the proportional weight of each cognitive dimension. Total weights must sum to 100%.
                 </p>
 
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "20px" }}>
+                <div className="studio-4col-grid">
                   {[
                     { label: "Clarity & Conciseness", key: "clarityWeight" as const },
                     { label: "Technical Accuracy", key: "technicalAccuracyWeight" as const },
@@ -713,7 +713,7 @@ export default function ScenarioAuthoringStudioPage() {
                     </span>
                   </div>
 
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px", marginBottom: "16px" }}>
+                  <div className="studio-4col-grid" style={{ marginBottom: "16px" }}>
                     <div style={{ background: "rgba(30, 41, 59, 0.6)", padding: "12px", borderRadius: "10px" }}>
                       <span style={{ fontSize: "11px", color: "#94a3b8" }}>Clarity</span>
                       <strong style={{ display: "block", fontSize: "16px", color: "#f8fafc" }}>{simulatedScore.clarity}%</strong>

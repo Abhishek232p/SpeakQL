@@ -20,11 +20,15 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#060919",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#060919" },
+    { media: "(prefers-color-scheme: dark)", color: "#060919" },
+  ],
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
   viewportFit: "cover",
+  interactiveWidget: "resizes-content",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

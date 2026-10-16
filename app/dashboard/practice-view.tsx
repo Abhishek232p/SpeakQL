@@ -866,7 +866,7 @@ export default function PracticeView({
               {evalResult.feedback}
             </p>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginTop: "0.75rem", marginBottom: "0.75rem" }}>
+            <div className="form-row-2col" style={{ marginTop: "0.75rem", marginBottom: "0.75rem" }}>
               <div style={{ background: "rgba(15, 23, 42, 0.6)", padding: "0.75rem", borderRadius: "0.5rem" }}>
                 <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "#4ade80", textTransform: "uppercase" }}>
                   Strengths

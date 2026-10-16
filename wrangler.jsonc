@@ -10,6 +10,10 @@
     "directory": ".open-next/assets",
     "binding": "ASSETS"
   },
+  "vars": {
+    "NEXT_PUBLIC_SUPABASE_URL": "https://hwqdufgiiufyknuoierh.supabase.co",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_U9HkatlRa8qBAgtp_UzrJg_YsNftsTm"
+  },
   "observability": {
     "enabled": true
   }

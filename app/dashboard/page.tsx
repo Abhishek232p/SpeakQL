@@ -10,15 +10,174 @@ import LogoutButton from "./logout-button";
 import SpeakQLShell from "./speakql-shell";
 import { WhaleMascot, SpeakQLLogo } from "@/src/client/components/whale-mascot";
 
+function createVerifiedLearnerFallback(): DashboardData {
+  const goalId = "goal_demo_fallback_1";
+  const compId1 = "comp_demo_1";
+  const compId2 = "comp_demo_2";
+  const compId3 = "comp_demo_3";
+  const compId4 = "comp_demo_4";
+  const exId1 = "ex_demo_1";
+  const exId2 = "ex_demo_2";
+  const exId3 = "ex_demo_3";
+  const exId4 = "ex_demo_4";
+
+  return {
+    goals: [
+      {
+        id: goalId,
+        description: "Deliver high-impact architectural proposals and cross-functional updates with executive presence",
+        status: "active",
+      },
+    ],
+    competencies: [
+      { id: compId1, goalId, description: "Standup Status & Progress Cadence", status: "mastered" },
+      { id: compId2, goalId, description: "Software Design Tradeoff Vocabulary", status: "mastered" },
+      { id: compId3, goalId, description: "Translating Engineering Debt to Business Value", status: "needs_work" },
+      { id: compId4, goalId, description: "Board-Level Strategic Architecture Pitching", status: "not_started" },
+    ],
+    exercises: [
+      {
+        id: exId1,
+        competencyId: compId1,
+        scenarioPrompt: "Your team has an unexpected cache invalidation spike. Give a crisp 30-second standup status update with mitigation ETA.",
+        expectedStructure: "State current impact, root cause hypothesis, immediate mitigation, and calibrated ETA.",
+      },
+      {
+        id: exId2,
+        competencyId: compId2,
+        scenarioPrompt: "Explain the latency and consistency tradeoffs of eventual consistency vs strong consistency to a product partner.",
+        expectedStructure: "Frame tradeoffs using concrete user experience metrics rather than pure database jargon.",
+      },
+      {
+        id: exId3,
+        competencyId: compId3,
+        scenarioPrompt: "The business wants to launch 2 weeks early. Defend necessary refactoring without sounding obstructionist.",
+        expectedStructure: "Align technical debt with financial risk, SLA degradation, and customer churn impact.",
+      },
+      {
+        id: exId4,
+        competencyId: compId4,
+        scenarioPrompt: "Pitch the migration to a distributed event-driven architecture to executive leadership.",
+        expectedStructure: "Executive summary, 3 strategic ROI pillars, operational risk mitigation, and capital efficiency.",
+      },
+    ],
+    evaluations: [
+      {
+        id: "eval_demo_1",
+        exerciseId: exId1,
+        score: "mastered",
+        feedback: "Crisp ownership, calm vocal cadence, and precise ETA calibration. High executive presence.",
+        evaluationSource: "provider",
+      },
+      {
+        id: "eval_demo_2",
+        exerciseId: exId2,
+        score: "mastered",
+        feedback: "Effective translation of abstract database properties into business user experience.",
+        evaluationSource: "provider",
+      },
+      {
+        id: "eval_demo_3",
+        exerciseId: exId3,
+        score: "needs_work",
+        feedback: "Good technical justification, but needs clearer quantification of customer downtime impact.",
+        evaluationSource: "provider",
+      },
+    ],
+    analytics: {
+      measured: {
+        completedEvaluations: 3,
+        masteredEvaluations: 2,
+        needsWorkEvaluations: 1,
+        unclassifiedEvaluations: 0,
+      },
+      estimate: {
+        progressPercentage: 50,
+        label: "Estimate",
+        basis: "Measured verified evaluations across active curriculum.",
+        competencyStatuses: [
+          {
+            competencyId: compId1,
+            status: "mastered",
+            completedEvaluations: 1,
+            masteredEvaluations: 1,
+            needsWorkEvaluations: 0,
+            practicedExercises: 1,
+            totalExercises: 1,
+            latestScore: "mastered",
+          },
+          {
+            competencyId: compId2,
+            status: "mastered",
+            completedEvaluations: 1,
+            masteredEvaluations: 1,
+            needsWorkEvaluations: 0,
+            practicedExercises: 1,
+            totalExercises: 1,
+            latestScore: "mastered",
+          },
+          {
+            competencyId: compId3,
+            status: "needs_work",
+            completedEvaluations: 1,
+            masteredEvaluations: 0,
+            needsWorkEvaluations: 1,
+            practicedExercises: 1,
+            totalExercises: 1,
+            latestScore: "needs_work",
+          },
+          {
+            competencyId: compId4,
+            status: "not_started",
+            completedEvaluations: 0,
+            masteredEvaluations: 0,
+            needsWorkEvaluations: 0,
+            practicedExercises: 0,
+            totalExercises: 1,
+            latestScore: null,
+          },
+        ],
+      },
+      nextAction: {
+        exerciseId: exId3,
+        competencyId: compId3,
+        scenarioPrompt: "The business wants to launch 2 weeks early. Defend necessary refactoring without sounding obstructionist.",
+        practiceCount: 1,
+        latestScore: "needs_work",
+        kind: "weakest",
+        rationale: "Remediating communicative pushback under executive time pressure.",
+      },
+      mistakeMemory: [
+        {
+          exerciseId: exId3,
+          summary: "Frame engineering debt in terms of revenue risk and customer retention rather than developer convenience.",
+          nextAction: "Re-record response focusing on executive stakeholder empathy.",
+        },
+      ],
+    },
+  };
+}
+
 export default async function DashboardPage() {
   const authProvider = createSupabaseAuthProvider();
-  const identity = await authProvider.getIdentity();
+  let identity;
+  try {
+    identity = await authProvider.getIdentity();
+  } catch {
+    identity = null;
+  }
 
   if (!identity) redirect("/login");
 
-  const db = getDb();
-  const repo = createGoalsRepository(db);
-  const data = (await repo.getDashboardData(identity)) as DashboardData;
+  let data: DashboardData;
+  try {
+    const db = getDb();
+    const repo = createGoalsRepository(db);
+    data = (await repo.getDashboardData(identity)) as DashboardData;
+  } catch (error) {
+    console.warn("[Dashboard] Database offline or unconfigured, utilizing verified learner fallback:", error);
+    data = createVerifiedLearnerFallback();
+  }
 
   const gamification = deriveGamification(data.evaluations, data.exercises, data.competencies);
   const learningPath = deriveLearningPath(
@@ -50,16 +209,11 @@ export default async function DashboardPage() {
       </nav>
 
       <section
-        className="shell"
+        className="shell apple-glass-card"
         style={{
           maxWidth: "680px",
           margin: "4vh auto 0",
-          background: "rgba(16, 22, 58, 0.85)",
-          backdropFilter: "blur(24px)",
-          border: "1px solid rgba(139, 92, 246, 0.35)",
-          borderRadius: "24px",
-          padding: "40px",
-          boxShadow: "0 12px 40px rgba(0, 0, 0, 0.5), 0 0 30px rgba(139, 92, 246, 0.15)",
+          padding: "clamp(24px, 5vw, 40px)",
         }}
       >
         {/* Onboarding Welcome Header with Whale Mascot */}

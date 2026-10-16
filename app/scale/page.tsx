@@ -553,7 +553,7 @@ export default function ScaleWithUsPage() {
                 </div>
               )}
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+              <div className="form-row-2col">
                 <div>
                   <label
                     htmlFor="contact-name"

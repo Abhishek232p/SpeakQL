@@ -401,7 +401,7 @@ export default function InteractiveDemoShowcase() {
           </div>
 
           {/* Interactive Stage Canvas */}
-          <div style={{ padding: "32px 28px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "32px" }}>
+          <div className="demo-stage-grid">
             {/* Left Column: Context, Coach & Token Builder */}
             <div>
               {/* Scenario Context Box */}
@@ -748,7 +748,7 @@ export default function InteractiveDemoShowcase() {
                 <div
                   style={{
                     display: "grid",
-                    gridTemplateColumns: "1fr 1fr 1fr",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(90px, 1fr))",
                     gap: "8px",
                   }}
                 >

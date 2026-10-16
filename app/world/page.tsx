@@ -202,12 +202,12 @@ export default async function WorldPage() {
           borderRadius: "24px",
         }}
       >
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "40px", alignItems: "center" }}>
+        <div className="spatial-neuro-grid">
           <div>
             <span style={{ fontSize: "11px", fontWeight: 800, color: "#c084fc", letterSpacing: "0.1em", textTransform: "uppercase" }}>
               NEURO-GEOGRAPHY &amp; RETENTION
             </span>
-            <h2 style={{ fontSize: "32px", fontWeight: 800, margin: "8px 0 16px", color: "#ffffff", letterSpacing: "-0.02em" }}>
+            <h2 style={{ fontSize: "clamp(24px, 4vw, 32px)", fontWeight: 800, margin: "8px 0 16px", color: "#ffffff", letterSpacing: "-0.02em" }}>
               Why spatial islands outlast abstract flashcards.
             </h2>
             <p style={{ color: "var(--muted)", fontSize: "15px", lineHeight: 1.7, margin: "0 0 16px" }}>
@@ -257,16 +257,10 @@ export default async function WorldPage() {
           {ISLANDS.map((island, index) => (
             <div
               key={island.id}
+              className="island-showcase-grid apple-glass-card"
               style={{
-                background: "rgba(14, 20, 54, 0.85)",
-                backdropFilter: "blur(20px)",
                 border: `1.5px solid rgba(${island.accentRgb}, 0.35)`,
-                borderRadius: "24px",
-                padding: "36px 32px",
                 boxShadow: `0 12px 40px rgba(0, 0, 0, 0.4), 0 0 30px rgba(${island.accentRgb}, 0.12)`,
-                display: "grid",
-                gridTemplateColumns: "1.2fr 1fr",
-                gap: "36px",
               }}
             >
               <div>

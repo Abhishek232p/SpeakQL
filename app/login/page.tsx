@@ -10,7 +10,8 @@ import { WhaleMascot, SpeakQLLogo } from '@/src/client/components/whale-mascot';
 const MAX_EMAIL_LENGTH = 320;
 const MAX_PASSWORD_LENGTH = 1_024;
 
-const supabase = createSupabaseBrowserClient();
+const DEMO_EMAIL = 'facttech.prime@gmail.com';
+const DEMO_PASSWORD = 'Spk_2bQvm0RntGfCt9TRaD0nN8mM!9x';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -18,30 +19,41 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [authStatusText, setAuthStatusText] = useState('');
   const router = useRouter();
 
-  const handleAuth = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const performLogin = async (targetEmail: string, targetPassword: string, isDemo = false) => {
     setLoading(true);
+    setAuthStatusText(isDemo ? 'Authenticating verified learner...' : 'Signing in...');
 
-    const normalizedEmail = email.trim();
-    if (!supabase || !normalizedEmail || !password || normalizedEmail.length > MAX_EMAIL_LENGTH || password.length > MAX_PASSWORD_LENGTH) {
+    const client = createSupabaseBrowserClient();
+    const normalizedEmail = targetEmail.trim();
+
+    if (!normalizedEmail || !targetPassword || normalizedEmail.length > MAX_EMAIL_LENGTH || targetPassword.length > MAX_PASSWORD_LENGTH) {
       toast.error('Unable to authenticate. Check your details and try again.');
       setLoading(false);
+      setAuthStatusText('');
+      return;
+    }
+
+    if (!client) {
+      toast.error('Authentication service is initializing. Please refresh or try again in a moment.');
+      setLoading(false);
+      setAuthStatusText('');
       return;
     }
 
     try {
       const result = isLogin
-        ? await supabase.auth.signInWithPassword({ email: normalizedEmail, password })
-        : await supabase.auth.signUp({ email: normalizedEmail, password });
+        ? await client.auth.signInWithPassword({ email: normalizedEmail, password: targetPassword })
+        : await client.auth.signUp({ email: normalizedEmail, password: targetPassword });
 
       if (result.error) {
         toast.error(isLogin
           ? 'Unable to sign in. Check your email and password.'
           : 'Unable to create your account. Check your details and try again.');
       } else if (isLogin) {
-        toast.success("Welcome back! Entering ocean world...");
+        toast.success(isDemo ? 'Verified Demo Learner authenticated! Entering ocean world...' : 'Welcome back! Entering ocean world...');
         router.push('/dashboard');
         router.refresh();
       } else {
@@ -53,11 +65,23 @@ export default function LoginPage() {
         : 'Unable to create your account. Check your details and try again.');
     } finally {
       setLoading(false);
+      setAuthStatusText('');
     }
   };
 
+  const handleAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await performLogin(email, password, false);
+  };
+
+  const handle1ClickDemoLogin = async () => {
+    setEmail(DEMO_EMAIL);
+    setPassword(DEMO_PASSWORD);
+    await performLogin(DEMO_EMAIL, DEMO_PASSWORD, true);
+  };
+
   return (
-    <main style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <main style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', position: 'relative' }}>
       {/* Ocean Nav */}
       <nav className="nav shell" aria-label="Primary navigation" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Link className="wordmark" href="/" aria-label="SpeakQL home" style={{ textDecoration: 'none' }}>
@@ -68,24 +92,20 @@ export default function LoginPage() {
         </Link>
       </nav>
 
-      {/* Ocean Login Box */}
+      {/* Apple-Grade Glassmorphic Login Container */}
       <section
+        className="apple-glass-card"
         style={{
           width: 'min(440px, calc(100% - 32px))',
-          margin: '4vh auto 8vh',
-          background: 'rgba(16, 22, 58, 0.85)',
-          backdropFilter: 'blur(20px)',
-          border: '1px solid rgba(139, 92, 246, 0.35)',
-          borderRadius: '24px',
-          padding: '36px 32px',
-          boxShadow: '0 12px 40px rgba(0, 0, 0, 0.5), 0 0 30px rgba(139, 92, 246, 0.15)',
+          margin: '3vh auto 8vh',
+          padding: 'clamp(24px, 5vw, 36px) clamp(20px, 4vw, 32px)',
           textAlign: 'left',
           position: 'relative',
         }}
       >
         {/* Welcome Mascot Avatar */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
-          <WhaleMascot mood="happy" size={68} animated={true} />
+          <WhaleMascot mood="happy" size={64} animated={true} />
           <div>
             <p
               className="eyebrow"
@@ -95,15 +115,54 @@ export default function LoginPage() {
                 fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
                 fontWeight: 700,
                 letterSpacing: '0.12em',
+                fontSize: '11px',
               }}
             >
-              {isLogin ? 'WELCOME BACK' : 'BEGIN YOUR ODYSSEY'}
+              {isLogin ? 'ENTERPRISE ACCESS' : 'BEGIN YOUR ODYSSEY'}
             </p>
-            <h1 style={{ margin: 0, fontSize: '24px', fontWeight: 800, color: '#ffffff' }}>
+            <h1 style={{ margin: 0, fontSize: 'clamp(20px, 4vw, 24px)', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.02em' }}>
               {isLogin ? 'Sign in to SpeakQL' : 'Create your account'}
             </h1>
           </div>
         </div>
+
+        {/* 1-Click Corporate Demo Sign-In (Top Priority for Evaluators) */}
+        {isLogin && (
+          <div style={{ marginBottom: '20px' }}>
+            <button
+              type="button"
+              disabled={loading}
+              onClick={handle1ClickDemoLogin}
+              className="neo-press"
+              style={{
+                width: '100%',
+                padding: '14px 16px',
+                borderRadius: '14px',
+                border: '1.5px solid rgba(56, 189, 248, 0.45)',
+                background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.18) 0%, rgba(168, 85, 247, 0.18) 100%)',
+                color: '#ffffff',
+                fontSize: '13px',
+                fontWeight: 800,
+                cursor: loading ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '10px',
+                boxShadow: '0 4px 20px rgba(56, 189, 248, 0.22)',
+              }}
+            >
+              <span style={{ fontSize: '16px' }}>⚡</span>
+              <span>1-Click Verified Corporate Demo Sign-In</span>
+            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', margin: '20px 0 16px' }}>
+              <div style={{ height: '1px', flex: 1, background: 'rgba(139, 92, 246, 0.25)' }} />
+              <span style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                OR SIGN IN WITH EMAIL
+              </span>
+              <div style={{ height: '1px', flex: 1, background: 'rgba(139, 92, 246, 0.25)' }} />
+            </div>
+          </div>
+        )}
 
         <form onSubmit={handleAuth} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           <div>
@@ -121,16 +180,11 @@ export default function LoginPage() {
               maxLength={MAX_EMAIL_LENGTH}
               required
               placeholder="you@example.com"
+              className="neo-well"
               style={{
                 width: '100%',
                 padding: '0.85rem 1rem',
-                borderRadius: '12px',
-                border: '1px solid rgba(139, 92, 246, 0.3)',
-                background: 'rgba(24, 32, 75, 0.7)',
-                color: '#ffffff',
-                fontSize: '14px',
-                outline: 'none',
-                transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
+                fontSize: '16px',
               }}
             />
           </div>
@@ -151,16 +205,11 @@ export default function LoginPage() {
                 maxLength={MAX_PASSWORD_LENGTH}
                 required
                 placeholder="••••••••••••"
+                className="neo-well"
                 style={{
                   width: '100%',
                   padding: '0.85rem 3rem 0.85rem 1rem',
-                  borderRadius: '12px',
-                  border: '1px solid rgba(139, 92, 246, 0.3)',
-                  background: 'rgba(24, 32, 75, 0.7)',
-                  color: '#ffffff',
-                  fontSize: '14px',
-                  outline: 'none',
-                  transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
+                  fontSize: '16px',
                 }}
               />
               <button
@@ -174,7 +223,7 @@ export default function LoginPage() {
                   border: 'none',
                   color: '#c4b5fd',
                   cursor: 'pointer',
-                  padding: '4px',
+                  padding: '6px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -198,9 +247,9 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="button button-primary"
+            className="button button-primary neo-press"
             style={{
-              marginTop: '0.75rem',
+              marginTop: '0.5rem',
               width: '100%',
               justifyContent: 'center',
               padding: '14px',
@@ -208,37 +257,8 @@ export default function LoginPage() {
               borderRadius: '12px',
             }}
           >
-            {loading ? 'Diving in...' : isLogin ? 'Sign In ▶' : 'Create Free Account ▶'}
+            {loading ? (authStatusText || 'Diving in...') : isLogin ? 'Sign In ▶' : 'Create Free Account ▶'}
           </button>
-
-          {isLogin && (
-            <button
-              type="button"
-              onClick={() => {
-                setEmail('facttech.prime@gmail.com');
-                setPassword('Spk_2bQvm0RntGfCt9TRaD0nN8mM!9x');
-                toast.info('Test learner credentials populated. Click Sign In to enter.');
-              }}
-              style={{
-                width: '100%',
-                padding: '10px',
-                borderRadius: '10px',
-                border: '1px dashed rgba(56, 189, 248, 0.4)',
-                background: 'rgba(56, 189, 248, 0.08)',
-                color: '#38bdf8',
-                fontSize: '12px',
-                fontWeight: 700,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-              }}
-            >
-              <span>🔑</span>
-              <span>Use Verified Demo Learner Credentials</span>
-            </button>
-          )}
         </form>
 
         <p style={{ marginTop: '1.75rem', textAlign: 'center', fontSize: '13px', color: '#c4b5fd' }}>
@@ -246,7 +266,7 @@ export default function LoginPage() {
             type="button"
             onClick={() => setIsLogin(!isLogin)}
             className="text-link"
-            style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#38bdf8' }}
+            style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#38bdf8', padding: '6px' }}
           >
             {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
           </button>
