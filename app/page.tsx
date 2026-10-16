@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { createSupabaseAuthProvider } from "@/src/server/auth/supabase";
+import { getOptionalIdentity } from "@/src/server/auth/optional-identity";
 import { WhaleMascot, SpeakQLLogo } from "@/src/client/components/whale-mascot";
 import ScaleWithUsSection from "@/src/client/components/scale-with-us-section";
 import InteractiveDemoShowcase from "@/src/client/components/interactive-demo-showcase";
@@ -57,8 +57,7 @@ const islandDestinations = [
 ];
 
 export default async function Home() {
-  const authProvider = createSupabaseAuthProvider();
-  const identity = await authProvider.getIdentity();
+  const identity = await getOptionalIdentity();
 
   const startLearningHref = identity ? "/dashboard" : "/login";
 

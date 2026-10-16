@@ -2,7 +2,7 @@ import React from "react";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { SpeakQLLogo, WhaleMascot } from "@/src/client/components/whale-mascot";
-import { createSupabaseAuthProvider } from "@/src/server/auth/supabase";
+import { getOptionalIdentity } from "@/src/server/auth/optional-identity";
 
 export const metadata: Metadata = {
   title: "The Human Brain & Communication Philosophy · Manifesto | SpeakQL",
@@ -11,8 +11,7 @@ export const metadata: Metadata = {
 };
 
 export default async function ManifestoPage() {
-  const authProvider = createSupabaseAuthProvider();
-  const identity = await authProvider.getIdentity();
+  const identity = await getOptionalIdentity();
   const startLearningHref = identity ? "/dashboard" : "/login";
 
   return (

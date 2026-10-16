@@ -2,7 +2,7 @@ import React from "react";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { SpeakQLLogo } from "@/src/client/components/whale-mascot";
-import { createSupabaseAuthProvider } from "@/src/server/auth/supabase";
+import { getOptionalIdentity } from "@/src/server/auth/optional-identity";
 
 export const metadata: Metadata = {
   title: "The Cognitive Learning Architecture · Methodology | SpeakQL",
@@ -39,8 +39,7 @@ const COMPARISONS = [
 ];
 
 export default async function MethodPage() {
-  const authProvider = createSupabaseAuthProvider();
-  const identity = await authProvider.getIdentity();
+  const identity = await getOptionalIdentity();
   const startLearningHref = identity ? "/dashboard" : "/login";
 
   return (
