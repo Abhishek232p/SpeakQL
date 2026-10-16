@@ -55,7 +55,7 @@ function normalizeScore(score: string): DashboardScore {
 
 /**
  * Builds an engaging, ordered Learning Path from competencies, exercises, and recorded evaluations.
- * Lessons unlock progressively as preceding activities are attempted or mastered.
+ * Lessons unlock only when the immediately preceding lesson is mastered. An attempt or a needs-work result never unlocks later content.
  */
 export function deriveLearningPath(
   competencies: readonly DashboardCompetencyRecord[],
@@ -102,15 +102,24 @@ export function deriveLearningPath(
       } else if (practiceCount > 0) {
         state = "in_progress";
       } else {
-        // For unpracticed exercises, check prerequisite:
-        // First exercise is always available.
-        // Subsequent exercises unlock if previous exercise has at least 1 practice attempt.
+        // First lesson is the only initial entry point.
+        // Every later lesson requires a mastered result for the immediately preceding exercise.
+        // A failed attempt must never unlock more advanced content.
         if (order === 1) {
           state = "available";
         } else {
           const prevEx = exercises[order - 2];
-          const prevPracticeCount = prevEx ? (evaluationsByExercise.get(prevEx.id)?.length ?? 0) : 0;
-          state = prevPracticeCount > 0 ? "available" : "locked";
+          const previousEvaluations = prevEx ? (evaluationsByExercise.get(prevEx.id) ?? []) : [];
+          const latestPreviousEvaluation = previousEvaluations
+            .slice()
+            .sort((a, b) => {
+              const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+              const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+              return timeB - timeA;
+            })[0];
+          state = latestPreviousEvaluation && normalizeScore(latestPreviousEvaluation.score) === "mastered"
+            ? "available"
+            : "locked";
         }
       }
 
