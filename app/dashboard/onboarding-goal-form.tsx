@@ -80,15 +80,21 @@ export default function OnboardingGoalForm() {
     >
       {/* Step Indicator */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px" }}>
-        <div style={{ display: "flex", gap: "6px" }}>
+        <div role="tablist" aria-label="Onboarding steps" style={{ display: "flex", gap: "6px" }}>
           {[1, 2, 3].map((s) => (
-            <div
+            <button
               key={s}
+              type="button"
+              role="tab"
+              aria-selected={s === step}
+              aria-label={`Step ${s} of 3: ${s === 1 ? "Target language" : s === 2 ? "Experience level" : "Professional context"}`}
               onClick={() => setStep(s)}
               style={{
                 width: s === step ? "28px" : "10px",
-                height: "6px",
-                borderRadius: "3px",
+                height: "8px",
+                borderRadius: "4px",
+                border: "none",
+                padding: 0,
                 background: s === step ? "#38bdf8" : s < step ? "#818cf8" : "rgba(255, 255, 255, 0.2)",
                 transition: "all 0.25s ease",
                 cursor: "pointer",
@@ -103,17 +109,18 @@ export default function OnboardingGoalForm() {
 
       {/* STEP 1: TARGET LANGUAGE SELECTION */}
       {step === 1 && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }} aria-live="polite">
           <label style={{ fontSize: "14px", fontWeight: 700, color: "#ffffff" }}>
             1. Select Target Language
           </label>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "10px" }}>
+          <div role="group" aria-label="Target language options" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "10px" }}>
             {LANGUAGES.map((lang) => {
               const isSelected = selectedLang === lang.name;
               return (
                 <button
                   key={lang.code}
                   type="button"
+                  aria-pressed={isSelected}
                   onClick={() => handleLanguageChange(lang.name)}
                   style={{
                     display: "flex",
@@ -128,7 +135,7 @@ export default function OnboardingGoalForm() {
                     transition: "all 0.15s ease",
                   }}
                 >
-                  <span style={{ fontSize: "20px", marginBottom: "4px" }}>{lang.flag}</span>
+                  <span style={{ fontSize: "20px", marginBottom: "4px" }} aria-hidden="true">{lang.flag}</span>
                   <span style={{ fontSize: "14px", fontWeight: 700, color: isSelected ? "#38bdf8" : "#ffffff" }}>
                     {lang.name}
                   </span>
@@ -153,14 +160,14 @@ export default function OnboardingGoalForm() {
 
       {/* STEP 2: SELF-REPORTED EXPERIENCE — NEVER A BYPASS */}
       {step === 2 && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }} aria-live="polite">
           <label style={{ fontSize: "14px", fontWeight: 700, color: "#ffffff" }}>
             2. How comfortable are you with {selectedLang} today?
           </label>
           <p style={{ margin: 0, color: "#94a3b8", fontSize: "12px", lineHeight: 1.5 }}>
             This helps tailor the first diagnostic. It does not unlock advanced lessons. SpeakQL verifies demonstrated skills before each new stage.
           </p>
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          <div role="group" aria-label="Experience level options" style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
             {EXPERIENCE_LEVELS.map((level) => {
               const isSelected = selectedExperience === level.id;
               return (
@@ -204,18 +211,19 @@ export default function OnboardingGoalForm() {
 
       {/* STEP 3: PROFESSIONAL FOCUS & OUTCOME DEFINITION */}
       {step === 3 && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "14px" }} aria-live="polite">
           <div>
-            <label style={{ fontSize: "14px", fontWeight: 700, color: "#ffffff", display: "block", marginBottom: "8px" }}>
+            <label id="prof-context-label" style={{ fontSize: "14px", fontWeight: 700, color: "#ffffff", display: "block", marginBottom: "8px" }}>
               3. Select Professional Context
             </label>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "8px" }}>
+            <div role="group" aria-labelledby="prof-context-label" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "8px" }}>
               {PROFESSIONAL_TRACKS.map((track) => {
                 const isSelected = selectedTrack === track.id;
                 return (
                   <button
                     key={track.id}
                     type="button"
+                    aria-pressed={isSelected}
                     onClick={() => handleTrackChange(track.id)}
                     style={{
                       display: "flex",
@@ -232,7 +240,7 @@ export default function OnboardingGoalForm() {
                       fontWeight: 600,
                     }}
                   >
-                    <span>{track.icon}</span>
+                    <span aria-hidden="true">{track.icon}</span>
                     <span>{track.label}</span>
                   </button>
                 );

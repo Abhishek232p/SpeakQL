@@ -264,6 +264,13 @@ export class ExerciseAccessLockedError extends Error {
   }
 }
 
+export class ExerciseNotFoundError extends Error {
+  constructor(message = "Exercise not found or not owned by user.") {
+    super(message);
+    this.name = "ExerciseNotFoundError";
+  }
+}
+
 export type LearnerStartingLevel = "fresher" | "intermediate" | "advanced";
 
 export interface GoalInput {
@@ -541,7 +548,7 @@ export function createGoalsRepository(db: Database, options: GoalsRepositoryOpti
           ))
           .limit(1);
 
-        if (!ownedExercise[0]) throw new Error("Exercise not found or not owned by user.");
+        if (!ownedExercise[0]) throw new ExerciseNotFoundError();
 
         // Server-side lesson access enforcement:
         // Ensure that direct requests cannot evaluate locked exercises.

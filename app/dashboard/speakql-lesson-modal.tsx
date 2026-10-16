@@ -440,7 +440,7 @@ function ActiveQuestionCard({ exercise, onAnswerSubmit, onNextQuestion }: Questi
             </div>
           ) : (
             <div className="duo-footer-feedback-row">
-              <div className="duo-feedback-message-block">
+              <div className="duo-feedback-message-block" role="alert" aria-live="polite">
                 <div className="duo-feedback-icon" aria-hidden="true">
                   {feedbackState === "correct" ? "✓" : "✕"}
                 </div>
@@ -552,7 +552,7 @@ export default function SpeakQLLessonModal({
           ✕
         </button>
 
-        <div className="duo-progress-container" role="progressbar" aria-valuenow={progressPercent} aria-valuemin={0} aria-valuemax={100}>
+        <div className="duo-progress-container" role="progressbar" aria-label={`Lesson progress: ${progressPercent}%`} aria-valuenow={progressPercent} aria-valuemin={0} aria-valuemax={100}>
           <div className="duo-progress-track">
             <div className="duo-progress-fill" style={{ width: `${progressPercent}%` }}>
               <div className="duo-progress-highlight" />
@@ -574,7 +574,7 @@ export default function SpeakQLLessonModal({
             {isMuted ? "🔇" : "🔊"}
           </button>
 
-          <div className="duo-hearts-badge" title={`${activeHeartCount} hearts remaining`}>
+          <div className="duo-hearts-badge" role="status" aria-label={`${activeHeartCount} hearts remaining`} title={`${activeHeartCount} hearts remaining`}>
             <span className="duo-heart-icon" aria-hidden="true">❤️</span>
             <span className="duo-heart-count">{activeHeartCount}</span>
           </div>

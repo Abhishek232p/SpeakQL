@@ -93,11 +93,11 @@ export default function LeaderboardView({ userXp, userStreak }: LeaderboardViewP
                 }`}
               >
                 <div className="row-rank-col">
-                  <span className={`rank-number ${item.rank <= 3 ? `rank-top-${item.rank}` : ""}`}>
+                  <span className={`rank-number ${item.rank <= 3 ? `rank-top-${item.rank}` : ""}`} aria-label={`Rank ${item.rank}`}>
                     {item.rank <= 3 ? ["🥇", "🥈", "🥉"][item.rank - 1] : item.rank}
                   </span>
-                  {isPromo && <span className="promo-arrow" title="In promotion zone">▲</span>}
-                  {isDemo && <span className="demo-arrow" title="In demotion zone">▼</span>}
+                  {isPromo && <span className="promo-arrow" aria-label="In promotion zone" title="In promotion zone">▲</span>}
+                  {isDemo && <span className="demo-arrow" aria-label="In demotion zone" title="In demotion zone">▼</span>}
                 </div>
 
                 <div className="row-avatar-col" aria-hidden="true">

@@ -99,9 +99,9 @@ export default function LoginPage() {
             >
               {isLogin ? 'WELCOME BACK' : 'BEGIN YOUR ODYSSEY'}
             </p>
-            <h2 style={{ margin: 0, fontSize: '24px', fontWeight: 800, color: '#ffffff' }}>
+            <h1 style={{ margin: 0, fontSize: '24px', fontWeight: 800, color: '#ffffff' }}>
               {isLogin ? 'Sign in to SpeakQL' : 'Create your account'}
-            </h2>
+            </h1>
           </div>
         </div>
 

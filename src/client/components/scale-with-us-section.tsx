@@ -627,16 +627,17 @@ export default function ScaleWithUsSection() {
 
             {/* Row 4: Areas of Interest Multi-Pills */}
             <div>
-              <span style={{ display: "block", fontSize: "13px", fontWeight: 600, color: "#ffffff", marginBottom: "6px" }}>
+              <span id="areas-of-focus-label" style={{ display: "block", fontSize: "13px", fontWeight: 600, color: "#ffffff", marginBottom: "6px" }}>
                 Key Areas of Focus (Select all that apply)
               </span>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+              <div role="group" aria-labelledby="areas-of-focus-label" style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                 {AREAS_OF_INTEREST.map((area) => {
                   const isSelected = formData.areasOfInterest.includes(area);
                   return (
                     <button
                       key={area}
                       type="button"
+                      aria-pressed={isSelected}
                       onClick={() => toggleAreaInterest(area)}
                       style={{
                         background: isSelected ? "rgba(56, 189, 248, 0.18)" : "rgba(255, 255, 255, 0.05)",
