@@ -132,11 +132,19 @@ export function parseExerciseDetails(
   };
 }
 
-export function generateGoalCurriculum(rawGoal: string): StructuredCompetencyPlan[] {
+export type LearnerStartingLevel = "fresher" | "intermediate" | "advanced";
+
+export function generateGoalCurriculum(
+  rawGoal: string,
+  startingLevel: LearnerStartingLevel = "fresher",
+): StructuredCompetencyPlan[] {
   const goal = rawGoal.trim();
   const lower = goal.toLowerCase();
   const language = detectTargetLanguage(goal);
   const isSpanish = language === "Spanish";
+  const requestedDifficulty: ParsedExerciseDetails["difficulty"] =
+    startingLevel === "advanced" ? "Advanced" :
+    startingLevel === "intermediate" ? "Intermediate" : "Foundational";
 
   const isTechOrStandup =
     lower.includes("standup") ||
@@ -176,7 +184,7 @@ export function generateGoalCurriculum(rawGoal: string): StructuredCompetencyPla
               expectedResponseType: "Hiragana vowels: あ い う え お",
               evaluationCriteria: "Accurate character production and phonetic recognition",
               estimatedMinutes: 3,
-              difficulty: "Foundational",
+              difficulty: requestedDifficulty,
               targetVocabulary: ["あ (a)", "い (i)", "う (u)", "え (e)", "お (o)"],
               speechPrompt: "Pronounce each vowel clearly: A (あ), I (い), U (う), E (え), O (お).",
             }),
