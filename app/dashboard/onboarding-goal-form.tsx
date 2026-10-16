@@ -20,10 +20,9 @@ const LANGUAGES: LanguageOption[] = [
 ];
 
 const EXPERIENCE_LEVELS = [
-  { id: "beginner", label: "Complete beginner", desc: "Start with the target language's script, characters, and sounds." },
-  { id: "basic", label: "I know a few words", desc: "The placement check will verify reading and writing before advancing." },
-  { id: "intermediate", label: "I can form sentences", desc: "The placement check still verifies each foundation; self-report never skips mastery gates." },
-  { id: "advanced", label: "I can already communicate", desc: "A short diagnostic can identify demonstrated skills; locked stages stay locked until verified." },
+  { id: "fresher", label: "Fresher / Beginner", desc: "Start from the first foundations: script, letters or characters, sounds, and guided writing." },
+  { id: "intermediate", label: "Intermediate", desc: "Begin with a level-appropriate diagnostic. Review missing foundations only where the evidence shows a gap." },
+  { id: "advanced", label: "Advanced", desc: "Begin with an advanced diagnostic and realistic tasks. Target only the gaps the assessment finds." },
 ];
 
 const PROFESSIONAL_TRACKS = [
@@ -69,8 +68,9 @@ export default function OnboardingGoalForm() {
           const enriched = new FormData(formData);
           enriched.set(
             "description",
-            `${String(formData.get("description") ?? "").trim()} | Self-reported level: ${selectedExperience}. Begin with foundational diagnostic; unlock later stages only after mastery.`
+            `${String(formData.get("description") ?? "").trim()} | SpeakQL starting level: ${selectedExperience}. Use this level to choose the initial diagnostic and curriculum entry point; verify actual ability before unlocking dependent stages.`
           );
+          enriched.set("startingLevel", selectedExperience);
           await createLearningGoal(enriched);
         } finally {
           setIsSubmitting(false);
@@ -146,7 +146,7 @@ export default function OnboardingGoalForm() {
             className="button button-primary"
             style={{ marginTop: "12px", alignSelf: "flex-end", padding: "10px 20px" }}
           >
-            Next: Starting Point →
+            Next: Your Level →
           </button>
         </div>
       )}
