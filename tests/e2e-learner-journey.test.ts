@@ -116,6 +116,29 @@ describe("Canonical End-to-End Learner Journey (ASD-STE100 Spec)", () => {
     expect(path.modules[1].lessons[0].state).toBe("locked"); // Locked until module 1 completed
   });
 
+  it("keeps the next lesson locked after needs_work and unlocks only after mastery", () => {
+    const competencies: DashboardCompetencyRecord[] = [
+      { id: "comp-1", goalId: "goal-1", description: "Foundational vowels", status: "pending" },
+      { id: "comp-2", goalId: "goal-1", description: "Core vocabulary", status: "pending" },
+    ];
+    const exercises: DashboardExerciseRecord[] = [
+      { id: "ex-1", competencyId: "comp-1", scenarioPrompt: "Recognize あ", expectedStructure: "あ" },
+      { id: "ex-2", competencyId: "comp-2", scenarioPrompt: "Read a basic word", expectedStructure: "A valid word" },
+    ];
+
+    const failedPath = deriveLearningPath(competencies, exercises, [
+      { id: "ev-1", exerciseId: "ex-1", score: "needs_work", createdAt: "2026-10-16T10:00:00Z" },
+    ]);
+    expect(failedPath.modules[0].lessons[0].state).toBe("review_recommended");
+    expect(failedPath.modules[1].lessons[0].state).toBe("locked");
+
+    const masteredPath = deriveLearningPath(competencies, exercises, [
+      { id: "ev-1", exerciseId: "ex-1", score: "mastered", createdAt: "2026-10-16T10:00:00Z" },
+    ]);
+    expect(masteredPath.modules[0].lessons[0].state).toBe("completed");
+    expect(masteredPath.modules[1].lessons[0].state).toBe("available");
+  });
+
   it("calculates gamification XP and daily goals without spam inflation", () => {
     const exercises: DashboardExerciseRecord[] = [
       { id: "ex-1", competencyId: "comp-1", scenarioPrompt: "Prompt", expectedStructure: "Structure" },
