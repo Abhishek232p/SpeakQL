@@ -8,15 +8,15 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    environment: production
+    environment: CF_API_TOKEN
     permissions:
       contents: read
       id-token: write
     env:
-      CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID || secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID || secrets.CLOUDFLARE_ACCOUNT_ID || '5f22856667f79f66a0671234a757aa2c' }}
       CF_API_TOKEN: ${{ secrets.CF_API_TOKEN || secrets.CLOUDFLARE_API_TOKEN }}
       CF_WORKER_NAME: ${{ secrets.CF_WORKER_NAME || 'speakql' }}
-      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID || secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID || secrets.CLOUDFLARE_ACCOUNT_ID || '5f22856667f79f66a0671234a757aa2c' }}
       CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN || secrets.CLOUDFLARE_API_TOKEN }}
       DEPLOY_URL: ${{ secrets.DEPLOY_URL || 'https://speakql.abhishekjaiso25.workers.dev' }}
     steps:
