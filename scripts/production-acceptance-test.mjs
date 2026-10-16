@@ -24,7 +24,7 @@ if (fs.existsSync('.env.test.local')) {
   dotenv.config({ path: '.env.test.local' });
 }
 
-const baseUrl = (process.env.SPEAKQL_BASE_URL || process.env.TARGET_URL || "http://localhost:3001").replace(/\/$/, "");
+const baseUrl = (process.env.SPEAKQL_BASE_URL || process.env.TARGET_URL || "http://localhost:3000").replace(/\/$/, "");
 const testEmail = process.env.SPEAKQL_TEST_EMAIL || process.env.TEST_ACCOUNT_EMAIL;
 const testPassword = process.env.SPEAKQL_TEST_PASSWORD || process.env.TEST_ACCOUNT_PASSWORD;
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;

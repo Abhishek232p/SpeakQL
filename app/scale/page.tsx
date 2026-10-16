@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { SpeakQLLogo, WhaleMascot } from "@/src/client/components/whale-mascot";
 import { sound } from "@/src/client/sound/synthesizer";
+import { submitPartnershipInquiry } from "@/app/actions/partner-inquiry";
 
 interface PathwayCard {
   number: string;
@@ -62,7 +63,9 @@ export default function ScaleWithUsPage() {
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
   const [validationError, setValidationError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     sound.playPop();
 
@@ -77,7 +80,30 @@ export default function ScaleWithUsPage() {
     }
 
     setValidationError(null);
-    setIsSubmitted(true);
+    setIsSubmitting(true);
+    try {
+      const res = await submitPartnershipInquiry({
+        name: formData.name,
+        email: formData.email,
+        organization: formData.organization,
+        role: "Partner / Institutional Lead",
+        interest: formData.interest,
+        message: formData.message.trim() || "General partnership inquiry from scale page.",
+      });
+
+      if (res.success) {
+        sound.playFanfare();
+        setIsSubmitted(true);
+      } else {
+        sound.playIncorrect();
+        setValidationError(res.error);
+      }
+    } catch {
+      sound.playIncorrect();
+      setValidationError("Failed to submit inquiry. Please reach out to partners@speakql.ai directly.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const scrollToContact = () => {
@@ -669,6 +695,7 @@ export default function ScaleWithUsPage() {
 
               <button
                 type="submit"
+                disabled={isSubmitting}
                 style={{
                   background: "linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)",
                   color: "#ffffff",
@@ -677,12 +704,13 @@ export default function ScaleWithUsPage() {
                   padding: "0.9rem",
                   fontSize: "1rem",
                   fontWeight: 600,
-                  cursor: "pointer",
+                  cursor: isSubmitting ? "not-allowed" : "pointer",
+                  opacity: isSubmitting ? 0.7 : 1,
                   marginTop: "0.5rem",
                   boxShadow: "0 8px 24px rgba(168, 85, 247, 0.35)",
                 }}
               >
-                Submit Partnership Inquiry →
+                {isSubmitting ? "Transmitting Inquiry..." : "Submit Partnership Inquiry →"}
               </button>
             </form>
           )}

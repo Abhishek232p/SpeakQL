@@ -755,7 +755,7 @@ h1 { font-size: clamp(48px, 7vw, 86px); letter-spacing: -.03em; line-height: .98
 }
 
 /* ==========================================================================
-   DUOLINGO EXPERIENCE DESIGN SYSTEM & COMPONENT SUITE
+   SPEAKQL EXPERIENCE DESIGN SYSTEM & COMPONENT SUITE
    ========================================================================== */
 
 :root {
@@ -1375,12 +1375,16 @@ h1 { font-size: clamp(48px, 7vw, 86px); letter-spacing: -.03em; line-height: .98
   top: 0;
   left: 0;
   width: 100vw;
+  width: 100dvw;
   height: 100vh;
+  height: 100dvh;
   background: #ffffff;
   z-index: 9999;
   display: flex;
   flex-direction: column;
   user-select: none;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .duo-lesson-header {
@@ -3058,29 +3062,42 @@ h1 { font-size: clamp(48px, 7vw, 86px); letter-spacing: -.03em; line-height: .98
 }
 
 /* ==========================================================================
-   MOBILE RESPONSIVENESS (OCEAN BOTTOM NAV)
+   UNIVERSAL DEVICE EXPERIENCE & RESPONSIVE ARCHITECTURE
    ========================================================================== */
 
+/* Base Accessible Focus & Touch Target Rules */
+button, a, input, select, textarea, [role="button"] {
+  touch-action: manipulation;
+}
+
+button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible {
+  outline: 2px solid #a855f7;
+  outline-offset: 2px;
+}
+
+/* --- MOBILE BREAKPOINT (<= 768px) --- */
 @media (max-width: 768px) {
   .duo-app-wrapper {
     flex-direction: column;
-    padding-bottom: 74px; /* Space for bottom nav */
+    padding-bottom: calc(74px + env(safe-area-inset-bottom, 0px));
   }
 
   .duo-sidebar {
     width: 100%;
-    height: 64px;
+    height: calc(64px + env(safe-area-inset-bottom, 0px));
     position: fixed;
     bottom: 0;
     top: auto;
     flex-direction: row;
-    padding: 6px 12px;
+    padding: 6px 12px calc(6px + env(safe-area-inset-bottom, 0px));
     border-right: none;
     border-top: 1px solid rgba(139, 92, 246, 0.25);
     background: rgba(8, 12, 34, 0.95);
     backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
     justify-content: space-around;
     align-items: center;
+    z-index: 100;
   }
 
   .duo-sidebar-logo, .duo-sidebar-footer, .nav-item-label, .duo-footer-status {
@@ -3097,10 +3114,16 @@ h1 { font-size: clamp(48px, 7vw, 86px); letter-spacing: -.03em; line-height: .98
   .duo-nav-item {
     padding: 10px;
     border-radius: 12px;
+    min-height: 44px;
+    min-width: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .duo-topbar {
     padding: 10px 16px;
+    padding-top: calc(10px + env(safe-area-inset-top, 0px));
   }
 
   .duo-goal-pill {
@@ -3108,7 +3131,7 @@ h1 { font-size: clamp(48px, 7vw, 86px); letter-spacing: -.03em; line-height: .98
   }
 
   .duo-tab-content {
-    padding: 16px 12px 60px;
+    padding: 16px 12px calc(60px + env(safe-area-inset-bottom, 0px));
   }
 
   .duo-next-action-hero {
@@ -3124,10 +3147,11 @@ h1 { font-size: clamp(48px, 7vw, 86px); letter-spacing: -.03em; line-height: .98
 
   .duo-lesson-header {
     padding: 14px 18px;
+    padding-top: calc(14px + env(safe-area-inset-top, 0px));
   }
 
   .duo-lesson-footer {
-    padding: 16px 20px;
+    padding: 16px 20px calc(16px + env(safe-area-inset-bottom, 0px));
   }
 
   .node-right-1, .node-right-2, .node-left-1, .node-left-2 {
@@ -3135,9 +3159,119 @@ h1 { font-size: clamp(48px, 7vw, 86px); letter-spacing: -.03em; line-height: .98
   }
 }
 
+/* --- SMALL MOBILE PHONES (<= 480px down to 320px) --- */
+@media (max-width: 480px) {
+  .shell {
+    width: calc(100% - 24px);
+  }
+
+  .duo-topbar {
+    padding: 8px 12px;
+    padding-top: calc(8px + env(safe-area-inset-top, 0px));
+    gap: 8px;
+  }
+
+  .duo-goal-pill {
+    max-width: 120px;
+    font-size: 11px;
+    padding: 4px 8px;
+  }
+
+  .duo-character-row {
+    gap: 10px;
+  }
+
+  .duo-coach-avatar {
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+  }
+
+  .duo-bubble-prompt {
+    font-size: 15px;
+    line-height: 1.4;
+  }
+
+  .duo-chip {
+    padding: 8px 12px;
+    font-size: 13px;
+    min-height: 44px;
+  }
+
+  .duo-sentence-slot {
+    min-height: 70px;
+    padding: 8px 4px;
+  }
+
+  .duo-lesson-footer {
+    padding: 12px 14px calc(12px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .duo-check-button {
+    padding: 12px 20px;
+    font-size: 14px;
+    min-height: 44px;
+  }
+
+  .duo-skip-button {
+    padding: 10px 16px;
+    font-size: 13px;
+    min-height: 44px;
+  }
+}
+
+/* --- TABLET BREAKPOINT (769px to 1024px) --- */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .duo-sidebar {
+    width: 200px;
+    padding: 20px 12px;
+  }
+
+  .duo-nav-item {
+    gap: 12px;
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
+  .duo-topbar {
+    padding: 12px 20px;
+  }
+
+  .duo-tab-content {
+    padding: 20px 16px 40px;
+  }
+
+  .duo-lesson-header {
+    padding: 18px 24px;
+    gap: 16px;
+  }
+}
+
+/* --- LARGE DESKTOP & MONITORS (>= 1440px) --- */
+@media (min-width: 1440px) {
+  .duo-main-canvas {
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  .duo-topbar {
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+  }
+}
+
+/* --- REDUCED MOTION --- */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; }
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+  }
 }
+
 
 

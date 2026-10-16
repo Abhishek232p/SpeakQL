@@ -93,7 +93,7 @@ export async function submitPracticeEvaluation(exerciseId: string, formData: For
   const validatedExerciseId = readExerciseId(exerciseId);
   const response = readSingleString(formData, 'response', MAX_PRACTICE_RESPONSE_LENGTH);
 
-  await runDatabaseWrite(async () => {
+  return runDatabaseWrite(async () => {
     const db = getDb();
     const repo = createGoalsRepository(db);
     return repo.evaluateExercise(identity, validatedExerciseId, response);

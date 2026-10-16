@@ -321,7 +321,9 @@ export default function PracticeView({
 
     // Evaluate response based on communicative heuristics & scenario objective
     setTimeout(() => {
-      const wordCount = responseToEvaluate.split(/\s+/).filter(Boolean).length;
+      const isCjk = /[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han}]/u.test(responseToEvaluate);
+      const cjkChars = responseToEvaluate.replace(/[^\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han}]/gu, "").length;
+      const wordCount = isCjk ? Math.ceil(cjkChars / 2) : responseToEvaluate.split(/\s+/).filter(Boolean).length;
       const lower = responseToEvaluate.toLowerCase();
 
       let isMastered = false;
@@ -330,11 +332,11 @@ export default function PracticeView({
       let nextAction = "";
 
       if (activeScenario.category === "workplace_meetings") {
-        const hasPastWork = lower.includes("terminé") || lower.includes("ayer") || lower.includes("finished");
-        const hasFocus = lower.includes("enfoco") || lower.includes("hoy") || lower.includes("focus");
-        const hasBlocker = lower.includes("bloqueo") || lower.includes("credenciales") || lower.includes("block");
+        const hasPastWork = lower.includes("terminé") || lower.includes("ayer") || lower.includes("finished") || lower.includes("昨日は") || lower.includes("कल");
+        const hasFocus = lower.includes("enfoco") || lower.includes("hoy") || lower.includes("focus") || lower.includes("本日は") || lower.includes("आज");
+        const hasBlocker = lower.includes("bloqueo") || lower.includes("credenciales") || lower.includes("block") || lower.includes("ブロッカー") || lower.includes("ब्लॉकर");
 
-        if (hasPastWork && (hasFocus || hasBlocker) && wordCount >= 10) {
+        if (hasPastWork && (hasFocus || hasBlocker) && (isCjk ? cjkChars >= 12 : wordCount >= 10)) {
           isMastered = true;
           strengths = "Excellent technical clarity: You structured your update across completed work and current blockers with natural workplace pacing.";
           areasToRefine = "To refine further, verify that the timeline for unblocking is explicitly agreed upon before concluding.";
@@ -347,7 +349,10 @@ export default function PracticeView({
         }
       } else {
         // General professional communication rubric
-        if (wordCount >= 15 && (lower.includes("because") || lower.includes("however") || lower.includes("specifically") || lower.includes("impact") || lower.includes("understand"))) {
+        const hasSubstance = isCjk ? cjkChars >= 16 : wordCount >= 15;
+        const hasConnector = lower.includes("because") || lower.includes("however") || lower.includes("specifically") || lower.includes("impact") || lower.includes("understand") || lower.includes("実装") || lower.includes("開発") || lower.includes("महत्वपूर्ण") || isCjk;
+
+        if (hasSubstance && hasConnector) {
           isMastered = true;
           strengths = "High communicative composure: Your response addresses the core prompt with professional framing, substantive evidence, and appropriate register.";
           areasToRefine = "Keep answers concise: Aim to deliver your core point in the first sentence before elaborating.";
@@ -513,13 +518,41 @@ export default function PracticeView({
             )}
           </div>
 
-          <p style={{ margin: "0 0 0.75rem", fontSize: "0.9rem", color: "#94a3b8", lineHeight: 1.5 }}>
-            <strong style={{ color: "#cbd5e1" }}>Context:</strong> {activeScenario.context}
-          </p>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "0.5rem", margin: "0 0 1rem" }}>
+            <div style={{ background: "rgba(30, 41, 59, 0.4)", padding: "0.6rem 0.8rem", borderRadius: "0.5rem", borderLeft: "3px solid #38bdf8" }}>
+              <span style={{ fontSize: "0.75rem", fontWeight: 800, color: "#38bdf8", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                WHY THIS MATTERS (REAL CONTEXT)
+              </span>
+              <p style={{ margin: "0.2rem 0 0", fontSize: "0.85rem", color: "#cbd5e1", lineHeight: 1.5 }}>
+                {activeScenario.context}
+              </p>
+            </div>
 
-          <p style={{ margin: "0 0 1rem", fontSize: "0.9rem", color: "#cbd5e1", lineHeight: 1.5 }}>
-            <strong style={{ color: "#a855f7" }}>Communication Objective:</strong> {activeScenario.objective}
-          </p>
+            <div style={{ background: "rgba(30, 41, 59, 0.4)", padding: "0.6rem 0.8rem", borderRadius: "0.5rem", borderLeft: "3px solid #a855f7" }}>
+              <span style={{ fontSize: "0.75rem", fontWeight: 800, color: "#c084fc", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                WHAT TO DEMONSTRATE (OBJECTIVE)
+              </span>
+              <p style={{ margin: "0.2rem 0 0", fontSize: "0.85rem", color: "#f8fafc", lineHeight: 1.5 }}>
+                {activeScenario.objective}
+              </p>
+            </div>
+
+            {activeScenario.suggestedOpening && (
+              <details style={{ background: "rgba(30, 41, 59, 0.5)", border: "1px solid rgba(168, 85, 247, 0.25)", borderRadius: "0.5rem", padding: "0.5rem 0.75rem" }}>
+                <summary style={{ cursor: "pointer", fontSize: "0.8rem", fontWeight: 700, color: "#d8b4fe" }}>
+                  💡 HOW TO PERFORM: Suggested Structural Pattern &amp; Opener
+                </summary>
+                <div style={{ marginTop: "0.5rem", fontSize: "0.85rem", color: "#cbd5e1" }}>
+                  <p style={{ margin: "0 0 0.25rem", color: "#38bdf8", fontStyle: "italic" }}>
+                    &ldquo;{activeScenario.suggestedOpening}&rdquo;
+                  </p>
+                  <span style={{ fontSize: "0.75rem", color: "#94a3b8" }}>
+                    Guidance: State completed work, current focus, and blocker clearly. Choose your preferred practice method below.
+                  </span>
+                </div>
+              </details>
+            )}
+          </div>
 
           {/* Conversation Partner Bubble */}
           <div
@@ -842,9 +875,11 @@ export default function PracticeView({
       {/* 2. Earn Hearts Banner & Targeted Mistake Reviews Section */}
       <div className="duo-practice-banner">
         <div className="practice-banner-left">
-          <span className="practice-kicker">MISTAKES RECOVERY HUB</span>
+          <span className="practice-kicker">MISTAKES RECOVERY HUB · TARGETED RECONSOLIDATION</span>
           <h2>Practice to Earn Hearts</h2>
-          <p>Review and revise previous mistakes to reinforce memory and restore your hearts without waiting!</p>
+          <p>
+            Mistakes are your most valuable learning opportunities. When an exercise receives a &ldquo;needs work&rdquo; evaluation, revising it reinforces correct syntax, restores +1 Heart ❤️, and updates your spaced retention schedule.
+          </p>
         </div>
         <div className="practice-heart-display">
           <span className="practice-heart-icon" aria-hidden="true">❤️</span>
@@ -857,14 +892,14 @@ export default function PracticeView({
       <div className="duo-mistakes-section">
         <div className="mistakes-section-header">
           <h3>Targeted Mistake Reviews ({mistakeEvaluations.length})</h3>
-          <p>Each resolved mistake earns +1 Heart ❤️ and +15 XP.</p>
+          <p>Each resolved mistake earns +1 Heart ❤️, +15 XP, and clears the item from your spaced review queue.</p>
         </div>
 
         {mistakeEvaluations.length === 0 ? (
           <div className="duo-empty-mistakes">
             <span className="empty-trophy" aria-hidden="true">✨</span>
             <h4>No Mistakes to Review!</h4>
-            <p>You&apos;ve mastered your exercises or haven&apos;t accumulated review items yet. Great job!</p>
+            <p>You&apos;ve mastered all attempted exercises or haven&apos;t accumulated review items yet. Keep exploring island units to encounter new communicative challenges!</p>
           </div>
         ) : (
           <div className="duo-mistakes-grid">
@@ -885,7 +920,7 @@ export default function PracticeView({
                   </p>
 
                   <div className="mistake-guidance-box">
-                    <span className="guidance-label">Coach Feedback:</span>
+                    <span className="guidance-label">Diagnostic Feedback:</span>
                     <p>{feedback.summaryFeedback || "Consider expanding on your main point with clearer vocabulary."}</p>
                   </div>
 
@@ -906,8 +941,15 @@ export default function PracticeView({
       {/* 3. Key Expressions Vault Flashcards Section */}
       <div className="duo-flashcards-section">
         <div className="flashcards-section-header">
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+            <span style={{ fontSize: "11px", fontWeight: 800, color: "#38bdf8", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+              ACTIVE RECALL PRACTICE
+            </span>
+          </div>
           <h3>Key Expressions Vault</h3>
-          <p>Tap a flashcard to flip between target phrasing and translations.</p>
+          <p>
+            Test your independent recall: Attempt to produce the translation or phrase out loud before tapping to flip.
+          </p>
         </div>
 
         <div className="duo-flashcards-grid">
@@ -933,17 +975,23 @@ export default function PracticeView({
                   <div className="flashcard-front">
                     <span className="flashcard-context">{fc.context}</span>
                     <h4 className="flashcard-phrase">{fc.front}</h4>
-                    <span className="flashcard-tap-hint">Tap to flip ↺</span>
+                    <span className="flashcard-tap-hint">Tap to test recall ↺</span>
                   </div>
                   <div className="flashcard-back">
                     <span className="flashcard-context">{fc.context}</span>
                     <h4 className="flashcard-phrase">{fc.back}</h4>
-                    <span className="flashcard-tap-hint">Tap to flip ↺</span>
+                    <span className="flashcard-tap-hint">Tap to flip back ↺</span>
                   </div>
                 </div>
               </div>
             );
           })}
+        </div>
+
+        <div style={{ marginTop: "1rem", padding: "0.75rem 1rem", background: "rgba(30, 41, 59, 0.4)", borderRadius: "0.75rem", border: "1px solid rgba(255, 255, 255, 0.08)" }}>
+          <p style={{ margin: 0, fontSize: "0.8rem", color: "#94a3b8", lineHeight: 1.5 }}>
+            💡 <strong>Pedagogical Note:</strong> Active recall strengthens retrieval memory traces. Card flipping builds phrase familiarity; true communicative capability is demonstrated in real-world scenario simulations.
+          </p>
         </div>
       </div>
 

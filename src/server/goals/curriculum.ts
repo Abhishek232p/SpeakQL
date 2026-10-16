@@ -44,10 +44,11 @@ export type ParsedExerciseDetails = {
 
 function detectTargetLanguage(goal: string): string {
   const lower = goal.toLowerCase();
+  if (lower.includes("japanese") || lower.includes("日本語") || lower.includes("nihongo") || lower.includes("tokyo")) return "Japanese";
+  if (lower.includes("hindi") || lower.includes("हिंदी") || lower.includes("devanagari")) return "Hindi";
   if (lower.includes("spanish") || lower.includes("español")) return "Spanish";
   if (lower.includes("french") || lower.includes("français")) return "French";
   if (lower.includes("german") || lower.includes("deutsch")) return "German";
-  if (lower.includes("japanese") || lower.includes("日本語")) return "Japanese";
   if (lower.includes("mandarin") || lower.includes("chinese")) return "Mandarin";
   if (lower.includes("italian") || lower.includes("italiano")) return "Italian";
   if (lower.includes("portuguese") || lower.includes("português")) return "Portuguese";
@@ -159,6 +160,112 @@ export function generateGoalCurriculum(rawGoal: string): StructuredCompetencyPla
     lower.includes("brief") ||
     lower.includes("stakeholder") ||
     lower.includes("leadership");
+
+  if (language === "Japanese") {
+    return [
+      {
+        competencyDescription: "Hiragana, Katakana & Script Foundations (日本語の文字と発音)",
+        exercises: [
+          {
+            scenarioPrompt: encodePrompt({
+              exerciseType: "contextual_response",
+              objective: "Master foundational vowels (A-I-U-E-O) and stroke order in Hiragana & Katakana",
+              context: "Foundational Japanese script and pronunciation training.",
+              scenario: "Practice writing and recognizing the foundational vowels 'あ, い, う, え, お' using the digital practice whiteboard or keyboard.",
+              instructions: "Write or type the five basic vowels: a, i, u, e, o (あ, い, う, え, お). Focus on stroke balance and clean character form.",
+              expectedResponseType: "Hiragana vowels: あ い う え お",
+              evaluationCriteria: "Accurate character production and phonetic recognition",
+              estimatedMinutes: 3,
+              difficulty: "Foundational",
+              targetVocabulary: ["あ (a)", "い (i)", "う (u)", "え (e)", "お (o)"],
+              speechPrompt: "Pronounce each vowel clearly: A (あ), I (い), U (う), E (え), O (お).",
+            }),
+            expectedStructure: "Accurate script production of あ, い, う, え, お.",
+          },
+        ],
+      },
+      {
+        competencyDescription: "Essential Workplace Japanese and Standup Reporting (ビジネス日本語)",
+        exercises: [
+          {
+            scenarioPrompt: encodePrompt({
+              exerciseType: "conversation_practice",
+              objective: "Deliver daily engineering standup update in polite Japanese (です/ます form)",
+              context: "Daily morning standup sync (Asakai) with Tokyo engineering colleagues.",
+              scenario: "It is your turn in the morning standup. Greet your teammates politely, report that you completed profiling yesterday, and state that today you are implementing the caching service.",
+              instructions: "Greet the team with 'お疲れ様です', state yesterday's completed work, and explain today's task in polite form (です/ます).",
+              expectedResponseType: "Polite Japanese standup update (2-3 sentences).",
+              evaluationCriteria: "Polite register (です/ます), clear status progression, and natural workplace flow.",
+              estimatedMinutes: 4,
+              difficulty: "Intermediate",
+              dialogueHistory: [
+                {
+                  speaker: "Kenji (Tech Lead)",
+                  text: "次、アビシェックさん、昨日の進捗と今日の予定をお願いします。",
+                },
+              ],
+              targetVocabulary: ["お疲れ様です", "昨日はAPIの最適化を完了しました", "本日はキャッシュ層の実装を進めます"],
+              speechPrompt: "Speak your morning standup update aloud in polite Japanese.",
+            }),
+            expectedStructure: "Polite greeting, yesterday's progress, today's focus, and collaborative closing in Japanese.",
+          },
+        ],
+      },
+    ];
+  }
+
+  if (language === "Hindi") {
+    return [
+      {
+        competencyDescription: "Devanagari Script Foundations & Matras (देवनागरी लिपि और मात्राएँ)",
+        exercises: [
+          {
+            scenarioPrompt: encodePrompt({
+              exerciseType: "contextual_response",
+              objective: "Recognize and write foundational Devanagari characters and matras",
+              context: "Hindi script and phonetic foundations.",
+              scenario: "Practice writing basic Devanagari characters and vowel signs (मात्राएँ) on the whiteboard or keyboard.",
+              instructions: "Write or type foundational characters (अ, आ, इ, ई, क, ख, ग, घ) with appropriate matras.",
+              expectedResponseType: "Devanagari characters: अ, आ, इ, ई, क, ख, ग, घ",
+              evaluationCriteria: "Script recognition, correct matra association, and pronunciation",
+              estimatedMinutes: 3,
+              difficulty: "Foundational",
+              targetVocabulary: ["अ (a)", "आ (aa)", "इ (i)", "ई (ee)", "क (ka)", "ख (kha)"],
+              speechPrompt: "Pronounce each character with pure phonetic clarity.",
+            }),
+            expectedStructure: "Clear script production of foundational Devanagari characters and matras.",
+          },
+        ],
+      },
+      {
+        competencyDescription: "Workplace Status Reporting and Collaborative Discussion in Hindi",
+        exercises: [
+          {
+            scenarioPrompt: encodePrompt({
+              exerciseType: "conversation_practice",
+              objective: "Provide a concise standup update and coordinate dependencies in formal Hindi",
+              context: "Daily team sync with bilingual engineering team.",
+              scenario: "During the daily sync, give your update: yesterday you fixed the API latency issue, today you are working on the caching service, and you need staging access from your lead.",
+              instructions: "Deliver your update in professional Hindi using respectful honorifics (आप/जी).",
+              expectedResponseType: "Professional Hindi standup update (2-3 sentences).",
+              evaluationCriteria: "Respectful tone, clear blocker explanation, and natural collaborative Hindi.",
+              estimatedMinutes: 4,
+              difficulty: "Intermediate",
+              dialogueHistory: [
+                {
+                  speaker: "Rahul (Engineering Manager)",
+                  text: "आज का स्टेटस क्या है और क्या कोई ब्लॉकर है?",
+                },
+              ],
+              targetVocabulary: ["कल मैंने पूरा किया...", "आज मैं काम कर रहा हूँ...", "स्टेजिंग एक्सेस की ज़रूरत है"],
+              speechPrompt: "Deliver your standup status update aloud in Hindi.",
+            }),
+            expectedStructure: "Clear 3-part update in formal Hindi: completed, today's focus, and blocker.",
+          },
+        ],
+      },
+    ];
+  }
 
   if (isTechOrStandup) {
     const langSuffix = isSpanish ? " in Spanish" : ` in ${language}`;

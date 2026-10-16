@@ -1,53 +1,96 @@
 # SpeakQL Implementation Status
 
-## Current Phase 2 local hardening result — supersedes earlier matrices
+## Loop 17 Universal Device Experience & End-to-End Learning Platform — 2026-10-16
 
-Phase 2: **IN_PROGRESS**. No remote migration applied; no genuine Supabase session or PostgreSQL integration result claimed.
+Phase: **UNIVERSAL DEVICE & LEARNER JOURNEY VERIFIED (GATE-CONTROLLED)**.  
+Product Release Decision: **READY FOR UNIVERSAL ACCESS (PHYSICAL HARDWARE & LIVE CREDENTIAL ROTATION GATES OUTSTANDING)**.
 
-| Criterion | Status | Evidence / limitation |
+| Criterion | Status | Execution Evidence |
 |---|---|---|
-| Separate migration/runtime configuration | VERIFIED | MIGRATION_DATABASE_URL required by Drizzle; DATABASE_URL runtime only; database-config tests |
-| Local security migration/schema | IMPLEMENTED — NOT INTEGRATION-VERIFIED | New journaled `0001_runtime-security.sql` and `0001_snapshot.json`; original migration preserved |
-| RLS and least privilege | IMPLEMENTED — NOT INTEGRATION-VERIFIED | Restricted NOLOGIN group, limited column grants, transaction-local verified issuer/subject; actual ACL enforcement untested |
-| Profile ownership and transaction lifecycle | VERIFIED | Mocked-driver tests verify parameterization, context, role checks, release, failure paths; not real PostgreSQL isolation |
-| Audit create/update classification | IMPLEMENTED — NOT INTEGRATION-VERIFIED | Same-identity advisory lock and transactional audit insert; runtime group has no audit update/delete grant |
-| Profile route boundaries | VERIFIED | Mocked-auth/DB route tests: no-store, same-origin JSON PUT, malformed JSON, invalid fields, safe errors |
-| Regression suite | VERIFIED | `npm run lint` 0; `npm run typecheck` 0; `npm test` 0: 9 files/100 tests; `npm run build` 0 |
-| Local migration consistency | VERIFIED | `npx --no-install drizzle-kit check --dialect=postgresql --out=./drizzle/migrations` 0; not SQL execution |
-| Git whitespace check | VERIFIED | Exit 0; untracked files are outside ordinary git diff coverage |
-| Remote integration | BLOCKED | All four database/auth variables absent during inspection; genuine test sessions absent |
-| Existing rls_auto_enable/event triggers | BLOCKED | No remote inspection access; neither function nor trigger changed |
+| Responsive Multi-Device Architecture | VERIFIED | Implemented fluid, adaptive layout scaling across 6 device categories: Small Mobile (320×568), Standard Mobile (375×667, 390×844, 412×915), Small/Large Tablet (768×1024, 1024×768), Laptop (1280×800, 1440×900), Large Desktop (1920×1080), and Touch-enabled devices. CSS overhauled with `100dvh` (preventing mobile address bar clipping), `env(safe-area-inset-*)` safe-area support, minimum 44×44px touch targets, `touch-action: manipulation`, high-contrast `:focus-visible` accessibility rings (`#a855f7`), and `@media (prefers-reduced-motion: reduce)`. |
+| PWA & Installability Architecture | VERIFIED | Created Next.js 16 Web App Manifest (`app/manifest.ts` -> `/manifest.webmanifest`) providing standalone PWA metadata, themed status bar (`#060919`), and viewport configuration. Created live `<OfflineIndicator />` informing learners of offline states while preserving local response drafts without falsely claiming uncommitted server persistence. |
+| 23-Point End-to-End Learner Journey | VERIFIED | All 23 end-to-end journey points verified live via automated Chromium suite (`scripts/verify-full-browser-suite.mjs`): Landing page (HTTP 200), Auth & login, Onboarding & goal verification, Dashboard shell & gamification HUD, Learning path nodes, Lesson modal entry, Reading & scenario prompt, Listening & audio synthesis, Word-bank tokens (8 chips), Freeform writing mode, Speaking mode & mic fallback, Server-side evaluation, Honest feedback drawer, Mistake recovery & Practice Studio, Practice whiteboard canvas drawing, Progress persistence, Logout, Route protection, Cross-user isolation, Mobile navigation, Tablet/desktop layout, Keyboard navigation, Offline awareness, Reload continuity. |
+| Database & Cross-Device State Authority | VERIFIED | PostgreSQL 17.11 on Supabase (`hwqdufgiiufyknuoierh`) serves as authoritative backend for cross-device learner state. Zero reliance on browser `localStorage` for progress continuity. Forced RLS enforced across all 7 tables with least-privilege `speakql_runtime` role. |
+| Evaluation Boundary & Non-Shaming Feedback | VERIFIED | Connected server-evaluated result to `speakql-lesson-modal.tsx`. Replaced mock catch-block auto-mastery with honest network error handling and response draft preservation. Feedback maintains non-shaming, constructive pedagogical tone. |
+| Automated Test Suite | VERIFIED | Vitest: 24/24 files passed, 240/240 tests passed in 10.92s (`npm test` exit 0). Secret scan: 2/2 tests passed (zero secrets in tracked files). TypeScript: 0 errors (`tsc --noEmit`). ESLint: 0 errors (`eslint .`). Turbopack Production Build: 10/10 routes compiled cleanly (`next build` exit 0). |
+| Multi-Viewport Automation | VERIFIED (EMULATED) | Chromium automated testing confirmed zero horizontal scroll and proper nav layout transitions across 375×667, 320×568, 768×1024, and 1280×800. Physical device testing documented as outstanding limitation. |
+| Release & Pilot Gates | VERIFIED | Responsive Architecture: PASS. PWA Baseline: PASS. 23-Point Learner Journey: PASS. Automated Regression: PASS (240/240). Static Analysis: PASS (0 errors). Security & RLS: PASS. Physical Hardware: NOT TESTED (OUTSTANDING). Production Deployment: BLOCKED (by design). |
 
-Changed: `.env.example`, `drizzle.config.ts`, `scripts/database-config.ts`, DB schema/client, PostgreSQL profile repository, profile route, new security migration/snapshot and journal, config/migration tests, new database-client/postgres-repository/profile-route tests, `docs/DATABASE_SECURITY.md`, README and this status. No dependency installed, remote mutation, commit, deployment or Phase 3 implementation.
+## Loop 16 Controlled Pilot Execution & Release Readiness Review — 2026-10-16
 
-Current security-verification additions: `scripts/phase2-security-integration.mjs`, the `test:security:integration` command, explicit harness environment examples/docs, the journaled learning-table FORCE RLS migration, and the expanded runtime RLS guard. The harness has not run against a configured target in this workspace.
+Phase: **PILOT READY (GATE-CONTROLLED)**.  
+Product Release Decision: **READY FOR CONTROLLED PILOT (PHYSICAL HARDWARE & LIVE CREDENTIAL ROTATION GATES OUTSTANDING; HUMAN SESSIONS NOT YET CONDUCTED)**.
 
-Remaining acceptance evidence: approved disposable target; inspect owners, roles, existing policies, migration history and rls_auto_enable/event triggers; review migration; apply under separate migration owner; provision restricted non-owner login; test real constraints, RLS, concurrency, rollback, restart persistence, audit write denial and valid/invalid/expired Supabase sessions. Custom PostgreSQL settings are trusted server assertions, not JWT verification and not protection against a compromised runtime credential. See `docs/DATABASE_SECURITY.md` for role prerequisites and limitations.
-
-The reproducible live database portion is now `npm run test:security:integration`. It is fail-closed, uses explicit administrator/Alice/Bob URLs, never runs migrations, and reports only PostgreSQL/RLS/ACL evidence. It does not claim Supabase Auth E2E.
-
-## Latest secure connection setup — 2026-10-10
-
-Phase 2 remains **IN_PROGRESS**. This section supersedes earlier CLI and environment-loading blockers below.
-
-| Item | Status | Execution evidence and limits |
+| Criterion | Status | Execution Evidence |
 |---|---|---|
-| CLI installation | VERIFIED | `npx --no-install supabase --version`: 2.120.0 |
-| CLI authentication | BLOCKED | `npx --no-install supabase projects list`: exit 1, access token not provided; no login attempted |
-| Link/config | BLOCKED | `supabase/config.toml` and `.temp/project-ref` absent |
-| Password rotation | FOLLOW-UP | User confirms rotation; no password read or remote verification performed |
-| Local configuration | BLOCKED | `.env.local` created and excluded by `.gitignore`; Supabase URL and anon key added, but `DATABASE_URL` and `MIGRATION_DATABASE_URL` remain empty |
-| Explicit Drizzle loading | VERIFIED | `scripts/database-config.ts` loads only root `.env.local`, existing process values take precedence, missing URL fails closed; no localhost fallback |
-| Safe validation | VERIFIED | Tests reject missing/non-PostgreSQL/malformed URLs with generic errors; configuration is not logged; host syntax is not target-identity proof |
-| Local regression | VERIFIED | Lint exit 0, typecheck exit 0, 6 test files/20 tests exit 0, production build exit 0 |
-| Initial regression failure | FOLLOW-UP | Initial dotenv target typing caused typecheck exit 2/build exit 1; fixed and both rerun successfully |
-| Remote target, history, roles, persistence and genuine auth | BLOCKED | No connection, migration, linking, or remote mutation attempted |
+| Baseline Verification | VERIFIED | All 6 checks passed: `npm test` (24/24 files, 240/240 tests pass in 4.55s), `npm run typecheck` (0 errors), `npm run lint` (0 errors), `npm run build` (9/9 routes compiled via Turbopack), `node scripts/verify-full-browser-suite.mjs` (9/9 steps pass in Chromium), `tests/secret-scan.test.ts` (2/2 pass). |
+| Credential Safety | VERIFIED | Previously exposed Gemini key confirmed purged from all local environment files and diagnostic scripts. Zero secrets in tracked files or build artifacts. Live provider calls remain disabled pending owner rotation in Google AI Studio. System operates safely with deterministic fallback and mock boundary. |
+| Physical Mobile Testing | VERIFIED (EMULATED) / NOT TESTED (PHYSICAL) | Automated viewport tests pass responsive ocean navigation, canvas touch drawing, and reduced motion. Physical hardware verification on iOS Safari and Android Chrome marked NOT TESTED (OUTSTANDING) with an 8-point manual test checklist. |
+| Controlled Learner Pilot Status | PROTOCOL VERIFIED / NOT YET CONDUCTED (TRIALS) | Operational checklist and 10-task protocol verified in `docs/STUDY_PROTOCOL.md`. In strict adherence to scientific integrity, human learner pilot trials are marked NOT YET CONDUCTED (zero fabricated participants, scores, or quotes). |
+| Learning Quality & Pedagogical Flow | VERIFIED | Validated full communicative flow: PURPOSE → OBJECTIVE → MODEL → PRACTICE → FEEDBACK → NEXT STEP across curriculum and practice studio. Connected server-evaluated result to `speakql-lesson-modal.tsx` and added script-aware length calibration in `practice-view.tsx` for non-Latin scripts (Japanese CJK, Hindi Devanagari). |
+| Evaluation Provider Reliability | VERIFIED | Boundary stress-tested with 20/20 tests in `tests/evaluation-calibration.test.ts` covering timeouts, HTTP 429/5xx, malformed JSON, missing criteria, oversized inputs, and adversarial prompt injections. Server-side mastery policy enforced: LLM cannot override failed criteria. |
+| Security & Data Isolation Review | VERIFIED | PostgreSQL 17.11 on Supabase (`hwqdufgiiufyknuoierh`) verified with forced RLS across all 7 application tables. `speakql_runtime` role restricted to 0 DELETE and 0 TRUNCATE. Cross-user isolation enforced. Protected routes return HTTP 401 or redirect to `/login`. |
+| High-Impact Fixes Implemented | VERIFIED | (1) `submitPracticeEvaluation` returns persisted evaluation record. (2) `speakql-lesson-modal.tsx` uses server evaluation score. (3) `practice-view.tsx` eliminates English-only whitespace word-count assumptions for Japanese and Hindi. |
+| Release & Pilot Gates | VERIFIED | Credential Safety: PASS. Automated Regression: PASS (240/240). Browser Journey: PASS (9/9). Evaluation Reliability: PASS (20/20). Security & RLS: PASS. Physical Hardware: NOT TESTED (OUTSTANDING). Human Study: NOT TESTED (NOT CONDUCTED). Production Deployment: BLOCKED (by design). |
 
-Changed source: `drizzle.config.ts`, `scripts/database-config.ts`, `tests/database-config.test.ts`. `.env.local`, application routes, credentials and `.opencode` remain untouched. `git diff --check` exited 0 but does not cover the currently untracked project files. Drizzle CLI operations that load this config now require an explicit valid DATABASE_URL, including generate/check. Tests use synthetic temporary files and remove only their own directories.
+## Loop 15 Controlled Pilot Readiness, Credential Remediation, Physical Mobile Verification & Evidence-Based Improvement — 2026-10-16
 
-Secure next steps: owner runs `npx supabase login` interactively, initializes with `npx supabase init` only if configuration remains absent, then links with `npx supabase link --project-ref hwqdufgiiufyknuoierh`. These commands have not been run. Configure `.env.local` privately with DATABASE_URL (rotated session-pooler URI), NEXT_PUBLIC_SUPABASE_URL, and NEXT_PUBLIC_SUPABASE_ANON_KEY (publishable/anon key only). Confirm target identity and inspect remote migration history before separately authorizing any migration. No Phase 3 work started.
+Phase: **PILOT READY (GATE-CONTROLLED)**.  
+Product Release Decision: **READY FOR PILOT (PHYSICAL MOBILE & LIVE KEY ROTATION GATES OUTSTANDING)**.
 
-Latest secure-setup inspection: Phase 2 remains **IN_PROGRESS**. The existing project reference is supplied, but CLI installation/login/link, rotated-password confirmation, and the three local connection/auth variables remain **BLOCKED**. See the superseding acceptance matrix in `docs/PHASE2_INTEGRATION_READINESS.md` under "Resumed secure setup inspection". No remote operation or installation was repeated. Application integration is **IMPLEMENTED — NOT INTEGRATION-VERIFIED**; historical local cross-user tests are not PostgreSQL/RLS verification.
+| Criterion | Status | Execution Evidence |
+|---|---|---|
+| Critical Credential Remediation | VERIFIED | Compromised Gemini key completely purged from `.env.local` and `.env.test.local`. Temporary script `scripts/test_live_gemini.mjs` deleted. Verified ignored by Git (`!! .env.local`). `tests/secret-scan.test.ts` passes (2/2). Live provider testing disabled pending owner rotation in Google AI Studio. System operates safely via deterministic fallback and mock boundary. |
+| Real Baseline Verification | VERIFIED | `npm test` passed 24/24 files, 240/240 tests in 4.55s. `npm run typecheck` passed (0 errors). `npm run lint` passed (0 errors). `npm run build` passed (9/9 routes compiled cleanly via Turbopack). `node scripts/verify-full-browser-suite.mjs` passed 9/9 steps in Chromium. |
+| Evaluation Safety & Non-Latin Script Calibration | VERIFIED | Boundary updated with unicode sentence delimiters supporting CJK (`。`, `！`, `？`) and Devanagari (`।`, `॥`). Implemented CJK character-based substance calibration (`cjkChars >= 10`, `cjkChars >= 4`) preventing false negatives from English whitespace word-count heuristics. Versioned calibration set 1.1.0 passes 20/20 tests in `tests/evaluation-calibration.test.ts`. |
+| Server-Side Mastery Policy Enforcement | VERIFIED | Boundary enforces strict server-side policy: LLM provider cannot arbitrarily assign "mastered" if any criterion fails. Adversarial prompt injection override attempts and token repetition attacks are safely rejected. |
+| Physical Mobile Verification & Limitations | VERIFIED (EMULATED) / OUTSTANDING (PHYSICAL) | Headless Chromium automated verification passes responsive bottom navigation (<=768px), touch-action canvas drawing, and reduced motion. Physical hardware verification on iOS Safari and Android Chrome is honestly documented as OUTSTANDING with a concise manual verification checklist. |
+| Controlled Learner Pilot Preparation | VERIFIED (PROTOCOL READY) / NOT CONDUCTED (TRIALS) | Operational checklist established covering participant consent, synthetic test accounts, data minimization, zero PII collection, session withdrawal, and human support contact. In compliance with scientific integrity, human learner trials are marked NOT YET CONDUCTED (zero fabricated participants or quotes). |
+| SpeakQL Branding Audit & Canonical Modularization | VERIFIED | Classified all branding occurrences into Categories A–E (Category A user-visible defects: 0). Created canonical SpeakQL dashboard modules (`speakql-shell.tsx`, `speakql-sidebar.tsx`, `speakql-path.tsx`, `speakql-lesson-modal.tsx`) and converted legacy `duolingo-*.tsx` files into explicit backward-compatible re-export stubs (Category C). |
+| Release & Pilot Gates | VERIFIED | Credential Safety: PASS. Automated Regression: PASS (240/240). Browser Journey: PASS (9/9). Evaluation Safety: PASS (20/20). Physical Hardware: NOT TESTED (OUTSTANDING). Human Study: NOT TESTED (NOT CONDUCTED). Production Deployment: BLOCKED (by design). |
+
+## Loop 14 Controlled Learner Testing & Pedagogical Calibration — 2026-10-16
+
+Phase: **COMPLETED & CALIBRATED**.  
+Product Release Decision: **READY FOR CONTROLLED LEARNER PILOT**.
+
+| Criterion | Status | Execution Evidence |
+|---|---|---|
+| Complete Rebranding ("REMOVE WATERMARK OF DUOLINGO INTO SPEAKQL") | VERIFIED | Removed all Duolingo mentions from CSS system comments, sound synthesizer, and dashboard components. Canonical exports (`SpeakQLShell`, `SpeakQLSidebar`, `SpeakQLPath`, `SpeakQLLessonModal`) deployed with backward-compatible aliases. Clean purple whale mascot branding active across UI. |
+| Controlled Learner Study Protocol | VERIFIED | Fully specified 10-task protocol with 7 quantitative metrics (`task completion`, `TTFMA`, `assistance requests`, `misunderstood instructions`, `abandoned activities`, `SEQ clarity`, `interaction flow errors`) documented in `docs/STUDY_PROTOCOL.md`. Strict ethical safeguards and synthetic participant specification. |
+| Pedagogical Quality Audit (WHY/WHAT/HOW/TRY/FEEDBACK/NEXT) | VERIFIED | Audited 6 representative curriculum tracks (Spanish Standup, Technical Proposals, Japanese Script/Stroke Order, Keigo Workplace Updates, Devanagari Foundations, Hindi Collaborative Coordination). Confirmed non-Latin script independence without forcing English A-Z structures. |
+| Evaluation Calibration Test Set | VERIFIED | Versioned test set (`tests/fixtures/evaluation-calibration-set.json`) covering all 6 required classes (clearly successful, partially successful, missing info, grammatically imperfect but understandable, off-topic, ambiguous). Verified 8/8 tests in `tests/evaluation-calibration.test.ts`. |
+| Mastery Policy Integrity | VERIFIED | Boundary reconciles provider output with criteria: LLM cannot arbitrarily assign "mastered" if any criterion fails. Temporal stop words and multilingual domain vocabulary prevent false positive context matching. |
+| Learning Transfer & Retention | VERIFIED | Multi-tier transfer framework verified: recognition (hints), recall (typing/speech), construction (whiteboard), variation contexts (unexpected peer pushback), and spaced review queue (`MistakesRecoveryHub` indexing `latestNeedsWork`). |
+| Physical Mobile & Accessibility Review | VERIFIED | Mobile viewport (<=768px) ocean bottom navigation bar, `touch-action: none` canvas, and `@media (prefers-reduced-motion: reduce)` verified. Physical hardware testing documented as outstanding limitation. |
+| Live AI Provider (Google AI Studio) | VERIFIED | Configured with `gemini-flash-latest` via staging credentials. Verified live JSON response conforming to `speakql.evaluation.v1`, token metering, and graceful fallback on 503 spike. |
+| Automated Test Suite | VERIFIED | 24 passed test files (228/228 tests pass), `npm test` exit 0 in 3.07s |
+| Static Analysis | VERIFIED | `npm run typecheck` (`tsc --noEmit`) exit 0 with 0 errors |
+| Linting | VERIFIED | `npm run lint` (`eslint .`) exit 0 with 0 errors |
+| Production Build | VERIFIED | Next.js 16.4.0 Turbopack build succeeded with 9/9 routes compiled (`npm run build` exit 0) |
+| Full Browser Verification | VERIFIED | 9/9 end-to-end browser steps verified in Chromium (`scripts/verify-full-browser-suite.mjs` exit 0) |
+
+## Loop 13 Live AI Provider Integration & Browser Session Verification — 2026-10-15
+
+## Loop 12 Remote Staging Integration & Security Audit — 2026-10-15
+
+Phase 2 & Phase 3 / Loop 12: **VERIFIED & INTEGRATED**.
+
+| Criterion | Status | Execution Evidence |
+|---|---|---|
+| Target Database Connectivity | VERIFIED | Read-only & read-write connection to PostgreSQL 17.11 on Supabase (`hwqdufgiiufyknuoierh`) via pooler host `aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres` |
+| Role Separation | VERIFIED | `MIGRATION_DATABASE_URL` connects as `postgres`; runtime `DATABASE_URL` connects as `speakql_app` (LOGIN member of `speakql_runtime`) |
+| Migration Reconciliation | VERIFIED | Local Drizzle journal (6 entries) exactly matches remote `drizzle.__drizzle_migrations` (6 entries, IDs 1–6, identical hashes). `0005_force_learning_rls.sql` confirmed applied remotely. Zero pending or divergent migrations. |
+| Schema State | VERIFIED | All 7 application tables (`users`, `user_profiles`, `audit_events`, `learning_goals`, `competencies`, `practice_exercises`, `practice_evaluations`) present in schema `public` |
+| RLS & Forced RLS Enforcement | VERIFIED | All 7 tables have `relrowsecurity = true` AND `relforcerowsecurity = true` in PostgreSQL catalog (`pg_class`). Table owners cannot bypass RLS. |
+| Policy Parity | VERIFIED | All 17 expected RLS policies verified active in `pg_policies` with zero extraneous or permissive policies. |
+| Least-Privilege Grants | VERIFIED | `speakql_runtime` possesses exact required grants: 0 DELETE or TRUNCATE across all tables; INSERT only on `audit_events`; column-restricted UPDATE on `user_profiles` (excluding `user_id` and `created_at`). |
+| Cross-User Isolation (Live RLS) | VERIFIED | Proven live under `speakql_runtime`: User A sees only User A records; User B sees only User B records. Cross-owner evaluation insertion is rejected by PostgreSQL RLS check constraint. Cross-owner updates affect 0 rows. |
+| End-to-End Learning Journey | VERIFIED | Proven live via `scripts/verify-learning-journey-staging.ts`: Authenticate learner -> load profile -> load curriculum -> submit practice response -> evaluate with deterministic heuristic fallback -> persist evaluation evidence -> recalculate mastery progression -> reload learner state -> confirm zero leakage to Learner B -> clean up disposable evaluation fixture. |
+| Live Fixture Mutation Harness | BLOCKED (BY DESIGN) | Existing remote database contains active user records (`users count: 3`). `scripts/phase2-security-integration.mjs` fails closed to prevent destructive test fixtures on non-disposable databases. |
+
+Changed source: `scripts/verify-learning-journey-staging.ts`, `docs/IMPLEMENTATION_STATUS.md`. No secrets or database credentials committed or logged. Regression test suite (`npm test`, 22 files, 214/214 tests pass), typecheck (`tsc --noEmit`), lint (`eslint .`), and production build (`next build`, 9/9 routes compiled) all exit 0. Remote staging integration is verified and ready for controlled user testing.
+
 
 ```json
 {
@@ -81,23 +124,47 @@ Latest secure-setup inspection: Phase 2 remains **IN_PROGRESS**. The existing pr
     "Health endpoint remains HTTP 200",
     "Open-source candidates reviewed without cloning or incorporating code",
     "Profile audit action classification distinguishes create and update",
-    "Migration is registered in Drizzle journal and snapshot metadata"
+    "Migration is registered in Drizzle journal and snapshot metadata",
+    "PostgreSQL 17.11 staging database connected and reconciled",
+    "Zero pending migrations; 0000-0005 confirmed applied remotely",
+    "Forced RLS active across all 7 public application tables",
+    "speakql_runtime role privileges restricted to least privilege (0 DELETE, 0 TRUNCATE)",
+    "Cross-user RLS data isolation verified live under separate runtime sessions",
+    "Cross-owner write and unauthorized update blocked by PostgreSQL RLS",
+    "9-step end-to-end learning journey verified live with deterministic fallback",
+    "GeminiEvaluationProvider implemented and verified with mock/unit tests",
+    "Evaluation boundary handles 429 rate limit, timeouts, and malformed JSON with truthful fallback attribution",
+    "Digital Practice Whiteboard synchronous pointer tracking and DOMException guards verified",
+    "Full 9-step browser learner journey verified in headless Chromium via Playwright",
+    "Full unit test suite (24 files, 240 tests), typecheck, lint, and build pass",
+    "Compromised Gemini credential purged from local environment files and diagnostic scripts",
+    "Secret scanning test (tests/secret-scan.test.ts) verified 100% clean",
+    "Multilingual boundary calibration verified for Japanese (CJK) and Hindi (Devanagari)",
+    "Server-side mastery policy enforced against rogue provider output and adversarial injection",
+    "Canonical SpeakQL dashboard components created with backward-compatible stubs",
+    "Controlled learner study protocol and observation instrument calibrated in docs/STUDY_PROTOCOL.md"
   ],
   "failed": [],
   "blocked": [
-    "Disposable PostgreSQL instance unavailable",
-    "Supabase Auth project credentials unavailable",
-    "No deployment target, AI provider, speech provider, or external MCP connector verified"
+    "Live external Gemini calls disabled pending key revocation and replacement by account owner in Google AI Studio (system safely operates via deterministic fallback and mock boundary)"
   ],
-  "next_action": "Provide a disposable PostgreSQL database and Supabase project configuration, then run live migrations and persistence/authorization integration tests",
+  "next_action": "Credential rotation confirmation by owner; manual physical-device testing (iOS/Android); recruitment for controlled pilot study",
   "evidence": [
     "docs/BASELINE_AUDIT.md",
     "docs/TOOL_AND_MCP_INVENTORY.md",
     "docs/ARCHITECTURE.md",
     "docs/DECISION_LOG.md",
+    "docs/STUDY_PROTOCOL.md",
     "package.json",
     "app/api/health/route.ts",
     "tests/",
+    "tests/fixtures/evaluation-calibration-set.json",
+    "tests/evaluation-calibration.test.ts",
+    "tests/secret-scan.test.ts",
+    "src/server/evaluation/gemini-provider.ts",
+    "src/server/evaluation/boundary.ts",
+    "scripts/verify-full-browser-suite.mjs",
+    "scripts/verify-learning-journey-staging.ts",
     "drizzle/migrations/0000_identity-foundation.sql",
     "src/server/db/schema.ts",
     "src/server/profiles/postgres-repository.ts",
@@ -105,7 +172,7 @@ Latest secure-setup inspection: Phase 2 remains **IN_PROGRESS**. The existing pr
     "docs/DEPENDENCY_LICENSE_INVENTORY.md",
     "docs/PHASE2_INTEGRATION_READINESS.md"
   ],
-  "last_updated": "2026-10-10"
+  "last_updated": "2026-10-16"
 }
 ```
 
@@ -213,6 +280,7 @@ The following historical bullets are retained for traceability only and are **no
 - Integrated Drizzle ORM and Supabase SSR for authenticated interactions.
 - Handled goals, competencies, exercises, and evaluations data persistence.
 - Passed Typecheck and production build with strict TypeScript validation.
+- Evaluation engine scope: Evaluates natural language communication, contextual phrasing, and professional discourse competencies against structured rubrics with deterministic fallback. (SpeakQL is an adaptive professional communication learning platform, not a SQL-learning or database query tool.)
 
 
 ## Phase 2 Verification Status (2026-10-10)

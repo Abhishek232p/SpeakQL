@@ -1,5 +1,5 @@
 /**
- * Web Audio API Sound Synthesizer for SpeakQL (Duolingo-style audio feedback).
+ * Web Audio API Sound Synthesizer for SpeakQL (SpeakQL gamified audio feedback).
  * Pure client-side synthesis with zero external audio assets, zero network latency,
  * and 100% cross-browser reliability.
  */

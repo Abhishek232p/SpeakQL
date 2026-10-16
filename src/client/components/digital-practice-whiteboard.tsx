@@ -45,6 +45,7 @@ export function DigitalPracticeWhiteboard({
 }: DigitalPracticeWhiteboardProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const currentStrokeRef = useRef<WhiteboardStroke | null>(null);
 
   // Drawing state
   const [strokes, setStrokes] = useState<WhiteboardStroke[]>([]);
@@ -150,7 +151,11 @@ export function DigitalPracticeWhiteboard({
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    canvas.setPointerCapture(e.pointerId);
+    try {
+      canvas.setPointerCapture(e.pointerId);
+    } catch {
+      // Non-fatal if pointer capture is not supported for synthetic/touch events
+    }
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
@@ -162,11 +167,12 @@ export function DigitalPracticeWhiteboard({
       points: [{ x, y, pressure: e.pressure }],
     };
 
+    currentStrokeRef.current = newStroke;
     setCurrentStroke(newStroke);
   };
 
   const handlePointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    if (!currentStroke) return;
+    if (!currentStrokeRef.current) return;
     e.preventDefault();
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -175,33 +181,42 @@ export function DigitalPracticeWhiteboard({
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
-    setCurrentStroke((prev) => {
-      if (!prev) return null;
-      return {
-        ...prev,
-        points: [...prev.points, { x, y, pressure: e.pressure }],
-      };
-    });
+    const nextStroke: WhiteboardStroke = {
+      ...currentStrokeRef.current,
+      points: [...currentStrokeRef.current.points, { x, y, pressure: e.pressure }],
+    };
+    currentStrokeRef.current = nextStroke;
+    setCurrentStroke(nextStroke);
   };
 
   const handlePointerUp = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    if (!currentStroke) return;
+    const finished = currentStrokeRef.current;
+    if (!finished) return;
     e.preventDefault();
     const canvas = canvasRef.current;
-    if (canvas && canvas.hasPointerCapture(e.pointerId)) {
-      canvas.releasePointerCapture(e.pointerId);
+    try {
+      if (canvas && canvas.hasPointerCapture(e.pointerId)) {
+        canvas.releasePointerCapture(e.pointerId);
+      }
+    } catch {
+      // Non-fatal
     }
 
-    setStrokes((prev) => [...prev, currentStroke]);
+    currentStrokeRef.current = null;
+    setStrokes((prev) => [...prev, finished]);
     setCurrentStroke(null);
   };
 
   const handlePointerCancel = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    if (!currentStroke) return;
     const canvas = canvasRef.current;
-    if (canvas && canvas.hasPointerCapture(e.pointerId)) {
-      canvas.releasePointerCapture(e.pointerId);
+    try {
+      if (canvas && e.pointerId && canvas.hasPointerCapture(e.pointerId)) {
+        canvas.releasePointerCapture(e.pointerId);
+      }
+    } catch {
+      // Non-fatal
     }
+    currentStrokeRef.current = null;
     setCurrentStroke(null);
   };
 
@@ -264,17 +279,34 @@ export function DigitalPracticeWhiteboard({
         }}
       >
         <div>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "4px" }}>
             <span style={{ fontSize: "1.2rem" }}>✍️</span>
             <h3 style={{ margin: 0, fontSize: "1rem", fontWeight: 700, color: "#f8fafc" }}>
               {scenarioTitle}
             </h3>
+            <span
+              style={{
+                fontSize: "10px",
+                fontWeight: 700,
+                color: "#c084fc",
+                background: "rgba(168, 85, 247, 0.15)",
+                border: "1px solid rgba(168, 85, 247, 0.3)",
+                padding: "2px 8px",
+                borderRadius: "99px",
+                letterSpacing: "0.05em",
+              }}
+            >
+              ACTIVE SCRIPT TRACING &amp; KINESTHETIC MEMORY
+            </span>
           </div>
-          {promptText && (
-            <p style={{ margin: "0.25rem 0 0", fontSize: "0.85rem", color: "#94a3b8" }}>
-              {promptText}
-            </p>
-          )}
+
+          <p style={{ margin: "0.2rem 0 0", fontSize: "0.85rem", color: "#cbd5e1", lineHeight: 1.4 }}>
+            {promptText || "Handwriting non-Latin scripts (Japanese Hiragana/Katakana, Hindi Devanagari) and diagramming sentence structure activates motor-cognitive pathways for stronger memory retention."}
+          </p>
+
+          <p style={{ margin: "0.25rem 0 0", fontSize: "0.75rem", color: "#94a3b8" }}>
+            ℹ️ Freehand canvas with touch &amp; stylus support. Transcribe your notes into the response field below when ready for rubric evaluation.
+          </p>
         </div>
 
         {onReturnToExercise && (

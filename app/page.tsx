@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createSupabaseAuthProvider } from "@/src/server/auth/supabase";
 import { WhaleMascot, SpeakQLLogo } from "@/src/client/components/whale-mascot";
+import ScaleWithUsSection from "@/src/client/components/scale-with-us-section";
 
 const capabilities = [
   {
@@ -67,6 +68,7 @@ export default async function Home() {
         <div className="nav-links">
           <a href="#islands">World</a>
           <a href="#method">Method</a>
+          <a href="#scale-with-us">Scale &amp; Partners</a>
           <a href="#status">Status</a>
           {identity ? (
             <Link className="nav-cta" href="/dashboard">
@@ -214,7 +216,10 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* 5. Platform Status & Foundation Assurance */}
+      {/* 5. Scale With Us & Partnerships Section */}
+      <ScaleWithUsSection />
+
+      {/* 6. Platform Status & Foundation Assurance */}
       <section className="status shell" id="status">
         <div className="status-card">
           <p className="section-kicker">Platform status · Active Learning System</p>

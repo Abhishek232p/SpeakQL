@@ -7,9 +7,10 @@ import {
   type EvaluationRequest,
   type EvaluationResult,
 } from "./contracts";
+import { createConfiguredEvaluationProvider } from "./gemini-provider";
 
 export const DEFAULT_EVALUATION_LIMITS = {
-  timeoutMs: 1_500,
+  timeoutMs: 12_000,
   maxInputChars: 10_000,
   maxInputTokens: 4_000,
   maxOutputChars: 4_000,
@@ -53,6 +54,7 @@ export type EvaluationBoundaryOptions = Readonly<{
 
 const STOP_WORDS = new Set([
   "a", "an", "and", "are", "as", "at", "be", "by", "for", "from", "how", "in", "into", "is", "it", "of", "on", "or", "the", "this", "to", "what", "when", "where", "with", "you",
+  "yesterday", "today", "tomorrow", "also", "just", "very", "were", "been", "have", "went", "will",
 ]);
 
 function estimateTokens(value: string): number {
@@ -74,43 +76,89 @@ function significantWords(value: string): Set<string> {
   );
 }
 
-function extractPromptText(request: EvaluationRequest): { scenario: string; instructions: string; expected: string } {
+function extractPromptText(request: EvaluationRequest): {
+  scenario: string;
+  instructions: string;
+  expected: string;
+  context: string;
+  objective: string;
+  targetVocabulary: string[];
+} {
   let scenario = request.scenarioPrompt;
   let instructions = "";
+  let context = "";
+  let objective = "";
+  let targetVocabulary: string[] = [];
+
   if (request.scenarioPrompt.startsWith("{") && request.scenarioPrompt.endsWith("}")) {
     try {
       const parsed = JSON.parse(request.scenarioPrompt);
       if (typeof parsed.scenario === "string") scenario = parsed.scenario;
       if (typeof parsed.instructions === "string") instructions = parsed.instructions;
+      if (typeof parsed.context === "string") context = parsed.context;
+      if (typeof parsed.objective === "string") objective = parsed.objective;
+      if (Array.isArray(parsed.targetVocabulary)) {
+        targetVocabulary = parsed.targetVocabulary.filter((v: unknown): v is string => typeof v === "string");
+      }
     } catch {
       // keep raw
     }
   }
-  return { scenario, instructions, expected: request.expectedStructure };
+  return { scenario, instructions, expected: request.expectedStructure, context, objective, targetVocabulary };
 }
 
 function extractKeyExcerpts(response: string): { opening: string; body: string; sentences: string[] } {
-  const sentences = response.split(/(?<=[.!?])\s+|\n+/).map(s => s.trim()).filter(Boolean);
+  // Multilingual sentence boundary delimiter: supports Latin (. ! ?), Japanese/CJK (。 ！ ？), and Devanagari (। ॥)
+  const sentences = response.split(/(?<=[.!?\u3002\uff01\uff1f\u0964\u0965])\s*|\n+/u).map(s => s.trim()).filter(Boolean);
   const firstSentence = sentences[0] || response.trim();
   const opening = firstSentence.length > 80 ? firstSentence.slice(0, 77) + "…" : firstSentence;
   const body = sentences.slice(1).join(" ");
   return { opening, body, sentences };
 }
 
+// Multilingual domain terminology equivalents for cross-language workplace scenarios
+const DOMAIN_VOCABULARY_EQUIVALENTS: Record<string, string[]> = {
+  standup: ["standup", "sprint", "ayer", "hoy", "bloqueo", "bloqueos", "yesterday", "today", "blocker", "blockers", "asakai", "昨日は", "本日は", "進捗", "कल", "आज", "ब्लॉकर"],
+  engineering: ["engineering", "developer", "software", "desarrollo", "código", "base", "datos", "migración", "api", "endpoint", "staging", "servidor", "tests", "pruebas", "実装", "開発", "テスト", "कोड", "सर्वर"],
+  database: ["database", "base", "datos", "sql", "migración", "esquema", "tabla", "registro", "db", "postgres", "redis", "caching", "キャッシュ"],
+  workplace: ["colleagues", "teammates", "equipo", "compañeros", "reunión", "sincronización", "sync", "lead", "お疲れ様", "チーム", "टीम"],
+};
+
 function hasContextSignal(request: EvaluationRequest): boolean {
-  const { scenario, instructions, expected } = extractPromptText(request);
+  const { scenario, instructions, expected, context, objective, targetVocabulary } = extractPromptText(request);
   const promptWords = new Set([
     ...significantWords(scenario),
     ...significantWords(instructions),
     ...significantWords(expected),
+    ...significantWords(context),
+    ...significantWords(objective),
+    ...targetVocabulary.flatMap((v) => [...significantWords(v)]),
   ]);
+
   if (promptWords.size === 0) return true;
+
   const responseWords = significantWords(request.response);
-  return [...promptWords].some((word) => responseWords.has(word));
+  const matchedPromptWords = [...promptWords].filter((word) => responseWords.has(word));
+
+  // If response matches explicit prompt/target vocabulary words directly
+  if (matchedPromptWords.length >= 1) return true;
+
+  // Cross-lingual domain check: detect if scenario is in domain category and response uses domain equivalent vocabulary
+  const fullPromptText = `${scenario} ${instructions} ${expected} ${context} ${objective}`.toLowerCase();
+  for (const [domainKey, terms] of Object.entries(DOMAIN_VOCABULARY_EQUIVALENTS)) {
+    const isDomainPrompt = fullPromptText.includes(domainKey) || terms.some((t) => fullPromptText.includes(t));
+    if (isDomainPrompt) {
+      const responseMatches = terms.filter((t) => request.response.toLowerCase().includes(t));
+      if (responseMatches.length >= 2) return true;
+      if (responseMatches.length === 1 && !["yesterday", "today", "ayer", "hoy"].includes(responseMatches[0])) return true;
+    }
+  }
+
+  return false;
 }
 
 function hasStructureSignal(response: string): boolean {
-  return /[.!?](?:\s|$)/u.test(response) || /\n\s*\S/u.test(response);
+  return /[.!?\u3002\uff01\uff1f\u0964\u0965](?:\s|$|[\p{L}\p{N}])/u.test(response) || /\n\s*\S/u.test(response);
 }
 
 function criterionEvidence(criterion: EvaluationCriterion): string {
@@ -121,9 +169,19 @@ function fallbackResult(request: EvaluationRequest): EvaluationResult {
   const response = request.response.trim();
   const wordCount = countWords(response);
   const { opening, sentences } = extractKeyExcerpts(response);
+
+  // Script-aware substance and structural length calibration:
+  // CJK scripts (Japanese Kanji/Hiragana/Katakana, Chinese) do not use whitespace word delimitation.
+  // In CJK, a 10-15 character phrase carries the communicative weight of an 8-word alphabetic clause.
+  const isCjk = /[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han}]/u.test(response);
+  const cjkChars = response.replace(/[^\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han}]/gu, "").length;
+
+  const substantiveLengthPassed = isCjk ? cjkChars >= 10 : wordCount >= 8;
+  const structuralLengthPassed = isCjk ? cjkChars >= 4 : wordCount >= 3;
+
   const contextPassed = hasContextSignal(request);
-  const structurePassed = hasStructureSignal(response) && sentences.length >= 1;
-  const specificityPassed = wordCount >= 8 && sentences.length >= 1;
+  const structurePassed = hasStructureSignal(response) && structuralLengthPassed && sentences.length >= 1;
+  const specificityPassed = substantiveLengthPassed && sentences.length >= 1;
 
   const contextEvidence = contextPassed
     ? `Engaged situational context effectively with relevant phrasing: "${opening}".`
@@ -134,8 +192,12 @@ function fallbackResult(request: EvaluationRequest): EvaluationResult {
     : "Add clear sentence boundaries, punctuation, or paragraph division to structure your message.";
 
   const specificityEvidence = specificityPassed
-    ? `Provided substantive communication with sufficient detail (${wordCount} words) rather than a brief assertion.`
-    : `Response is too brief or general (${wordCount} words); expand with concrete actions, reasoning, or next steps.`;
+    ? (isCjk
+        ? `Provided substantive communication with sufficient detail (${cjkChars} characters) rather than a brief assertion.`
+        : `Provided substantive communication with sufficient detail (${wordCount} words) rather than a brief assertion.`)
+    : (isCjk
+        ? `Response is too brief or general (${cjkChars} characters); expand with concrete actions, reasoning, or next steps.`
+        : `Response is too brief or general (${wordCount} words); expand with concrete actions, reasoning, or next steps.`);
 
   const criteria: EvaluationCriterion[] = [
     {
@@ -255,6 +317,7 @@ async function evaluateProvider(
  */
 export function createEvaluationBoundary(options: EvaluationBoundaryOptions = {}): EvaluationBoundary {
   const limits = mergeLimits(options.limits);
+  const provider = options.provider ?? (process.env.VITEST ? undefined : createConfiguredEvaluationProvider());
 
   return {
     async evaluate(request: EvaluationRequest): Promise<EvaluationDecision> {
@@ -282,7 +345,7 @@ export function createEvaluationBoundary(options: EvaluationBoundaryOptions = {}
         };
       }
 
-      if (!options.provider) {
+      if (!provider) {
         return {
           source: "fallback",
           fallbackReason: "no_provider_configured",
@@ -292,7 +355,7 @@ export function createEvaluationBoundary(options: EvaluationBoundaryOptions = {}
 
       let rawOutput: unknown;
       try {
-        rawOutput = await evaluateProvider(options.provider, normalizedRequest, limits.timeoutMs);
+        rawOutput = await evaluateProvider(provider, normalizedRequest, limits.timeoutMs);
       } catch (error) {
         return {
           source: "fallback",
@@ -318,10 +381,21 @@ export function createEvaluationBoundary(options: EvaluationBoundaryOptions = {}
         };
       }
 
+      // Enforce SpeakQL versioned mastery policy: score CANNOT be 'mastered' if any criterion failed
+      const hasFailedCriteria = parsedOutput.data.criteria.some((c) => !c.passed);
+      const reconciledScore = hasFailedCriteria ? "needs_work" : parsedOutput.data.score;
+      const reconciledMistakes = hasFailedCriteria && parsedOutput.data.mistakes.length === 0
+        ? parsedOutput.data.criteria.filter((c) => !c.passed).map((c) => criterionEvidence(c))
+        : parsedOutput.data.mistakes;
+
       return {
         source: "provider",
-        providerId: options.provider.id,
-        result: parsedOutput.data,
+        providerId: provider.id,
+        result: {
+          ...parsedOutput.data,
+          score: reconciledScore,
+          mistakes: reconciledMistakes,
+        },
       };
     },
   };

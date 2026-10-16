@@ -209,7 +209,7 @@ export default function ConversationMentorView({
         <div>
           <span className="mentor-ai-badge">
             <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#38bdf8", display: "inline-block" }} />
-            AI Language Mentor &amp; Dialogue
+            Interactive Language Mentor · Dialogue Studio
           </span>
           <h2 style={{ fontSize: "24px", fontWeight: 800, margin: "10px 0 6px", color: "#ffffff" }}>
             Natural Conversation Studio
@@ -235,7 +235,7 @@ export default function ConversationMentorView({
           <strong style={{ color: "#ffffff", display: "block", marginBottom: 2 }}>
             Evaluation Engine Status:
           </strong>
-          Configured linguistic boundary active. All submissions receive instant grammatical and pragmatic feedback.
+          Configured deterministic linguistic engine active (Rule-based Standup Rubric v1). All submissions receive instant structural feedback.
         </div>
       </div>
 

@@ -7,7 +7,7 @@ import { deriveGamification } from "@/src/server/goals/gamification";
 import { deriveLearningPath } from "@/src/server/goals/learning-path";
 import OnboardingGoalForm from "./onboarding-goal-form";
 import LogoutButton from "./logout-button";
-import DuolingoShell from "./duolingo-shell";
+import SpeakQLShell from "./speakql-shell";
 import { WhaleMascot, SpeakQLLogo } from "@/src/client/components/whale-mascot";
 
 export default async function DashboardPage() {
@@ -29,7 +29,7 @@ export default async function DashboardPage() {
   );
 
   if (data.goals.length > 0) {
-    return <DuolingoShell data={data} gamification={gamification} learningPath={learningPath} />;
+    return <SpeakQLShell data={data} gamification={gamification} learningPath={learningPath} />;
   }
 
   // Screen 3: Guided Learner Onboarding Experience
