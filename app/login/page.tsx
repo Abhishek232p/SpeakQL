@@ -59,9 +59,12 @@ export default function LoginPage() {
   return (
     <main style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       {/* Ocean Nav */}
-      <nav className="nav shell" aria-label="Primary navigation">
-        <Link className="wordmark" href="/" aria-label="SpeakQL home">
+      <nav className="nav shell" aria-label="Primary navigation" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Link className="wordmark" href="/" aria-label="SpeakQL home" style={{ textDecoration: 'none' }}>
           <SpeakQLLogo size={36} showText={true} />
+        </Link>
+        <Link href="/" style={{ color: '#94a3b8', fontSize: '13px', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span>← Back to home</span>
         </Link>
       </nav>
 
@@ -84,7 +87,16 @@ export default function LoginPage() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
           <WhaleMascot mood="happy" size={68} animated={true} />
           <div>
-            <p className="eyebrow" style={{ margin: '0 0 4px', color: '#38bdf8' }}>
+            <p
+              className="eyebrow"
+              style={{
+                margin: '0 0 4px',
+                color: '#38bdf8',
+                fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                fontWeight: 700,
+                letterSpacing: '0.12em',
+              }}
+            >
               {isLogin ? 'WELCOME BACK' : 'BEGIN YOUR ODYSSEY'}
             </p>
             <h2 style={{ margin: 0, fontSize: '24px', fontWeight: 800, color: '#ffffff' }}>
@@ -162,13 +174,23 @@ export default function LoginPage() {
                   border: 'none',
                   color: '#c4b5fd',
                   cursor: 'pointer',
-                  fontSize: '16px',
                   padding: '4px',
                   display: 'flex',
                   alignItems: 'center',
+                  justifyContent: 'center',
                 }}
               >
-                {showPassword ? '👁️' : '👁️‍🗨️'}
+                {showPassword ? (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                ) : (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                    <line x1="1" y1="1" x2="23" y2="23" />
+                  </svg>
+                )}
               </button>
             </div>
           </div>

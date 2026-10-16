@@ -7,6 +7,11 @@ export const metadata: Metadata = {
   title: "SpeakQL — Capability, practiced in context",
   description: "Professional learning for the language, role, culture, and environment you choose.",
   manifest: "/manifest.webmanifest",
+  icons: {
+    icon: "/icon.svg",
+    shortcut: "/icon.svg",
+    apple: "/icon.svg",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
