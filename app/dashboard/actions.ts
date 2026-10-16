@@ -68,11 +68,16 @@ async function runDatabaseWrite<T>(write: () => Promise<T>, safeMessage: string)
 export async function createLearningGoal(formData: FormData) {
   const identity = await requireIdentity();
   const description = readSingleString(formData, 'description', MAX_GOAL_DESCRIPTION_LENGTH);
+  const startingLevelValue = formData.get('startingLevel');
+  const allowedStartingLevels = new Set(['fresher', 'intermediate', 'advanced']);
+  if (typeof startingLevelValue !== 'string' || !allowedStartingLevels.has(startingLevelValue)) {
+    throw new ActionInputError('Choose Fresher, Intermediate, or Advanced.');
+  }
 
   await runDatabaseWrite(async () => {
     const db = getDb();
     const repo = createGoalsRepository(db);
-    return repo.createGoal(identity, { description });
+    return repo.createGoal(identity, { description, startingLevel: startingLevelValue as 'fresher' | 'intermediate' | 'advanced' });
   }, GOAL_WRITE_FAILED);
 }
 
