@@ -29,6 +29,9 @@ const exerciseId = "00000000-0000-4000-8000-000000000001";
 function form(field: string, value: string | Blob) {
   const data = new FormData();
   data.set(field, value);
+  if (field === "description") {
+    data.set("startingLevel", "fresher");
+  }
   return data;
 }
 
@@ -72,6 +75,7 @@ describe.each([
     "rejects %s input before database access",
     async (invalid) => {
       const data = new FormData();
+      if (field === "description") data.set("startingLevel", "fresher");
       if (invalid === "empty") data.set(field, "");
       if (invalid === "whitespace") data.set(field, " \n\t ");
       if (invalid === "file") data.set(field, new Blob(["not a text field"]), "answer.txt");
@@ -119,16 +123,31 @@ describe.each([
 });
 
 describe("action ownership and normalization", () => {
-  it("uses only the validated identity and trimmed goal description", async () => {
+  it("uses only the validated identity, trimmed goal description, and starting level", async () => {
     const data = form("description", "  Lead a meeting in Spanish. \n");
     data.set("subject", "untrusted-subject");
     data.set("userId", "untrusted-user");
 
     await createLearningGoal(data);
 
-    expect(mocks.repository.createGoal).toHaveBeenCalledExactlyOnceWith(identity, { description: "Lead a meeting in Spanish." });
+    expect(mocks.repository.createGoal).toHaveBeenCalledExactlyOnceWith(identity, {
+      description: "Lead a meeting in Spanish.",
+      startingLevel: "fresher",
+    });
     expect(mocks.repository.evaluateExercise).not.toHaveBeenCalled();
   });
+
+  it.each(["beginner", "expert", "unknown", "", "   "])(
+    "rejects invalid or unapproved starting level %j before database access",
+    async (invalidLevel) => {
+      const data = new FormData();
+      data.set("description", "A valid goal description");
+      data.set("startingLevel", invalidLevel);
+
+      await expect(createLearningGoal(data)).rejects.toThrow("Choose Fresher, Intermediate, or Advanced.");
+      expectNoWrite();
+    },
+  );
 
   it("uses the bound UUID, validated identity, and trimmed response", async () => {
     const data = form("response", "  A practical response. \n");

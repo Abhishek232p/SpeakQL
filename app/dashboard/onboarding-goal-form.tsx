@@ -23,7 +23,7 @@ const EXPERIENCE_LEVELS = [
   { id: "fresher", label: "Fresher / Beginner", desc: "Start from the first foundations: script, letters or characters, sounds, and guided writing." },
   { id: "intermediate", label: "Intermediate", desc: "Begin with a level-appropriate diagnostic. Review missing foundations only where the evidence shows a gap." },
   { id: "advanced", label: "Advanced", desc: "Begin with an advanced diagnostic and realistic tasks. Target only the gaps the assessment finds." },
-];
+] as const;
 
 const PROFESSIONAL_TRACKS = [
   { id: "engineering", label: "Software Engineering & Standups", icon: "💻", defaultGoal: "Lead daily engineering standups and explain architecture dependencies" },
@@ -36,7 +36,7 @@ const PROFESSIONAL_TRACKS = [
 
 export default function OnboardingGoalForm() {
   const [selectedLang, setSelectedLang] = useState<string>("Japanese");
-  const [selectedExperience, setSelectedExperience] = useState<string>("fresher");
+  const [selectedExperience, setSelectedExperience] = useState<"fresher" | "intermediate" | "advanced">("fresher");
   const [selectedTrack, setSelectedTrack] = useState<string>("engineering");
   const [customDescription, setCustomDescription] = useState<string>(
     "Lead daily engineering standups and explain architecture dependencies in Japanese"
@@ -65,13 +65,12 @@ export default function OnboardingGoalForm() {
         setIsSubmitting(true);
         try {
           // Self-reported experience personalizes the diagnostic only; it cannot bypass the foundation mastery gate.
-          const enriched = new FormData(formData);
-          enriched.set(
+          formData.set(
             "description",
             `${String(formData.get("description") ?? "").trim()} | SpeakQL starting level: ${selectedExperience}. Use this level to choose the initial diagnostic and curriculum entry point; verify actual ability before unlocking dependent stages.`
           );
-          enriched.set("startingLevel", selectedExperience);
-          await createLearningGoal(enriched);
+          formData.set("startingLevel", selectedExperience);
+          await createLearningGoal(formData);
         } finally {
           setIsSubmitting(false);
         }
