@@ -32,6 +32,27 @@ interface SpeechRecognitionInstance {
 
 type SpeechRecognitionConstructor = new () => SpeechRecognitionInstance;
 
+function getSpeechLocale(details: ParsedExerciseDetails): string {
+  const context = [
+    details.scenario,
+    details.context,
+    details.objective,
+    details.instructions,
+    details.speechPrompt ?? "",
+    ...(details.targetVocabulary ?? []),
+  ].join(" ").toLowerCase();
+
+  if (context.includes("japanese") || context.includes("日本語") || /[ぁ-ゟ゠-ヿ]/u.test(context)) return "ja-JP";
+  if (context.includes("hindi") || context.includes("devanagari") || /[ऀ-ॿ]/u.test(context)) return "hi-IN";
+  if (context.includes("spanish") || context.includes("español") || /[¿¡ñáéíóú]/u.test(context)) return "es-ES";
+  if (context.includes("german") || context.includes("deutsch") || /[äöüß]/u.test(context)) return "de-DE";
+  if (context.includes("french") || context.includes("français") || /[àâçéèêëîïôûùüÿœ]/u.test(context)) return "fr-FR";
+  if (context.includes("mandarin") || context.includes("chinese") || /[\u4e00-\u9fff]/u.test(context)) return "zh-CN";
+  if (context.includes("italian") || context.includes("italiano")) return "it-IT";
+  if (context.includes("portuguese") || context.includes("português")) return "pt-PT";
+  return "en-US";
+}
+
 interface SpeechWindow {
   SpeechRecognition?: SpeechRecognitionConstructor;
   webkitSpeechRecognition?: SpeechRecognitionConstructor;
@@ -116,7 +137,7 @@ function ActiveQuestionCard({ exercise, onAnswerSubmit, onNextQuestion }: Questi
       const recognition = new SpeechConstructor();
       recognition.continuous = true;
       recognition.interimResults = true;
-      recognition.lang = details.scenario.toLowerCase().includes("spanish") ? "es-ES" : "en-US";
+      recognition.lang = getSpeechLocale(details);
 
       recognition.onstart = () => {
         setIsListening(true);
@@ -185,17 +206,22 @@ function ActiveQuestionCard({ exercise, onAnswerSubmit, onNextQuestion }: Questi
     startTransition(async () => {
       try {
         const evalRecord = await submitPracticeEvaluation(exercise.id, formData) as { score?: string } | undefined;
-        const isMastered = evalRecord?.score ? evalRecord.score === "mastered" : (answerToSubmit.length >= 25 && !answerToSubmit.includes("bad"));
+        // Fail closed: missing or unknown server evaluation must never grant mastery.
+        const isMastered = evalRecord?.score === "mastered";
         if (isMastered) {
           sound.playCorrect();
           setFeedbackState("correct");
-          setFeedbackMessage("Excellent fluency, natural clarity, and professional tone!");
+          setFeedbackMessage("Your submitted response met the current evaluation criteria.");
           onAnswerSubmit(true);
         } else {
           sound.playIncorrect();
           setFeedbackState("incorrect");
-          setFeedbackMessage("Good attempt! Consider incorporating more specific context and complete sentences.");
-          onAnswerSubmit(false);
+          setFeedbackMessage(
+            evalRecord?.score === "needs_work"
+              ? "Good attempt. Review the feedback, revise your answer, and try again. This stage remains incomplete."
+              : "We could not verify mastery from the server. Your answer is preserved; retry when evaluation is available."
+          );
+          if (evalRecord?.score === "needs_work") onAnswerSubmit(false);
         }
       } catch {
         sound.playIncorrect();
@@ -205,7 +231,14 @@ function ActiveQuestionCard({ exercise, onAnswerSubmit, onNextQuestion }: Questi
     });
   };
 
+  const handleRetry = () => {
+    sound.playPop();
+    setFeedbackState("idle");
+    setFeedbackMessage(null);
+  };
+
   const handleContinue = () => {
+    if (feedbackState !== "correct") return;
     sound.playPop();
     onNextQuestion();
   };
@@ -213,9 +246,12 @@ function ActiveQuestionCard({ exercise, onAnswerSubmit, onNextQuestion }: Questi
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Enter" && !e.shiftKey) {
-        if (feedbackState !== "idle") {
+        if (feedbackState === "correct") {
           e.preventDefault();
           handleContinue();
+        } else if (feedbackState === "incorrect") {
+          e.preventDefault();
+          handleRetry();
         } else if (!isSubmitDisabled) {
           e.preventDefault();
           handleCheckAnswer();
@@ -390,13 +426,9 @@ function ActiveQuestionCard({ exercise, onAnswerSubmit, onNextQuestion }: Questi
         <div className="duo-footer-content">
           {feedbackState === "idle" ? (
             <div className="duo-footer-idle-row">
-              <button
-                type="button"
-                className="duo-skip-button"
-                onClick={handleContinue}
-              >
-                SKIP
-              </button>
+              <span style={{ color: "#94a3b8", fontSize: "12px", alignSelf: "center" }}>
+                Master this step to continue
+              </span>
               <button
                 type="button"
                 className="duo-check-button"
@@ -408,7 +440,7 @@ function ActiveQuestionCard({ exercise, onAnswerSubmit, onNextQuestion }: Questi
             </div>
           ) : (
             <div className="duo-footer-feedback-row">
-              <div className="duo-feedback-message-block">
+              <div className="duo-feedback-message-block" role="alert" aria-live="polite">
                 <div className="duo-feedback-icon" aria-hidden="true">
                   {feedbackState === "correct" ? "✓" : "✕"}
                 </div>
@@ -439,14 +471,25 @@ function ActiveQuestionCard({ exercise, onAnswerSubmit, onNextQuestion }: Questi
                   </div>
                 </div>
               </div>
-              <button
-                type="button"
-                className={`duo-continue-button duo-btn-${feedbackState}`}
-                onClick={handleContinue}
-                autoFocus
-              >
-                CONTINUE
-              </button>
+              {feedbackState === "correct" ? (
+                <button
+                  type="button"
+                  className="duo-continue-button duo-btn-correct"
+                  onClick={handleContinue}
+                  autoFocus
+                >
+                  CONTINUE
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="duo-continue-button duo-btn-incorrect"
+                  onClick={handleRetry}
+                  autoFocus
+                >
+                  TRY AGAIN
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -509,7 +552,7 @@ export default function SpeakQLLessonModal({
           ✕
         </button>
 
-        <div className="duo-progress-container" role="progressbar" aria-valuenow={progressPercent} aria-valuemin={0} aria-valuemax={100}>
+        <div className="duo-progress-container" role="progressbar" aria-label={`Lesson progress: ${progressPercent}%`} aria-valuenow={progressPercent} aria-valuemin={0} aria-valuemax={100}>
           <div className="duo-progress-track">
             <div className="duo-progress-fill" style={{ width: `${progressPercent}%` }}>
               <div className="duo-progress-highlight" />
@@ -531,7 +574,7 @@ export default function SpeakQLLessonModal({
             {isMuted ? "🔇" : "🔊"}
           </button>
 
-          <div className="duo-hearts-badge" title={`${activeHeartCount} hearts remaining`}>
+          <div className="duo-hearts-badge" role="status" aria-label={`${activeHeartCount} hearts remaining`} title={`${activeHeartCount} hearts remaining`}>
             <span className="duo-heart-icon" aria-hidden="true">❤️</span>
             <span className="duo-heart-count">{activeHeartCount}</span>
           </div>

@@ -32,6 +32,42 @@ describe("Canonical End-to-End Learner Journey (ASD-STE100 Spec)", () => {
     expect(standupPlan.exercises[0].scenarioPrompt).toContain("お疲れ様です");
   });
 
+  it("uses the selected starting level to configure diagnostic assessments and difficulty", () => {
+    const fresher = generateGoalCurriculum("Learn Japanese", "fresher");
+    const intermediate = generateGoalCurriculum("Learn Japanese", "intermediate");
+    const advanced = generateGoalCurriculum("Learn Japanese", "advanced");
+
+    // Fresher starts with foundational script
+    const fresherDetails = parseExerciseDetails(fresher[0].exercises[0].scenarioPrompt, fresher[0].exercises[0].expectedStructure);
+    expect(fresherDetails.difficulty).toBe("Foundational");
+    expect(fresher[0].competencyDescription).toContain("Foundations");
+
+    // Intermediate starts with a diagnostic assessment to calibrate proficiency
+    const intermediateDetails = parseExerciseDetails(intermediate[0].exercises[0].scenarioPrompt, intermediate[0].exercises[0].expectedStructure);
+    expect(intermediateDetails.difficulty).toBe("Intermediate");
+    expect(intermediateDetails.objective).toContain("Diagnostic Assessment");
+
+    // Advanced starts with high-stakes diagnostic assessment
+    const advancedDetails = parseExerciseDetails(advanced[0].exercises[0].scenarioPrompt, advanced[0].exercises[0].expectedStructure);
+    expect(advancedDetails.difficulty).toBe("Advanced");
+    expect(advancedDetails.objective).toContain("Diagnostic Assessment");
+  });
+
+  it("respects explicit targetLanguage options without relying solely on text regex", () => {
+    // Goal contains no language keywords in its description
+    const plansWithJapanese = generateGoalCurriculum("Prepare for technical sprint reviews", {
+      startingLevel: "fresher",
+      targetLanguage: "Japanese",
+    });
+    expect(plansWithJapanese[0].competencyDescription).toContain("Hiragana");
+
+    const plansWithHindi = generateGoalCurriculum("Prepare for technical sprint reviews", {
+      startingLevel: "fresher",
+      targetLanguage: "Hindi",
+    });
+    expect(plansWithHindi[0].competencyDescription).toContain("Devanagari");
+  });
+
   it("generates language-aware curriculum for Hindi with Devanagari script foundations", () => {
     const plans = generateGoalCurriculum("Deliver technical status updates in Hindi");
     expect(plans.length).toBeGreaterThanOrEqual(2);
@@ -114,6 +150,29 @@ describe("Canonical End-to-End Learner Journey (ASD-STE100 Spec)", () => {
     expect(path.modules.length).toBe(2);
     expect(path.modules[0].lessons[0].state).toBe("available");
     expect(path.modules[1].lessons[0].state).toBe("locked"); // Locked until module 1 completed
+  });
+
+  it("keeps the next lesson locked after needs_work and unlocks only after mastery", () => {
+    const competencies: DashboardCompetencyRecord[] = [
+      { id: "comp-1", goalId: "goal-1", description: "Foundational vowels", status: "pending" },
+      { id: "comp-2", goalId: "goal-1", description: "Core vocabulary", status: "pending" },
+    ];
+    const exercises: DashboardExerciseRecord[] = [
+      { id: "ex-1", competencyId: "comp-1", scenarioPrompt: "Recognize あ", expectedStructure: "あ" },
+      { id: "ex-2", competencyId: "comp-2", scenarioPrompt: "Read a basic word", expectedStructure: "A valid word" },
+    ];
+
+    const failedPath = deriveLearningPath(competencies, exercises, [
+      { id: "ev-1", exerciseId: "ex-1", score: "needs_work", createdAt: "2026-10-16T10:00:00Z" },
+    ]);
+    expect(failedPath.modules[0].lessons[0].state).toBe("review_recommended");
+    expect(failedPath.modules[1].lessons[0].state).toBe("locked");
+
+    const masteredPath = deriveLearningPath(competencies, exercises, [
+      { id: "ev-1", exerciseId: "ex-1", score: "mastered", createdAt: "2026-10-16T10:00:00Z" },
+    ]);
+    expect(masteredPath.modules[0].lessons[0].state).toBe("completed");
+    expect(masteredPath.modules[1].lessons[0].state).toBe("available");
   });
 
   it("calculates gamification XP and daily goals without spam inflation", () => {

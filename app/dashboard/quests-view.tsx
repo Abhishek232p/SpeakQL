@@ -61,7 +61,7 @@ export default function QuestsView({ gamification, onClaimGems }: QuestsViewProp
           <h3>Autumn Fluency Expedition</h3>
           <p>Complete 15 daily quests this month to earn the limited-edition Communicator Badge.</p>
           <div className="monthly-progress-row">
-            <div className="monthly-progress-bar" role="progressbar" aria-valuenow={7} aria-valuemin={0} aria-valuemax={15}>
+            <div className="monthly-progress-bar" role="progressbar" aria-label="Autumn Fluency Expedition: 7 of 15 quests completed" aria-valuenow={7} aria-valuemin={0} aria-valuemax={15}>
               <div className="monthly-progress-fill" style={{ width: "46%" }} />
             </div>
             <span className="monthly-progress-text">7 / 15 Quests</span>
@@ -91,7 +91,7 @@ export default function QuestsView({ gamification, onClaimGems }: QuestsViewProp
                 <div className="quest-details-col">
                   <h4 className="quest-title">{q.title}</h4>
                   <p className="quest-desc">{q.description}</p>
-                  <div className="quest-progress-track">
+                  <div className="quest-progress-track" role="progressbar" aria-label={`${q.title} progress: ${q.current} of ${q.target}`} aria-valuenow={q.current} aria-valuemin={0} aria-valuemax={q.target}>
                     <div className="quest-progress-fill" style={{ width: `${pct}%` }} />
                   </div>
                   <span className="quest-count-label">
@@ -106,6 +106,7 @@ export default function QuestsView({ gamification, onClaimGems }: QuestsViewProp
                     <button
                       type="button"
                       className="duo-claim-btn"
+                      aria-label={`Claim ${q.rewardGems} gems for completing ${q.title}`}
                       onClick={() => handleClaim(q.id, q.rewardGems)}
                     >
                       CLAIM +{q.rewardGems} 💎

@@ -151,7 +151,12 @@ export default function SpeakQLShell({
         </header>
 
         {/* Dynamic Tab Body */}
-        <main className="duo-tab-content">
+        <main
+          className="duo-tab-content"
+          role="tabpanel"
+          id={`tabpanel-${currentTab}`}
+          aria-labelledby={`tab-${currentTab}`}
+        >
           {currentTab === "learn" && (
             <div className="duo-learn-stage">
               {/* Learning Command Center: Goal, Why It Matters, & Next Mission */}

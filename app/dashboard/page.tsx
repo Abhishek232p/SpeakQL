@@ -26,6 +26,7 @@ export default async function DashboardPage() {
     data.exercises,
     data.evaluations,
     data.analytics.nextAction?.exerciseId,
+    { goalDescription: data.goals[0]?.description },
   );
 
   if (data.goals.length > 0) {

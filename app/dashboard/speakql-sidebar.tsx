@@ -63,9 +63,11 @@ export default function SpeakQLSidebar({
           return (
             <button
               key={tab.id}
+              id={`tab-${tab.id}`}
               type="button"
               role="tab"
               aria-selected={isActive}
+              aria-controls={`tabpanel-${tab.id}`}
               className={`duo-nav-item ${isActive ? "nav-item-active" : ""}`}
               onClick={() => handleTabClick(tab.id)}
             >
@@ -74,7 +76,7 @@ export default function SpeakQLSidebar({
               </span>
               <span className="nav-item-label">{tab.label}</span>
               {tab.badge !== undefined && (
-                <span className="nav-item-badge" title={`${tab.badge} mistakes in review queue`}>
+                <span className="nav-item-badge" role="status" aria-label={`${tab.badge} unreviewed mistakes`} title={`${tab.badge} mistakes in review queue`}>
                   {tab.badge}
                 </span>
               )}

@@ -2,7 +2,7 @@
 
 import { createSupabaseAuthProvider } from "@/src/server/auth/supabase";
 import { getDb } from "@/src/server/db/client";
-import { createGoalsRepository } from "@/src/server/goals/repository";
+import { createGoalsRepository, ExerciseAccessLockedError } from "@/src/server/goals/repository";
 import { revalidatePath } from "next/cache";
 
 const MAX_GOAL_DESCRIPTION_LENGTH = 2_000;
@@ -60,7 +60,8 @@ async function runDatabaseWrite<T>(write: () => Promise<T>, safeMessage: string)
     const result = await write();
     revalidatePath('/dashboard');
     return result;
-  } catch {
+  } catch (error) {
+    if (error instanceof ExerciseAccessLockedError) throw error;
     throw new Error(safeMessage);
   }
 }
@@ -68,11 +69,29 @@ async function runDatabaseWrite<T>(write: () => Promise<T>, safeMessage: string)
 export async function createLearningGoal(formData: FormData) {
   const identity = await requireIdentity();
   const description = readSingleString(formData, 'description', MAX_GOAL_DESCRIPTION_LENGTH);
+  const startingLevelValue = formData.get('startingLevel');
+  const allowedStartingLevels = new Set(['fresher', 'intermediate', 'advanced']);
+  if (typeof startingLevelValue !== 'string' || !allowedStartingLevels.has(startingLevelValue)) {
+    throw new ActionInputError('Choose Fresher, Intermediate, or Advanced.');
+  }
+
+  const targetLanguageValue = formData.get('targetLanguage');
+  const targetLanguage = typeof targetLanguageValue === 'string' && targetLanguageValue.trim().length > 0
+    ? targetLanguageValue.trim()
+    : undefined;
+
+  const goalInput: { description: string; startingLevel: 'fresher' | 'intermediate' | 'advanced'; targetLanguage?: string } = {
+    description,
+    startingLevel: startingLevelValue as 'fresher' | 'intermediate' | 'advanced',
+  };
+  if (targetLanguage) {
+    goalInput.targetLanguage = targetLanguage;
+  }
 
   await runDatabaseWrite(async () => {
     const db = getDb();
     const repo = createGoalsRepository(db);
-    return repo.createGoal(identity, { description });
+    return repo.createGoal(identity, goalInput);
   }, GOAL_WRITE_FAILED);
 }
 

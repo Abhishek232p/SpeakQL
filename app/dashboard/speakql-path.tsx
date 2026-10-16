@@ -205,6 +205,8 @@ export default function SpeakQLPath({ learningPath, onStartLesson }: SpeakQLPath
               <div className="duo-node-row node-center duo-trophy-row">
                 <div
                   className={`duo-milestone-chest ${module.completed ? "chest-unlocked" : "chest-locked"}`}
+                  role="status"
+                  aria-label={`${islandTheme.name} milestone: ${module.completed ? "Unlocked and mastered" : "Locked"}`}
                   title={
                     module.completed
                       ? "Unit Mastered! Milestone Unlocked."

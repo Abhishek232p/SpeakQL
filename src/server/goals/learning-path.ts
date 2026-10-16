@@ -4,7 +4,12 @@ import type {
   DashboardExerciseRecord,
   DashboardScore,
 } from "./repository";
-import { parseExerciseDetails, type ExerciseType } from "./curriculum";
+import {
+  parseExerciseDetails,
+  generateGoalCurriculum,
+  type ExerciseType,
+  type StructuredCompetencyPlan,
+} from "./curriculum";
 
 export type PathLessonState =
   | "locked"
@@ -46,6 +51,11 @@ export type DashboardLearningPath = Readonly<{
   activeLessonId: string | null;
 }>;
 
+export interface LearningPathOptions {
+  goalDescription?: string | null;
+  curriculumPlans?: readonly StructuredCompetencyPlan[];
+}
+
 function normalizeScore(score: string): DashboardScore {
   const normalized = score.trim().toLowerCase();
   if (normalized === "mastered") return "mastered";
@@ -54,15 +64,112 @@ function normalizeScore(score: string): DashboardScore {
 }
 
 /**
+ * Deterministically sorts competencies.
+ * 1. If curriculum plans match competency descriptions, orders by syllabus position.
+ * 2. Secondary sort: createdAt timestamp ascending (earliest first).
+ * 3. Final tie-breaker: deterministic string comparison of id (lexicographical).
+ */
+export function sortCompetenciesDeterministically(
+  competencies: readonly DashboardCompetencyRecord[],
+  curriculumPlans?: readonly StructuredCompetencyPlan[],
+): DashboardCompetencyRecord[] {
+  return [...competencies].sort((a, b) => {
+    if (curriculumPlans && curriculumPlans.length > 0) {
+      const idxA = curriculumPlans.findIndex((p) => p.competencyDescription.trim() === a.description.trim());
+      const idxB = curriculumPlans.findIndex((p) => p.competencyDescription.trim() === b.description.trim());
+      if (idxA !== -1 && idxB !== -1 && idxA !== idxB) {
+        return idxA - idxB;
+      }
+      if (idxA !== -1 && idxB === -1) return -1;
+      if (idxA === -1 && idxB !== -1) return 1;
+    }
+    const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+    const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+    if (timeA !== timeB) return timeA - timeB;
+    return a.id.localeCompare(b.id);
+  });
+}
+
+/**
+ * Deterministically sorts exercises within a competency.
+ * 1. If curriculum plans match the exercise scenarioPrompt or objective, orders by syllabus position.
+ * 2. Secondary sort: createdAt timestamp ascending (earliest first).
+ * 3. Final tie-breaker: deterministic string comparison of id (lexicographical).
+ */
+export function sortExercisesDeterministically(
+  exercises: readonly DashboardExerciseRecord[],
+  curriculumPlans?: readonly StructuredCompetencyPlan[],
+): DashboardExerciseRecord[] {
+  return [...exercises].sort((a, b) => {
+    if (curriculumPlans && curriculumPlans.length > 0) {
+      let orderA = -1;
+      let orderB = -1;
+      for (const plan of curriculumPlans) {
+        const foundA = plan.exercises.findIndex((e) => e.scenarioPrompt.trim() === a.scenarioPrompt.trim());
+        if (foundA !== -1) {
+          orderA = foundA;
+          break;
+        }
+      }
+      for (const plan of curriculumPlans) {
+        const foundB = plan.exercises.findIndex((e) => e.scenarioPrompt.trim() === b.scenarioPrompt.trim());
+        if (foundB !== -1) {
+          orderB = foundB;
+          break;
+        }
+      }
+      if (orderA !== -1 && orderB !== -1 && orderA !== orderB) {
+        return orderA - orderB;
+      }
+      if (orderA !== -1 && orderB === -1) return -1;
+      if (orderA === -1 && orderB !== -1) return 1;
+    }
+    const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+    const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+    if (timeA !== timeB) return timeA - timeB;
+    return a.id.localeCompare(b.id);
+  });
+}
+
+/**
  * Builds an engaging, ordered Learning Path from competencies, exercises, and recorded evaluations.
- * Lessons unlock progressively as preceding activities are attempted or mastered.
+ * Lessons unlock only when the immediately preceding lesson is mastered. An attempt or a needs-work result never unlocks later content.
  */
 export function deriveLearningPath(
   competencies: readonly DashboardCompetencyRecord[],
   exercises: readonly DashboardExerciseRecord[],
   evaluations: readonly DashboardEvaluationRecord[],
   recommendedExerciseId?: string | null,
+  options?: LearningPathOptions,
 ): DashboardLearningPath {
+  let curriculumPlans = options?.curriculumPlans;
+  if (!curriculumPlans && options?.goalDescription) {
+    try {
+      curriculumPlans = generateGoalCurriculum(options.goalDescription);
+    } catch {
+      // Graceful fallback to timestamp/ID tie-breaking if goalDescription parsing fails
+    }
+  }
+
+  // 1. Sort competencies deterministically
+  const sortedCompetencies = sortCompetenciesDeterministically(competencies, curriculumPlans);
+
+  // 2. Group and sort exercises per competency deterministically
+  const sortedExercisesByComp = new Map<string, DashboardExerciseRecord[]>();
+  for (const comp of sortedCompetencies) {
+    const raw = exercises.filter((ex) => ex.competencyId === comp.id);
+    sortedExercisesByComp.set(comp.id, sortExercisesDeterministically(raw, curriculumPlans));
+  }
+
+  // 3. Establish the single, canonical, flattened lesson sequence across all modules
+  const canonicalOrderedExercises: DashboardExerciseRecord[] = [];
+  for (const comp of sortedCompetencies) {
+    const compList = sortedExercisesByComp.get(comp.id) ?? [];
+    for (const ex of compList) {
+      canonicalOrderedExercises.push(ex);
+    }
+  }
+
   const evaluationsByExercise = new Map<string, DashboardEvaluationRecord[]>();
   for (const ev of evaluations) {
     const list = evaluationsByExercise.get(ev.exerciseId) ?? [];
@@ -74,13 +181,14 @@ export function deriveLearningPath(
   let completedLessons = 0;
   let globalIndex = 0;
 
-  const modules: PathModule[] = competencies.map((competency, compIndex) => {
-    const compExercises = exercises.filter((ex) => ex.competencyId === competency.id);
+  const modules: PathModule[] = sortedCompetencies.map((competency, compIndex) => {
+    const compExercises = sortedExercisesByComp.get(competency.id) ?? [];
     const lessons: PathLessonNode[] = [];
 
     compExercises.forEach((exercise, exIndex) => {
       totalLessons += 1;
       const order = globalIndex + 1;
+      const lessonGlobalIndex = globalIndex;
       globalIndex += 1;
 
       const exEvals = (evaluationsByExercise.get(exercise.id) ?? []).slice().sort((a, b) => {
@@ -102,15 +210,24 @@ export function deriveLearningPath(
       } else if (practiceCount > 0) {
         state = "in_progress";
       } else {
-        // For unpracticed exercises, check prerequisite:
-        // First exercise is always available.
-        // Subsequent exercises unlock if previous exercise has at least 1 practice attempt.
-        if (order === 1) {
+        // First lesson is the only initial entry point.
+        // Every later lesson requires a mastered result for the IMMEDIATELY PRECEDING lesson
+        // in the canonical, deterministic lesson sequence.
+        if (lessonGlobalIndex === 0) {
           state = "available";
         } else {
-          const prevEx = exercises[order - 2];
-          const prevPracticeCount = prevEx ? (evaluationsByExercise.get(prevEx.id)?.length ?? 0) : 0;
-          state = prevPracticeCount > 0 ? "available" : "locked";
+          const prevEx = canonicalOrderedExercises[lessonGlobalIndex - 1];
+          const previousEvaluations = prevEx ? (evaluationsByExercise.get(prevEx.id) ?? []) : [];
+          const latestPreviousEvaluation = previousEvaluations
+            .slice()
+            .sort((a, b) => {
+              const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+              const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+              return timeB - timeA;
+            })[0];
+          state = latestPreviousEvaluation && normalizeScore(latestPreviousEvaluation.score) === "mastered"
+            ? "available"
+            : "locked";
         }
       }
 

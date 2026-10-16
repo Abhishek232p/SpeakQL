@@ -338,6 +338,8 @@ export function DigitalPracticeWhiteboard({
         <div style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
           <button
             type="button"
+            aria-pressed={!isEraser}
+            aria-label="Draw with pen"
             onClick={() => {
               sound.playPop();
               setIsEraser(false);
@@ -356,12 +358,14 @@ export function DigitalPracticeWhiteboard({
               gap: "0.3rem",
             }}
           >
-            <span>✏️</span>
+            <span aria-hidden="true">✏️</span>
             <span>Pen</span>
           </button>
 
           <button
             type="button"
+            aria-pressed={isEraser}
+            aria-label="Erase strokes"
             onClick={() => {
               sound.playPop();
               setIsEraser(true);
@@ -380,7 +384,7 @@ export function DigitalPracticeWhiteboard({
               gap: "0.3rem",
             }}
           >
-            <span>🧹</span>
+            <span aria-hidden="true">🧹</span>
             <span>Eraser</span>
           </button>
         </div>
@@ -519,6 +523,8 @@ export function DigitalPracticeWhiteboard({
       >
         <canvas
           ref={canvasRef}
+          role="img"
+          aria-label="Digital practice whiteboard for handwriting script practice and notes"
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
@@ -528,7 +534,12 @@ export function DigitalPracticeWhiteboard({
             width: "100%",
             height: "100%",
           }}
-        />
+        >
+          <p>
+            Digital practice whiteboard. Use your pointer, touch, or stylus to write characters and notes.
+            If you cannot use a pointer device, you can use the keyboard response input below.
+          </p>
+        </canvas>
 
         {/* Empty state hint */}
         {strokes.length === 0 && !currentStroke && (

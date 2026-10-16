@@ -2,6 +2,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { AuthProvider } from "@/src/server/auth/types";
 
 const mocks = vi.hoisted(() => {
+  class MockExerciseAccessLockedError extends Error {
+    constructor(message = "Exercise is locked. Complete preceding prerequisite exercises to unlock it.") {
+      super(message);
+      this.name = "ExerciseAccessLockedError";
+    }
+  }
   const provider = { getIdentity: vi.fn<AuthProvider["getIdentity"]>() };
   const repository = { createGoal: vi.fn(), evaluateExercise: vi.fn() };
   const database = { kind: "mock-database" };
@@ -9,6 +15,7 @@ const mocks = vi.hoisted(() => {
     provider,
     repository,
     database,
+    ExerciseAccessLockedError: MockExerciseAccessLockedError,
     createAuthProvider: vi.fn(() => provider),
     getDb: vi.fn(() => database),
     createRepository: vi.fn(() => repository),
@@ -18,7 +25,10 @@ const mocks = vi.hoisted(() => {
 
 vi.mock("@/src/server/auth/supabase", () => ({ createSupabaseAuthProvider: mocks.createAuthProvider }));
 vi.mock("@/src/server/db/client", () => ({ getDb: mocks.getDb }));
-vi.mock("@/src/server/goals/repository", () => ({ createGoalsRepository: mocks.createRepository }));
+vi.mock("@/src/server/goals/repository", () => ({
+  createGoalsRepository: mocks.createRepository,
+  ExerciseAccessLockedError: mocks.ExerciseAccessLockedError,
+}));
 vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidatePath }));
 
 import { createLearningGoal, submitPracticeEvaluation } from "@/app/dashboard/actions";
@@ -29,6 +39,9 @@ const exerciseId = "00000000-0000-4000-8000-000000000001";
 function form(field: string, value: string | Blob) {
   const data = new FormData();
   data.set(field, value);
+  if (field === "description") {
+    data.set("startingLevel", "fresher");
+  }
   return data;
 }
 
@@ -72,6 +85,7 @@ describe.each([
     "rejects %s input before database access",
     async (invalid) => {
       const data = new FormData();
+      if (field === "description") data.set("startingLevel", "fresher");
       if (invalid === "empty") data.set(field, "");
       if (invalid === "whitespace") data.set(field, " \n\t ");
       if (invalid === "file") data.set(field, new Blob(["not a text field"]), "answer.txt");
@@ -119,16 +133,31 @@ describe.each([
 });
 
 describe("action ownership and normalization", () => {
-  it("uses only the validated identity and trimmed goal description", async () => {
+  it("uses only the validated identity, trimmed goal description, and starting level", async () => {
     const data = form("description", "  Lead a meeting in Spanish. \n");
     data.set("subject", "untrusted-subject");
     data.set("userId", "untrusted-user");
 
     await createLearningGoal(data);
 
-    expect(mocks.repository.createGoal).toHaveBeenCalledExactlyOnceWith(identity, { description: "Lead a meeting in Spanish." });
+    expect(mocks.repository.createGoal).toHaveBeenCalledExactlyOnceWith(identity, {
+      description: "Lead a meeting in Spanish.",
+      startingLevel: "fresher",
+    });
     expect(mocks.repository.evaluateExercise).not.toHaveBeenCalled();
   });
+
+  it.each(["beginner", "expert", "unknown", "", "   "])(
+    "rejects invalid or unapproved starting level %j before database access",
+    async (invalidLevel) => {
+      const data = new FormData();
+      data.set("description", "A valid goal description");
+      data.set("startingLevel", invalidLevel);
+
+      await expect(createLearningGoal(data)).rejects.toThrow("Choose Fresher, Intermediate, or Advanced.");
+      expectNoWrite();
+    },
+  );
 
   it("uses the bound UUID, validated identity, and trimmed response", async () => {
     const data = form("response", "  A practical response. \n");
@@ -148,4 +177,29 @@ describe("action ownership and normalization", () => {
       expectNoWrite();
     },
   );
+
+  it("extracts and passes targetLanguage metadata to createGoal when present", async () => {
+    const data = form("description", "Master everyday conversation in Japanese.");
+    data.set("targetLanguage", "Japanese");
+
+    await createLearningGoal(data);
+
+    expect(mocks.repository.createGoal).toHaveBeenCalledExactlyOnceWith(identity, {
+      description: "Master everyday conversation in Japanese.",
+      startingLevel: "fresher",
+      targetLanguage: "Japanese",
+    });
+  });
+
+  it("propagates ExerciseAccessLockedError cleanly without masking as a generic error", async () => {
+    mocks.repository.evaluateExercise.mockRejectedValueOnce(
+      new mocks.ExerciseAccessLockedError("Exercise is locked. Complete preceding exercises first.")
+    );
+
+    const data = form("response", "Attempt on locked exercise");
+    await expect(submitPracticeEvaluation(exerciseId, data)).rejects.toThrow(
+      "Exercise is locked. Complete preceding exercises first."
+    );
+    expect(mocks.revalidatePath).not.toHaveBeenCalled();
+  });
 });

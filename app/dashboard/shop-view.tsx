@@ -79,6 +79,7 @@ export default function ShopView({
               <button
                 type="button"
                 className="duo-shop-buy-btn"
+                aria-label="Buy full hearts refill for 150 gems"
                 disabled={gems < 150}
                 onClick={handleHeartRefill}
               >
@@ -88,6 +89,7 @@ export default function ShopView({
             <button
               type="button"
               className="duo-shop-free-btn"
+              aria-label="Practice for free to restore hearts"
               onClick={onGoToPractice}
             >
               Or Practice for Free ❤️
@@ -107,6 +109,7 @@ export default function ShopView({
             <button
               type="button"
               className="duo-shop-buy-btn"
+              aria-label="Buy streak freeze shield for 200 gems"
               disabled={gems < 200}
               onClick={handleBuyStreakFreeze}
             >
@@ -126,6 +129,7 @@ export default function ShopView({
             <button
               type="button"
               className="duo-shop-buy-btn"
+              aria-label="Activate double XP boost for 100 gems"
               disabled={gems < 100}
               onClick={handleBuyXpBoost}
             >

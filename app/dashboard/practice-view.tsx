@@ -584,9 +584,11 @@ export default function PracticeView({
             <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#94a3b8" }}>
               Input Method:
             </span>
-            <div style={{ display: "flex", background: "rgba(15, 23, 42, 0.8)", padding: "0.25rem", borderRadius: "0.75rem", border: "1px solid rgba(255, 255, 255, 0.08)" }}>
+            <div role="tablist" aria-label="Input methods" style={{ display: "flex", background: "rgba(15, 23, 42, 0.8)", padding: "0.25rem", borderRadius: "0.75rem", border: "1px solid rgba(255, 255, 255, 0.08)" }}>
               <button
                 type="button"
+                role="tab"
+                aria-selected={activeInputMethod === "type"}
                 onClick={() => {
                   sound.playPop();
                   setActiveInputMethod("type");
@@ -607,6 +609,8 @@ export default function PracticeView({
 
               <button
                 type="button"
+                role="tab"
+                aria-selected={activeInputMethod === "whiteboard"}
                 onClick={() => {
                   sound.playPop();
                   setActiveInputMethod("whiteboard");
@@ -627,6 +631,8 @@ export default function PracticeView({
 
               <button
                 type="button"
+                role="tab"
+                aria-selected={activeInputMethod === "speak"}
                 onClick={() => {
                   sound.playPop();
                   setActiveInputMethod("speak");
@@ -797,6 +803,8 @@ export default function PracticeView({
         {/* Evaluation Feedback Drawer */}
         {evalResult && (
           <div
+            role="alert"
+            aria-live="polite"
             style={{
               marginTop: "1.5rem",
               background: evalResult.score === "mastered" ? "rgba(22, 101, 52, 0.25)" : "rgba(153, 27, 27, 0.25)",
