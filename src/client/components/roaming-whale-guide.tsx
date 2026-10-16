@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useCallback, useId } from "react";
+import { useClientStorage } from "@/src/client/hooks/use-client-storage";
 import { WhaleMascot, type WhaleMood } from "./whale-mascot";
 import { sound } from "@/src/client/sound/synthesizer";
 
@@ -36,19 +37,17 @@ export function RoamingWhaleGuide({
   onDismissMessage,
   className = "",
 }: RoamingWhaleGuideProps) {
-  const [isMinimized, setIsMinimized] = useState<boolean>(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("speakql_whale_minimized") === "true";
-    }
-    return false;
-  });
+  const [isMinimized, setIsMinimized] = useClientStorage<boolean>(
+    "speakql_whale_minimized",
+    false,
+    useCallback((raw: string) => raw === "true", [])
+  );
 
-  const [isMuted, setIsMuted] = useState<boolean>(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("speakql_whale_muted") === "true";
-    }
-    return false;
-  });
+  const [isMuted, setIsMuted] = useClientStorage<boolean>(
+    "speakql_whale_muted",
+    false,
+    useCallback((raw: string) => raw === "true", [])
+  );
 
   const [dismissedEvent, setDismissedEvent] = useState<string | null>(null);
   const [manualEventOverride, setManualEventOverride] = useState<WhaleContextEvent | null>(null);

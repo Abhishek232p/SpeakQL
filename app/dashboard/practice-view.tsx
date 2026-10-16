@@ -217,6 +217,7 @@ export default function PracticeView({
   const [isEvaluating, setIsEvaluating] = useState<boolean>(false);
   const [evalResult, setEvalResult] = useState<EvaluationResultDisplay | null>(null);
   const [previousAttemptsCount, setPreviousAttemptsCount] = useState<number>(0);
+  const [noticeMessage, setNoticeMessage] = useState<string | null>(null);
 
   // Flashcards state
   const [activeFlippedCard, setActiveFlippedCard] = useState<string | null>(null);
@@ -251,7 +252,7 @@ export default function PracticeView({
     const SpeechConstructor = speechWin.SpeechRecognition || speechWin.webkitSpeechRecognition;
 
     if (!SpeechConstructor) {
-      alert("Web Speech API is not supported in this browser. Please use typed input or whiteboard.");
+      setNoticeMessage("Web Speech API is not supported in this browser. Please use typed input or whiteboard.");
       return;
     }
 
@@ -313,9 +314,10 @@ export default function PracticeView({
       : typedResponse.trim();
 
     if (!responseToEvaluate) {
-      alert("Please provide a response via typing, speaking, or transcribe your whiteboard notes before evaluating.");
+      setNoticeMessage("Please provide a response via typing, speaking, or transcribe your whiteboard notes before evaluating.");
       return;
     }
+    setNoticeMessage(null);
 
     setIsEvaluating(true);
 
@@ -577,6 +579,43 @@ export default function PracticeView({
             </div>
           </div>
         </div>
+
+        {noticeMessage && (
+          <div
+            role="status"
+            aria-live="polite"
+            style={{
+              marginBottom: "1rem",
+              padding: "0.6rem 1rem",
+              borderRadius: "0.5rem",
+              background: "rgba(239, 68, 68, 0.15)",
+              border: "1px solid rgba(239, 68, 68, 0.4)",
+              color: "#fca5a5",
+              fontSize: "0.85rem",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: "0.75rem",
+            }}
+          >
+            <span>⚠️ {noticeMessage}</span>
+            <button
+              type="button"
+              onClick={() => setNoticeMessage(null)}
+              style={{
+                background: "transparent",
+                border: "none",
+                color: "#fca5a5",
+                cursor: "pointer",
+                fontSize: "1rem",
+                padding: "0 4px",
+              }}
+              aria-label="Dismiss notice"
+            >
+              ✕
+            </button>
+          </div>
+        )}
 
         {/* 3 Input Methods Switcher */}
         <div style={{ marginBottom: "1rem" }}>

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
+import { useClientStorage } from "@/src/client/hooks/use-client-storage";
 import { WhaleMascot } from "@/src/client/components/whale-mascot";
 import { sound } from "@/src/client/sound/synthesizer";
 import LogoutButton from "./logout-button";
@@ -20,15 +21,15 @@ export default function ProfileSettingsView({
   gems,
   hearts,
 }: ProfileSettingsViewProps) {
-  const [dailyTargetXp, setDailyTargetXp] = useState<number>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("speakql_daily_target_xp");
-      if (saved) return Number(saved) || 30;
-    }
-    return 30;
-  });
-
-  const [soundEnabled, setSoundEnabled] = useState<boolean>(() => !sound.muted());
+  const [dailyTargetXp, setDailyTargetXp] = useClientStorage<number>(
+    "speakql_daily_target_xp",
+    30,
+    useCallback((raw: string) => {
+      const parsed = Number(raw);
+      return !Number.isNaN(parsed) && parsed > 0 ? parsed : 30;
+    }, [])
+  );
+  const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
   const [savedSuccess, setSavedSuccess] = useState(false);
 
   const handleToggleSound = () => {

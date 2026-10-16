@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
+import { useClientStorage } from "@/src/client/hooks/use-client-storage";
 import type { DashboardData } from "@/src/server/goals/repository";
 import type { DashboardGamification } from "@/src/server/goals/gamification";
 import type { DashboardLearningPath } from "@/src/server/goals/learning-path";
@@ -35,36 +36,31 @@ export default function SpeakQLShell({
   const [currentTab, setCurrentTab] = useState<NavTab>("learn");
   const [activeLessonId, setActiveLessonId] = useState<string | null>(null);
 
-  // Gamified persistent client balances (Hearts & Gems)
-  const [hearts, setHearts] = useState<number>(() => {
-    if (typeof window !== "undefined") {
-      const savedHearts = localStorage.getItem("speakql_hearts");
-      if (savedHearts !== null) return Number(savedHearts);
-    }
-    return 5;
-  });
+  // Gamified persistent client balances (Hearts & Gems) with SSR-safe synchronization
+  const [hearts, setHearts] = useClientStorage<number>(
+    "speakql_hearts",
+    5,
+    useCallback((raw: string) => {
+      const val = Number(raw);
+      return Number.isNaN(val) ? 5 : Math.max(0, Math.min(5, val));
+    }, [])
+  );
 
-  const [gems, setGems] = useState<number>(() => {
-    if (typeof window !== "undefined") {
-      const savedGems = localStorage.getItem("speakql_gems");
-      if (savedGems !== null) return Number(savedGems);
-    }
-    return 450;
-  });
+  const [gems, setGems] = useClientStorage<number>(
+    "speakql_gems",
+    450,
+    useCallback((raw: string) => {
+      const val = Number(raw);
+      return Number.isNaN(val) ? 450 : Math.max(0, val);
+    }, [])
+  );
 
   const updateHearts = (newHearts: number) => {
-    const clamped = Math.max(0, Math.min(5, newHearts));
-    setHearts(clamped);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("speakql_hearts", String(clamped));
-    }
+    setHearts(Math.max(0, Math.min(5, newHearts)));
   };
 
   const updateGems = (newGems: number) => {
-    setGems(newGems);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("speakql_gems", String(newGems));
-    }
+    setGems(Math.max(0, newGems));
   };
 
   const handleHeartLoss = () => {

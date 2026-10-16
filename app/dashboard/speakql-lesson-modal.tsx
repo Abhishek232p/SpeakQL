@@ -243,24 +243,41 @@ function ActiveQuestionCard({ exercise, onAnswerSubmit, onNextQuestion }: Questi
     onNextQuestion();
   };
 
+  const stateRef = useRef({ feedbackState, isSubmitDisabled, handleContinue, handleRetry, handleCheckAnswer });
+  useEffect(() => {
+    stateRef.current = { feedbackState, isSubmitDisabled, handleContinue, handleRetry, handleCheckAnswer };
+  });
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Enter" && !e.shiftKey) {
-        if (feedbackState === "correct") {
+      const { feedbackState: fbState, isSubmitDisabled: isDisabled, handleContinue: fnContinue, handleRetry: fnRetry, handleCheckAnswer: fnCheck } = stateRef.current;
+      const isTargetTextarea = (e.target as HTMLElement)?.tagName === "TEXTAREA";
+
+      if (fbState === "correct" && e.key === "Enter") {
+        e.preventDefault();
+        fnContinue();
+        return;
+      }
+      if (fbState === "incorrect" && e.key === "Enter") {
+        e.preventDefault();
+        fnRetry();
+        return;
+      }
+      if (isTargetTextarea) {
+        if ((e.ctrlKey || e.metaKey) && e.key === "Enter" && !isDisabled) {
           e.preventDefault();
-          handleContinue();
-        } else if (feedbackState === "incorrect") {
-          e.preventDefault();
-          handleRetry();
-        } else if (!isSubmitDisabled) {
-          e.preventDefault();
-          handleCheckAnswer();
+          fnCheck();
         }
+        return;
+      }
+      if (e.key === "Enter" && !e.shiftKey && !isDisabled) {
+        e.preventDefault();
+        fnCheck();
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  });
+  }, []);
 
   return (
     <div className="duo-exercise-stage">
@@ -604,8 +621,8 @@ export default function SpeakQLLessonModal({
                 <span className="card-icon" aria-hidden="true">⚡</span>
               </div>
               <div className="duo-celebration-card duo-card-accuracy">
-                <span className="card-label">ACCURACY</span>
-                <strong className="card-value">{activeHeartCount >= 4 ? "100%" : "85%"}</strong>
+                <span className="card-label">MASTERY STATUS</span>
+                <strong className="card-value">{activeHeartCount === 5 ? "100% · Flawless" : activeHeartCount >= 3 ? "Mastered" : "Review Ready"}</strong>
                 <span className="card-icon" aria-hidden="true">🎯</span>
               </div>
               <div className="duo-celebration-card duo-card-hearts">
