@@ -30,7 +30,7 @@ describe("Learning Path: Progressive Progression & States", () => {
     expect(l3.state).toBe("locked");
   });
 
-  it("unlocks lesson 2 once lesson 1 has recorded an evaluation attempt", () => {
+  it("keeps lesson 2 locked when lesson 1 has an attempt but is not mastered", () => {
     const evaluations: DashboardEvaluationRecord[] = [
       { id: "ev-1", exerciseId: "ex-1", score: "needs_work", createdAt: "2026-10-12T10:00:00.000Z" },
     ];
@@ -41,8 +41,19 @@ describe("Learning Path: Progressive Progression & States", () => {
     const l2 = path.modules[0].lessons[1];
 
     expect(l1.state).toBe("review_recommended");
-    expect(l2.state).toBe("available"); // unlocked because ex-1 has an attempt!
-    expect(path.activeLessonId).toBe("ex-1"); // prioritizes review
+    expect(l2.state).toBe("locked");
+    expect(path.activeLessonId).toBe("ex-1");
+  });
+
+  it("unlocks the next lesson only after the immediately preceding lesson is mastered", () => {
+    const evaluations: DashboardEvaluationRecord[] = [
+      { id: "ev-1", exerciseId: "ex-1", score: "mastered", createdAt: "2026-10-12T10:00:00.000Z" },
+    ];
+
+    const path = deriveLearningPath(mockCompetencies, mockExercises, evaluations);
+
+    expect(path.modules[0].lessons[1].state).toBe("available");
+    expect(path.modules[1].lessons[0].state).toBe("locked");
   });
 
   it("marks lessons as completed when mastered and calculates unit completion", () => {
