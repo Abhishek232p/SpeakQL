@@ -255,8 +255,11 @@ export function emptyDashboardAnalytics(): DashboardAnalytics {
   return deriveDashboardAnalytics([], [], []);
 }
 
+export type LearnerStartingLevel = "fresher" | "intermediate" | "advanced";
+
 export interface GoalInput {
   description: string;
+  startingLevel?: LearnerStartingLevel;
 }
 
 export type GoalsRepositoryOptions = Readonly<{
@@ -290,7 +293,7 @@ export function createGoalsRepository(db: Database, options: GoalsRepositoryOpti
           description: input.description,
         }).returning();
         
-        const curriculum = generateGoalCurriculum(input.description);
+        const curriculum = generateGoalCurriculum(input.description, input.startingLevel ?? "fresher");
 
         for (const plan of curriculum) {
           const [comp] = await tx.insert(competencies).values({
