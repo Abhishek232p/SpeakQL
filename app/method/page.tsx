@@ -2,7 +2,6 @@ import React from "react";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { SpeakQLLogo } from "@/src/client/components/whale-mascot";
-import { getOptionalIdentity } from "@/src/server/auth/optional-identity";
 
 export const metadata: Metadata = {
   title: "The Cognitive Learning Architecture · Methodology | SpeakQL",
@@ -38,9 +37,8 @@ const COMPARISONS = [
   },
 ];
 
-export default async function MethodPage() {
-  const identity = await getOptionalIdentity();
-  const startLearningHref = identity ? "/dashboard" : "/login";
+export default function MethodPage() {
+  const startLearningHref = "/login";
 
   return (
     <main style={{ minHeight: "100vh", position: "relative", overflowX: "hidden" }}>
@@ -57,7 +55,7 @@ export default async function MethodPage() {
           <Link href="/manifesto">Philosophy</Link>
           <Link href="/scale">Scale &amp; Partners</Link>
           <Link className="nav-cta" href={startLearningHref}>
-            {identity ? "Open Dashboard →" : "Start Learning →"}
+            Start Learning →
           </Link>
         </div>
       </nav>

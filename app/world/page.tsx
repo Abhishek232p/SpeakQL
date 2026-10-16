@@ -2,7 +2,6 @@ import React from "react";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { SpeakQLLogo, WhaleMascot } from "@/src/client/components/whale-mascot";
-import { getOptionalIdentity } from "@/src/server/auth/optional-identity";
 
 export const metadata: Metadata = {
   title: "The Living Ocean World · Islands of Fluency | SpeakQL",
@@ -102,9 +101,8 @@ const ISLANDS: IslandDetail[] = [
   },
 ];
 
-export default async function WorldPage() {
-  const identity = await getOptionalIdentity();
-  const startLearningHref = identity ? "/dashboard" : "/login";
+export default function WorldPage() {
+  const startLearningHref = "/login";
 
   return (
     <main style={{ minHeight: "100vh", position: "relative", overflowX: "hidden" }}>
@@ -121,7 +119,7 @@ export default async function WorldPage() {
           <Link href="/manifesto">Philosophy</Link>
           <Link href="/scale">Scale &amp; Partners</Link>
           <Link className="nav-cta" href={startLearningHref}>
-            {identity ? "Open Dashboard →" : "Start Learning →"}
+            Start Learning →
           </Link>
         </div>
       </nav>

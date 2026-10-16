@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { getOptionalIdentity } from "@/src/server/auth/optional-identity";
 import { WhaleMascot, SpeakQLLogo } from "@/src/client/components/whale-mascot";
 import ScaleWithUsSection from "@/src/client/components/scale-with-us-section";
 import InteractiveDemoShowcase from "@/src/client/components/interactive-demo-showcase";
@@ -56,10 +55,8 @@ const islandDestinations = [
   },
 ];
 
-export default async function Home() {
-  const identity = await getOptionalIdentity();
-
-  const startLearningHref = identity ? "/dashboard" : "/login";
+export default function Home() {
+  const startLearningHref = "/login";
 
   return (
     <main style={{ minHeight: "100vh", position: "relative", overflowX: "hidden" }}>
@@ -73,15 +70,9 @@ export default async function Home() {
           <Link href="/method">Method</Link>
           <Link href="/manifesto">Philosophy</Link>
           <Link href="/scale">Scale &amp; Partners</Link>
-          {identity ? (
-            <Link className="nav-cta" href="/dashboard">
-              Go to Dashboard <span>→</span>
-            </Link>
-          ) : (
-            <Link className="nav-cta" href="/login">
-              Start Learning <span>→</span>
-            </Link>
-          )}
+          <Link className="nav-cta" href="/login">
+            Start Learning <span>→</span>
+          </Link>
         </div>
       </nav>
 

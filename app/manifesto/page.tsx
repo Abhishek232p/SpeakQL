@@ -2,7 +2,6 @@ import React from "react";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { SpeakQLLogo, WhaleMascot } from "@/src/client/components/whale-mascot";
-import { getOptionalIdentity } from "@/src/server/auth/optional-identity";
 
 export const metadata: Metadata = {
   title: "The Human Brain & Communication Philosophy · Manifesto | SpeakQL",
@@ -10,9 +9,8 @@ export const metadata: Metadata = {
     "Why language is personal sovereignty, presence, and relationship—not cartoon trivia. Read the human philosophy behind SpeakQL.",
 };
 
-export default async function ManifestoPage() {
-  const identity = await getOptionalIdentity();
-  const startLearningHref = identity ? "/dashboard" : "/login";
+export default function ManifestoPage() {
+  const startLearningHref = "/login";
 
   return (
     <main style={{ minHeight: "100vh", position: "relative", overflowX: "hidden" }}>
@@ -29,7 +27,7 @@ export default async function ManifestoPage() {
           </Link>
           <Link href="/scale">Scale &amp; Partners</Link>
           <Link className="nav-cta" href={startLearningHref}>
-            {identity ? "Open Dashboard →" : "Start Learning →"}
+            Start Learning →
           </Link>
         </div>
       </nav>
