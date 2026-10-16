@@ -28,6 +28,33 @@ export interface SpeakQLShellProps {
 
 export type DuolingoShellProps = SpeakQLShellProps;
 
+export const PROFESSIONAL_TRACKS = [
+  {
+    id: "engineering",
+    title: "Engineering & Technical Architecture",
+    icon: "💻",
+    description: "Technical standups, architecture trade-offs, incident reviews",
+  },
+  {
+    id: "product",
+    title: "Product & Cross-Functional Leadership",
+    icon: "🧭",
+    description: "Sprint trade-offs, stakeholder negotiations, alignment",
+  },
+  {
+    id: "async",
+    title: "Global Asynchronous Collaboration",
+    icon: "🌐",
+    description: "Executive written briefs, cross-timezone PRs, meeting summaries",
+  },
+  {
+    id: "executive",
+    title: "Executive Presence & Investor Pitch",
+    icon: "👔",
+    description: "Investor presentations, boardroom communication, strategic recommendations",
+  },
+] as const;
+
 export default function SpeakQLShell({
   data,
   gamification,
@@ -35,6 +62,17 @@ export default function SpeakQLShell({
 }: SpeakQLShellProps) {
   const [currentTab, setCurrentTab] = useState<NavTab>("learn");
   const [activeLessonId, setActiveLessonId] = useState<string | null>(null);
+
+  // Professional Learning Track selection with persistent client synchronization
+  const [selectedTrackId, setSelectedTrackId] = useClientStorage<string>(
+    "speakql_active_track",
+    "engineering",
+    useCallback((raw: string) => raw || "engineering", [])
+  );
+
+  const activeTrack =
+    PROFESSIONAL_TRACKS.find((t) => t.id === selectedTrackId) ||
+    PROFESSIONAL_TRACKS[0];
 
   // Gamified persistent client balances (Hearts & Gems) with SSR-safe synchronization
   const [hearts, setHearts] = useClientStorage<number>(
@@ -109,7 +147,50 @@ export default function SpeakQLShell({
       <div className="duo-main-canvas">
         {/* Top Floating Stats Bar */}
         <header className="duo-topbar" role="banner" aria-label="Learning stats">
-          <div className="duo-topbar-left">
+          <div className="duo-topbar-left" style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+            {/* Professional Track Switcher */}
+            <div
+              className="duo-goal-pill"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                background: "rgba(30, 41, 59, 0.85)",
+                border: "1px solid rgba(168, 85, 247, 0.4)",
+                padding: "6px 12px",
+                borderRadius: "16px",
+              }}
+            >
+              <span className="goal-flag" aria-hidden="true">{activeTrack.icon}</span>
+              <select
+                value={selectedTrackId}
+                onChange={(e) => {
+                  sound.playPop();
+                  setSelectedTrackId(e.target.value);
+                }}
+                aria-label="Select Professional Learning Track"
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  color: "#f8fafc",
+                  fontSize: "13px",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  outline: "none",
+                }}
+              >
+                {PROFESSIONAL_TRACKS.map((track) => (
+                  <option
+                    key={track.id}
+                    value={track.id}
+                    style={{ background: "#0f172a", color: "#f8fafc" }}
+                  >
+                    {track.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             <div className="duo-goal-pill" title={`Active Goal: ${currentGoalDescription}`}>
               <span className="goal-flag" aria-hidden="true">🌐</span>
               <span className="goal-name">{currentGoalDescription}</span>
@@ -145,6 +226,54 @@ export default function SpeakQLShell({
             <LogoutButton />
           </div>
         </header>
+
+        {/* Feature B: Mistake-Driven Recovery Banner when Hearts are zero */}
+        {hearts === 0 && (
+          <div
+            style={{
+              background: "linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(15, 23, 42, 0.95))",
+              border: "2px solid rgba(239, 68, 68, 0.5)",
+              borderRadius: "18px",
+              padding: "16px 24px",
+              margin: "12px 24px 0",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: "14px",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              <span style={{ fontSize: "28px" }}>❤️‍🩹</span>
+              <div>
+                <strong style={{ color: "#fca5a5", fontSize: "15px", display: "block" }}>
+                  You have reached your practice limit for this session.
+                </strong>
+                <span style={{ color: "#e2e8f0", fontSize: "13px" }}>
+                  You can continue improving by reviewing an earlier mistake in your queue to restore hearts.
+                </span>
+              </div>
+            </div>
+            <button
+              type="button"
+              className="button button-primary"
+              onClick={() => {
+                sound.playPop();
+                setCurrentTab("practice");
+              }}
+              style={{
+                background: "linear-gradient(135deg, #ef4444, #dc2626)",
+                border: "none",
+                padding: "8px 18px",
+                fontSize: "13px",
+                fontWeight: 800,
+                borderRadius: "12px",
+              }}
+            >
+              REVIEW MISTAKE (+1 HEART) 🎯
+            </button>
+          </div>
+        )}
 
         {/* Dynamic Tab Body */}
         <main

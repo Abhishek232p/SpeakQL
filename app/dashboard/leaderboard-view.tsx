@@ -50,8 +50,23 @@ export default function LeaderboardView({ userXp, userStreak }: LeaderboardViewP
   }, [userXp, userStreak]);
 
   const userRank = cohort.find((u) => u.isCurrentUser)?.rank ?? 6;
-  const leagueTier = userXp >= 150 ? "Gold League" : userXp >= 60 ? "Silver League" : "Bronze League";
-  const leagueIcon = userXp >= 150 ? "🥇" : userXp >= 60 ? "🥈" : "🥉";
+  const leagueTier =
+    userXp >= 250
+      ? "Diamond Deep"
+      : userXp >= 150
+      ? "Amethyst Cove"
+      : userXp >= 60
+      ? "Silver Reef"
+      : "Bronze Lagoon";
+
+  const leagueIcon =
+    userXp >= 250
+      ? "💎"
+      : userXp >= 150
+      ? "🔮"
+      : userXp >= 60
+      ? "🥈"
+      : "🥉";
 
   return (
     <div className="duo-tab-view" aria-label="Leaderboards Tab">
@@ -60,16 +75,37 @@ export default function LeaderboardView({ userXp, userStreak }: LeaderboardViewP
         <div className="league-trophy-display">
           <span className="league-icon-big" aria-hidden="true">{leagueIcon}</span>
           <div>
-            <span className="league-kicker">CURRENT DIVISION &bull; COHORT BENCHMARK</span>
+            <span className="league-kicker">ISLAND LEAGUE &bull; WEEKLY COHORT BENCHMARK</span>
             <h2 className="league-title">{leagueTier}</h2>
             <p className="league-subtitle">
-              Illustrative cohort standing &bull; Progression and mastery reflect your demonstrated exercise evaluations.
+              Cohort practice velocity &bull; Activity XP encourages daily momentum, while demonstrated competence is tracked through diagnostic rubrics.
             </p>
           </div>
         </div>
         <div className="league-timer-box">
-          <span className="timer-label">YOUR RANK &bull; WEEK ENDS</span>
+          <span className="timer-label">YOUR RANK &bull; WEEK RESETS</span>
           <strong className="timer-val">#{userRank} &bull; 2d 14h</strong>
+        </div>
+      </div>
+
+      {/* Activity vs Mastery Pedagogical Notice */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "12px",
+          background: "rgba(30, 41, 59, 0.7)",
+          border: "1px solid rgba(148, 163, 184, 0.2)",
+          borderRadius: "12px",
+          padding: "12px 18px",
+          marginBottom: "16px",
+          fontSize: "13px",
+          color: "#94a3b8",
+        }}
+      >
+        <span style={{ fontSize: "18px" }}>⚖️</span>
+        <div>
+          <strong style={{ color: "#e2e8f0" }}>Healthy Competition Principle:</strong> League rank measures weekly practice effort and time invested. It does not replace or artificially inflate your formal professional competency evaluations.
         </div>
       </div>
 

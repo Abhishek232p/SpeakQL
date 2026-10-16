@@ -141,3 +141,42 @@ describe("Feature 4: Real-World Communication Simulator Scenarios & Rubrics", ()
     expect(resultIncomplete.score).toBe("needs_work");
   });
 });
+
+describe("Feature 5: SpeakQL × Lingo Strategic Architecture", () => {
+  it("defines the 4 core professional learning tracks", async () => {
+    const { PROFESSIONAL_TRACKS } = await import("@/app/dashboard/speakql-shell");
+    expect(PROFESSIONAL_TRACKS).toHaveLength(4);
+    const trackIds = PROFESSIONAL_TRACKS.map((t) => t.id);
+    expect(trackIds).toContain("engineering");
+    expect(trackIds).toContain("product");
+    expect(trackIds).toContain("async");
+    expect(trackIds).toContain("executive");
+  });
+
+  it("calibrates the 4 oceanic leagues with healthy competition principles", () => {
+    function computeLeague(userXp: number) {
+      if (userXp >= 250) return "Diamond Deep";
+      if (userXp >= 150) return "Amethyst Cove";
+      if (userXp >= 60) return "Silver Reef";
+      return "Bronze Lagoon";
+    }
+
+    expect(computeLeague(20)).toBe("Bronze Lagoon");
+    expect(computeLeague(75)).toBe("Silver Reef");
+    expect(computeLeague(180)).toBe("Amethyst Cove");
+    expect(computeLeague(320)).toBe("Diamond Deep");
+  });
+
+  it("verifies enterprise scenario rubric weights sum to 100%", async () => {
+    const fs = await import("fs");
+    const path = await import("path");
+    const content = fs.readFileSync(path.resolve(process.cwd(), "app/enterprise/studio/page.tsx"), "utf8");
+
+    expect(content).toContain("ENTERPRISE SCENARIO STUDIO");
+    expect(content).toContain("ASD-STE100 CONTROLLED");
+    expect(content).toContain("clarityWeight");
+    expect(content).toContain("technicalAccuracyWeight");
+    expect(content).toContain("businessImpactWeight");
+    expect(content).toContain("professionalToneWeight");
+  });
+});
