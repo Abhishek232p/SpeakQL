@@ -9,6 +9,7 @@ import {
 } from "@/src/server/evaluation/boundary";
 import { eq, and, desc } from "drizzle-orm";
 import { generateGoalCurriculum } from "./curriculum";
+import { deriveLearningPath } from "./learning-path";
 
 type Database = ReturnType<typeof import("@/src/server/db/client").getDb>;
 
@@ -255,11 +256,19 @@ export function emptyDashboardAnalytics(): DashboardAnalytics {
   return deriveDashboardAnalytics([], [], []);
 }
 
+export class ExerciseAccessLockedError extends Error {
+  constructor(message = "Exercise is locked. Complete preceding prerequisite exercises to unlock it.") {
+    super(message);
+    this.name = "ExerciseAccessLockedError";
+  }
+}
+
 export type LearnerStartingLevel = "fresher" | "intermediate" | "advanced";
 
 export interface GoalInput {
   description: string;
   startingLevel?: LearnerStartingLevel;
+  targetLanguage?: string;
 }
 
 export type GoalsRepositoryOptions = Readonly<{
@@ -293,7 +302,10 @@ export function createGoalsRepository(db: Database, options: GoalsRepositoryOpti
           description: input.description,
         }).returning();
         
-        const curriculum = generateGoalCurriculum(input.description, input.startingLevel ?? "fresher");
+        const curriculum = generateGoalCurriculum(input.description, {
+          startingLevel: input.startingLevel ?? "fresher",
+          targetLanguage: input.targetLanguage,
+        });
 
         for (const plan of curriculum) {
           const [comp] = await tx.insert(competencies).values({
@@ -510,6 +522,8 @@ export function createGoalsRepository(db: Database, options: GoalsRepositoryOpti
           id: practiceExercises.id,
           scenarioPrompt: practiceExercises.scenarioPrompt,
           expectedStructure: practiceExercises.expectedStructure,
+          competencyId: practiceExercises.competencyId,
+          goalId: competencies.goalId,
         })
           .from(practiceExercises)
           .innerJoin(competencies, eq(practiceExercises.competencyId, competencies.id))
@@ -524,6 +538,57 @@ export function createGoalsRepository(db: Database, options: GoalsRepositoryOpti
           .limit(1);
 
         if (!ownedExercise[0]) throw new Error("Exercise not found or not owned by user.");
+
+        // Server-side lesson access enforcement:
+        // Ensure that direct requests cannot evaluate locked exercises.
+        // Lessons only unlock when preceding prerequisite exercises have reached mastery.
+        const goalCompetencies = await tx.select({
+          id: competencies.id,
+          goalId: competencies.goalId,
+          description: competencies.description,
+          status: competencies.status,
+        })
+          .from(competencies)
+          .where(eq(competencies.goalId, ownedExercise[0].goalId));
+
+        const goalExercises = await tx.select({
+          id: practiceExercises.id,
+          competencyId: practiceExercises.competencyId,
+          scenarioPrompt: practiceExercises.scenarioPrompt,
+          expectedStructure: practiceExercises.expectedStructure,
+          createdAt: practiceExercises.createdAt,
+        })
+          .from(practiceExercises)
+          .innerJoin(competencies, eq(practiceExercises.competencyId, competencies.id))
+          .where(eq(competencies.goalId, ownedExercise[0].goalId));
+
+        const goalEvaluations = await tx.select({
+          id: practiceEvaluations.id,
+          exerciseId: practiceEvaluations.exerciseId,
+          userId: practiceEvaluations.userId,
+          userResponse: practiceEvaluations.userResponse,
+          feedback: practiceEvaluations.feedback,
+          score: practiceEvaluations.score,
+          createdAt: practiceEvaluations.createdAt,
+        })
+          .from(practiceEvaluations)
+          .innerJoin(practiceExercises, eq(practiceEvaluations.exerciseId, practiceExercises.id))
+          .innerJoin(competencies, eq(practiceExercises.competencyId, competencies.id))
+          .where(eq(competencies.goalId, ownedExercise[0].goalId));
+
+        if (goalCompetencies.length > 0 && goalExercises.length > 0) {
+          const learningPath = deriveLearningPath(goalCompetencies, goalExercises, goalEvaluations);
+          const currentLesson = learningPath.modules
+            .flatMap((m) => m.lessons)
+            .find((l) => l.id === exerciseId);
+
+          if (currentLesson && currentLesson.state === "locked") {
+            throw new ExerciseAccessLockedError(
+              `Exercise "${exerciseId}" is locked. Complete preceding prerequisite exercises to unlock it.`
+            );
+          }
+        }
+
         return { userId, exercise: ownedExercise[0] };
       });
 

@@ -2,6 +2,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { AuthProvider } from "@/src/server/auth/types";
 
 const mocks = vi.hoisted(() => {
+  class MockExerciseAccessLockedError extends Error {
+    constructor(message = "Exercise is locked. Complete preceding prerequisite exercises to unlock it.") {
+      super(message);
+      this.name = "ExerciseAccessLockedError";
+    }
+  }
   const provider = { getIdentity: vi.fn<AuthProvider["getIdentity"]>() };
   const repository = { createGoal: vi.fn(), evaluateExercise: vi.fn() };
   const database = { kind: "mock-database" };
@@ -9,6 +15,7 @@ const mocks = vi.hoisted(() => {
     provider,
     repository,
     database,
+    ExerciseAccessLockedError: MockExerciseAccessLockedError,
     createAuthProvider: vi.fn(() => provider),
     getDb: vi.fn(() => database),
     createRepository: vi.fn(() => repository),
@@ -18,7 +25,10 @@ const mocks = vi.hoisted(() => {
 
 vi.mock("@/src/server/auth/supabase", () => ({ createSupabaseAuthProvider: mocks.createAuthProvider }));
 vi.mock("@/src/server/db/client", () => ({ getDb: mocks.getDb }));
-vi.mock("@/src/server/goals/repository", () => ({ createGoalsRepository: mocks.createRepository }));
+vi.mock("@/src/server/goals/repository", () => ({
+  createGoalsRepository: mocks.createRepository,
+  ExerciseAccessLockedError: mocks.ExerciseAccessLockedError,
+}));
 vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidatePath }));
 
 import { createLearningGoal, submitPracticeEvaluation } from "@/app/dashboard/actions";
@@ -167,4 +177,29 @@ describe("action ownership and normalization", () => {
       expectNoWrite();
     },
   );
+
+  it("extracts and passes targetLanguage metadata to createGoal when present", async () => {
+    const data = form("description", "Master everyday conversation in Japanese.");
+    data.set("targetLanguage", "Japanese");
+
+    await createLearningGoal(data);
+
+    expect(mocks.repository.createGoal).toHaveBeenCalledExactlyOnceWith(identity, {
+      description: "Master everyday conversation in Japanese.",
+      startingLevel: "fresher",
+      targetLanguage: "Japanese",
+    });
+  });
+
+  it("propagates ExerciseAccessLockedError cleanly without masking as a generic error", async () => {
+    mocks.repository.evaluateExercise.mockRejectedValueOnce(
+      new mocks.ExerciseAccessLockedError("Exercise is locked. Complete preceding exercises first.")
+    );
+
+    const data = form("response", "Attempt on locked exercise");
+    await expect(submitPracticeEvaluation(exerciseId, data)).rejects.toThrow(
+      "Exercise is locked. Complete preceding exercises first."
+    );
+    expect(mocks.revalidatePath).not.toHaveBeenCalled();
+  });
 });

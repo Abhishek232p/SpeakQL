@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { drizzle } from "drizzle-orm/node-postgres";
 import type { Pool, QueryConfig } from "pg";
 import type { AuthenticatedIdentity } from "../src/server/auth/types";
-import { createGoalsRepository } from "../src/server/goals/repository";
+import { createGoalsRepository, ExerciseAccessLockedError } from "../src/server/goals/repository";
 
 // Real Drizzle SQL generation and transaction control; this driver does not
 // execute SQL or evaluate PostgreSQL RLS policies.
@@ -43,11 +43,19 @@ const timestamp = "2026-10-10T12:00:00.000Z";
 const isContext = (query: Query) => query.text.includes("set_config('speakql.auth_issuer'");
 const isUserRead = (query: Query) => query.text.startsWith('select "id" from "users"');
 const isOwnershipCheck = (query: Query) => query.text.startsWith('select "practice_exercises"."id"') && query.text.includes('inner join "learning_goals"');
+const isCompetenciesRead = (query: Query) =>
+  (query.text.startsWith('select "competencies"."id"') || query.text.startsWith('select "id", "goal_id"')) &&
+  query.text.includes('"competencies"');
+const isGoalExercisesRead = (query: Query) => query.text.startsWith('select "practice_exercises"."id"') && !query.text.includes('inner join "learning_goals"');
+const isGoalEvaluationsRead = (query: Query) => query.text.startsWith('select "practice_evaluations"."id"');
 const isEvaluationInsert = (query: Query) => query.text.startsWith('insert into "practice_evaluations"');
 
 function writeRows(query: Query): Rows | undefined {
   if (isUserRead(query)) return [[userId]];
-  if (isOwnershipCheck(query)) return [[exerciseId, "Respond to the customer with context.", "A professional response with context."]];
+  if (isOwnershipCheck(query)) return [[exerciseId, "Respond to the customer with context.", "A professional response with context.", competencyId, goalId]];
+  if (isCompetenciesRead(query)) return [[competencyId, goalId, "Core competency", "pending"]];
+  if (isGoalExercisesRead(query)) return [[exerciseId, competencyId, "Respond to the customer with context.", "A professional response with context.", timestamp]];
+  if (isGoalEvaluationsRead(query)) return [];
   if (query.text.startsWith('insert into "learning_goals"')) return [[goalId, ...query.params, "active", timestamp, timestamp]];
   if (query.text.startsWith('insert into "competencies"')) return [[competencyId, ...query.params, "pending", timestamp, timestamp]];
   if (isEvaluationInsert(query)) return [[evaluationId, ...query.params, timestamp]];
@@ -180,6 +188,74 @@ describe("Goals Repository Security & Parameterization (mock driver)", () => {
     expect(ownership!.params[0]).toBe(requestedExerciseId);
   });
   
+  it("rejects direct evaluation of a locked exercise and does not insert an evaluation", async () => {
+    const exercise2Id = "00000000-0000-4000-8000-000000000009";
+    const f = fixture((query) => {
+      if (isUserRead(query)) return [[userId]];
+      if (isOwnershipCheck(query)) return [[exercise2Id, "Scenario 2", "Structure 2", competencyId, goalId]];
+      if (isCompetenciesRead(query)) return [[competencyId, goalId, "Core competency", "pending"]];
+      if (isGoalExercisesRead(query)) return [
+        [exerciseId, competencyId, "Scenario 1", "Structure 1", timestamp],
+        [exercise2Id, competencyId, "Scenario 2", "Structure 2", timestamp],
+      ];
+      // No evaluations recorded yet, so exercise 2 is locked behind unattempted exercise 1
+      if (isGoalEvaluationsRead(query)) return [];
+      if (isEvaluationInsert(query)) return [[evaluationId, ...query.params, timestamp]];
+    });
+
+    await expect(
+      f.repository.evaluateExercise(identity, exercise2Id, "Bypassing attempt on locked exercise")
+    ).rejects.toThrow(ExerciseAccessLockedError);
+
+    expect(f.queries.some(isEvaluationInsert)).toBe(false);
+  });
+
+  it("allows evaluation of exercise 2 once prerequisite exercise 1 has reached mastery", async () => {
+    const exercise2Id = "00000000-0000-4000-8000-000000000009";
+    const f = fixture((query) => {
+      if (isUserRead(query)) return [[userId]];
+      if (isOwnershipCheck(query)) return [[exercise2Id, "Scenario 2", "Structure 2", competencyId, goalId]];
+      if (isCompetenciesRead(query)) return [[competencyId, goalId, "Core competency", "pending"]];
+      if (isGoalExercisesRead(query)) return [
+        [exerciseId, competencyId, "Scenario 1", "Structure 1", timestamp],
+        [exercise2Id, competencyId, "Scenario 2", "Structure 2", timestamp],
+      ];
+      // Exercise 1 was mastered
+      if (isGoalEvaluationsRead(query)) return [
+        [evaluationId, exerciseId, userId, "Prior response", "Feedback", "mastered", timestamp],
+      ];
+      if (isEvaluationInsert(query)) return [[evaluationId, ...query.params, timestamp]];
+    });
+
+    const result = await f.repository.evaluateExercise(identity, exercise2Id, "Valid response for unlocked exercise");
+    expect(result).toBeDefined();
+    expect(f.queries.some(isEvaluationInsert)).toBe(true);
+  });
+
+  it("keeps exercise 2 locked if prerequisite exercise 1 only received needs_work", async () => {
+    const exercise2Id = "00000000-0000-4000-8000-000000000009";
+    const f = fixture((query) => {
+      if (isUserRead(query)) return [[userId]];
+      if (isOwnershipCheck(query)) return [[exercise2Id, "Scenario 2", "Structure 2", competencyId, goalId]];
+      if (isCompetenciesRead(query)) return [[competencyId, goalId, "Core competency", "pending"]];
+      if (isGoalExercisesRead(query)) return [
+        [exerciseId, competencyId, "Scenario 1", "Structure 1", timestamp],
+        [exercise2Id, competencyId, "Scenario 2", "Structure 2", timestamp],
+      ];
+      // Exercise 1 needs work, not mastered
+      if (isGoalEvaluationsRead(query)) return [
+        [evaluationId, exerciseId, userId, "Prior response", "Feedback", "needs_work", timestamp],
+      ];
+      if (isEvaluationInsert(query)) return [[evaluationId, ...query.params, timestamp]];
+    });
+
+    await expect(
+      f.repository.evaluateExercise(identity, exercise2Id, "Attempting before mastering prereq")
+    ).rejects.toThrow(ExerciseAccessLockedError);
+
+    expect(f.queries.some(isEvaluationInsert)).toBe(false);
+  });
+
   it("rejects unauthorized access if identity is missing", async () => {
     const f = fixture();
     const badIdentity: AuthenticatedIdentity = { issuer: "", subject: "" };

@@ -70,6 +70,7 @@ export default function OnboardingGoalForm() {
             `${String(formData.get("description") ?? "").trim()} | SpeakQL starting level: ${selectedExperience}. Use this level to choose the initial diagnostic and curriculum entry point; verify actual ability before unlocking dependent stages.`
           );
           formData.set("startingLevel", selectedExperience);
+          formData.set("targetLanguage", selectedLang);
           await createLearningGoal(formData);
         } finally {
           setIsSubmitting(false);

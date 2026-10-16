@@ -32,14 +32,40 @@ describe("Canonical End-to-End Learner Journey (ASD-STE100 Spec)", () => {
     expect(standupPlan.exercises[0].scenarioPrompt).toContain("お疲れ様です");
   });
 
-  it("uses the selected starting level to configure the initial Japanese exercise difficulty", () => {
+  it("uses the selected starting level to configure diagnostic assessments and difficulty", () => {
     const fresher = generateGoalCurriculum("Learn Japanese", "fresher");
     const intermediate = generateGoalCurriculum("Learn Japanese", "intermediate");
     const advanced = generateGoalCurriculum("Learn Japanese", "advanced");
 
-    expect(parseExerciseDetails(fresher[0].exercises[0].scenarioPrompt, fresher[0].exercises[0].expectedStructure).difficulty).toBe("Foundational");
-    expect(parseExerciseDetails(intermediate[0].exercises[0].scenarioPrompt, intermediate[0].exercises[0].expectedStructure).difficulty).toBe("Intermediate");
-    expect(parseExerciseDetails(advanced[0].exercises[0].scenarioPrompt, advanced[0].exercises[0].expectedStructure).difficulty).toBe("Advanced");
+    // Fresher starts with foundational script
+    const fresherDetails = parseExerciseDetails(fresher[0].exercises[0].scenarioPrompt, fresher[0].exercises[0].expectedStructure);
+    expect(fresherDetails.difficulty).toBe("Foundational");
+    expect(fresher[0].competencyDescription).toContain("Foundations");
+
+    // Intermediate starts with a diagnostic assessment to calibrate proficiency
+    const intermediateDetails = parseExerciseDetails(intermediate[0].exercises[0].scenarioPrompt, intermediate[0].exercises[0].expectedStructure);
+    expect(intermediateDetails.difficulty).toBe("Intermediate");
+    expect(intermediateDetails.objective).toContain("Diagnostic Assessment");
+
+    // Advanced starts with high-stakes diagnostic assessment
+    const advancedDetails = parseExerciseDetails(advanced[0].exercises[0].scenarioPrompt, advanced[0].exercises[0].expectedStructure);
+    expect(advancedDetails.difficulty).toBe("Advanced");
+    expect(advancedDetails.objective).toContain("Diagnostic Assessment");
+  });
+
+  it("respects explicit targetLanguage options without relying solely on text regex", () => {
+    // Goal contains no language keywords in its description
+    const plansWithJapanese = generateGoalCurriculum("Prepare for technical sprint reviews", {
+      startingLevel: "fresher",
+      targetLanguage: "Japanese",
+    });
+    expect(plansWithJapanese[0].competencyDescription).toContain("Hiragana");
+
+    const plansWithHindi = generateGoalCurriculum("Prepare for technical sprint reviews", {
+      startingLevel: "fresher",
+      targetLanguage: "Hindi",
+    });
+    expect(plansWithHindi[0].competencyDescription).toContain("Devanagari");
   });
 
   it("generates language-aware curriculum for Hindi with Devanagari script foundations", () => {
