@@ -36,7 +36,7 @@ const PROFESSIONAL_TRACKS = [
 
 export default function OnboardingGoalForm() {
   const [selectedLang, setSelectedLang] = useState<string>("Japanese");
-  const [selectedExperience, setSelectedExperience] = useState<string>("beginner");
+  const [selectedExperience, setSelectedExperience] = useState<string>("fresher");
   const [selectedTrack, setSelectedTrack] = useState<string>("engineering");
   const [customDescription, setCustomDescription] = useState<string>(
     "Lead daily engineering standups and explain architecture dependencies in Japanese"
