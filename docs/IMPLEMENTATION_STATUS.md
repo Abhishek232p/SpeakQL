@@ -1,9 +1,21 @@
 # SpeakQL Implementation Status
 
-## Loop 17 Universal Device Experience & End-to-End Learning Platform — 2026-10-16
+## Loop 18 Server-Side Mastery Gating, Deterministic Ordering & HTTP 403 Route Authorization — 2026-10-16
 
-Phase: **UNIVERSAL DEVICE & LEARNER JOURNEY VERIFIED (GATE-CONTROLLED)**.  
-Product Release Decision: **READY FOR UNIVERSAL ACCESS (PHYSICAL HARDWARE & LIVE CREDENTIAL ROTATION GATES OUTSTANDING)**.
+Phase: **MASTERY GATING & SERVER ACCESS AUTHORIZATION VERIFIED (HOLD - EVIDENCE RECONCILIATION)**.  
+Product Release Decision: **READY FOR MERGE REVIEW (DRAFT PR #1 MAINTAINED, ZERO PRODUCTION DEPLOYMENT)**.  
+Commit: [`b9de58d`](https://github.com/Abhishek232p/SpeakQL/commit/b9de58ded7160a900f04d62f4ae8bb675e5b7c1f) (`b9de58ded7160a900f04d62f4ae8bb675e5b7c1f`).
+
+| Criterion | Status | Execution Evidence |
+|---|---|---|
+| Deterministic Lesson Ordering | VERIFIED | Implemented `sortCompetenciesDeterministically` and `sortExercisesDeterministically` resolving syllabus index, `createdAt ASC`, and lexicographical `id.localeCompare` tie-breaking. Shared between dashboard display and server evaluate access checks. Tested against reversed/shuffled database rows. |
+| Server-Side Locked-Exercise HTTP 403 Route | VERIFIED | Created dedicated route `app/api/exercises/[id]/evaluate/route.ts` returning HTTP 403 `exercise_access_locked` when prerequisite lessons are unmastered. Verified with 6/6 tests in `tests/exercise-evaluate-route.test.ts`. |
+| Retry Semantics & Lock Cascade | VERIFIED | Failed exercises (`needs_work`) transition to `review_recommended`, allowing repeated attempts while all downstream dependent lessons strictly remain locked until mastery is achieved. |
+| Screen Reader Accessibility Remediation | VERIFIED | Screen-by-screen audit across 11 views: `<h1>` outline on login, accessible button tabs on onboarding, `role="img"` and text fallback on canvas, `role="alert"` and `aria-live="polite"` on evaluation drawers, and descriptive ARIA labels across controls. |
+| Automated Test Suite | VERIFIED | Vitest: 25/25 files passed, 266/266 tests passed (`npm test` exit 0). TypeScript: 0 errors (`tsc --noEmit`). ESLint: 0 errors (`eslint .`). Turbopack Production Build: compiled successfully in 5.0s (`next build` exit 0). |
+| Staging Database Verification & Cleanup | VERIFIED | Live Supabase PostgreSQL 17.11 verification passed all 9 integration steps (`scripts/verify-learning-journey-staging.ts`). Disposable evaluation record `787a2666-ee93-4c74-a1cb-39db84d041ac` deleted cleanly. Zero production database modifications. |
+| Multi-Viewport Automation | VERIFIED (EMULATED) | Chromium suite (`scripts/verify-full-browser-suite.mjs`) confirmed zero horizontal overflow and responsive layout across 320×568, 375×667, 768×1024, and 1280×800. Physical screen-reader testing documented as post-merge pilot qualification gate. |
+| Release Decision Gate | VERIFIED (HOLD) | Pull Request #1 remains in Draft status, unmerged. Zero production deployments performed. PR description explicitly attributes execution runner results. |
 
 | Criterion | Status | Execution Evidence |
 |---|---|---|
