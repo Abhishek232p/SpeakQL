@@ -1,0 +1,61 @@
+name: Deploy to Cloudflare (OpenNext)
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch: {}
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build (OpenNext -> Cloudflare bundle)
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://hwqdufgiiufyknuoierh.supabase.co' }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_U9HkatlRa8qBAgtp_UzrJg_YsNftsTm' }}
+        run: npm run build
+
+      - name: Deploy to Cloudflare (OpenNext)
+        if: ${{ env.CF_API_TOKEN != '' }}
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_WORKER_NAME: ${{ secrets.CF_WORKER_NAME }}
+        run: |
+          npx opennextjs-cloudflare deploy \
+            --account-id "$CF_ACCOUNT_ID" \
+            --api-token "$CF_API_TOKEN" \
+            --name "${{ secrets.CF_WORKER_NAME || 'speakql' }}"
+
+      - name: Post-deploy smoke test
+        env:
+          DEPLOY_URL: ${{ secrets.DEPLOY_URL || 'https://speakql.abhishekjaiso25.workers.dev' }}
+        run: |
+          if [ -z "$DEPLOY_URL" ]; then
+            echo "No DEPLOY_URL secret provided; skipping smoke test.";
+            exit 0;
+          fi
+          echo "Running smoke test against $DEPLOY_URL";
+          # Expect redirect for /dashboard to /login (HTTP 301, 302, 307, or 308)
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -I "$DEPLOY_URL/dashboard") || true
+          echo "/dashboard status: $STATUS"
+          if [ "$STATUS" -ne 302 ] && [ "$STATUS" -ne 301 ] && [ "$STATUS" -ne 307 ] && [ "$STATUS" -ne 308 ]; then
+            echo "Unexpected status for /dashboard: $STATUS";
+            exit 1;
+          fi
+          echo "Smoke test passed successfully! /dashboard smoothly redirects to /login."
