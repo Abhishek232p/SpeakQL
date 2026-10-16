@@ -4,9 +4,13 @@ const isCloudflare = Boolean(
   process.env.CF_PAGES ||
   process.env.CLOUDFLARE ||
   process.env.WRANGLER ||
-  (process.env.NODE_ENV === "production" &&
+  process.env.CF_WORKER ||
+  (process.env.HOME && process.env.HOME.includes("buildhome")) ||
+  (process.cwd && process.cwd().includes("buildhome")) ||
+  (process.platform === "linux" &&
     !process.env.VERCEL &&
-    process.platform === "linux")
+    !process.env.NETLIFY &&
+    !process.env.GITHUB_ACTIONS)
 );
 
 const target = isCloudflare

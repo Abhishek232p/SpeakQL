@@ -16,8 +16,7 @@
     "test:security:integration": "node scripts/phase2-security-integration.mjs",
     "health-check": "node scripts/health-check.mjs",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
-    "build:cloudflare": "opennextjs-cloudflare build"
+    "db:migrate": "drizzle-kit migrate"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
@@ -46,9 +45,5 @@
     "typescript": "5.9.3",
     "vitest": "5.0.3",
     "wrangler": "^4.151.1"
-  },
-  "optionalDependencies": {
-    "@emnapi/core": "1.11.3",
-    "@emnapi/runtime": "1.11.3"
   }
 }
