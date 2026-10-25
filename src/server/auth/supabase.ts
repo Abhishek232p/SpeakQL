@@ -14,7 +14,24 @@ export class SupabaseAuthVerificationError extends Error {
 }
 
 function isReadOnlyCookieError(error: unknown): boolean {
-  return error instanceof Error && error.message.startsWith(READ_ONLY_COOKIE_ERROR);
+  if (!error) return false;
+  if (error instanceof Error && error.message.startsWith(READ_ONLY_COOKIE_ERROR)) return true;
+  const message =
+    typeof error === "object" && error !== null && "message" in error
+      ? String((error as { message: unknown }).message)
+      : String(error);
+  const name =
+    typeof error === "object" && error !== null && "name" in error
+      ? String((error as { name: unknown }).name)
+      : "";
+  return (
+    name === "ReadonlyRequestCookiesError" ||
+    message.startsWith(READ_ONLY_COOKIE_ERROR) ||
+    message.includes(READ_ONLY_COOKIE_ERROR) ||
+    message.includes("Cookies can only be modified in a Server Action or Route Handler") ||
+    message.includes("ReadonlyRequestCookiesError") ||
+    message.includes("cookies() cannot be modified")
+  );
 }
 
 function isMissingSessionError(error: unknown): boolean {

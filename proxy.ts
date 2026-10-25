@@ -20,3 +20,6 @@ export const config = {
     "/api/profile/:path*",
   ],
 };
+
+export default proxy;
+
