@@ -197,31 +197,7 @@ export default function SpeakQLShell({
           </div>
 
           <div className="duo-topbar-right">
-            {/* Streak Counter */}
-            <div className={`duo-stat-pill duo-streak-pill ${gamification.streakActiveToday ? "streak-live" : ""}`}>
-              <span className="stat-emoji" aria-hidden="true">🔥</span>
-              <span className="stat-number">{gamification.streakDays}</span>
-            </div>
-
-            {/* Gems Counter */}
-            <div className="duo-stat-pill duo-gems-pill">
-              <span className="stat-emoji" aria-hidden="true">💎</span>
-              <span className="stat-number">{gems}</span>
-            </div>
-
-            {/* Hearts Counter */}
-            <button
-              type="button"
-              className="duo-stat-pill duo-hearts-pill"
-              onClick={() => setCurrentTab("shop")}
-              title="Click to view hearts in shop"
-              aria-label={`${hearts} of 5 hearts remaining`}
-            >
-              <span className="stat-emoji" aria-hidden="true">❤️</span>
-              <span className="stat-number">{hearts}</span>
-            </button>
-
-            {/* Logout Control */}
+            {/* Account actions */}
             <LogoutButton />
           </div>
         </header>
