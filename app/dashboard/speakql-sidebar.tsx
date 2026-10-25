@@ -35,10 +35,6 @@ export default function SpeakQLSidebar({
       badge: unreviewedMistakesCount > 0 ? unreviewedMistakesCount : undefined,
     },
     { id: "conversation" as NavTab, label: "Conversations", icon: "💬", hint: "Guided speaking practice" },
-    { id: "leaderboard" as NavTab, label: "Progress", icon: "📈", hint: "Your learning progress" },
-    { id: "quests" as NavTab, label: "Challenges", icon: "✓", hint: "Optional practice goals" },
-    { id: "shop" as NavTab, label: "Rewards", icon: "✦", hint: "Optional rewards" },
-    { id: "achievements" as NavTab, label: "Achievements", icon: "★", hint: "Milestones you have earned" },
     { id: "profile" as NavTab, label: "Settings", icon: "⚙", hint: "Account and preferences" },
   ];
 
