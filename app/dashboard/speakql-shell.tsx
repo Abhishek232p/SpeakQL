@@ -18,7 +18,6 @@ import ProfileSettingsView from "./profile-settings-view";
 import LogoutButton from "./logout-button";
 import { sound } from "@/src/client/sound/synthesizer";
 import { WhaleMascot } from "@/src/client/components/whale-mascot";
-import { RoamingWhaleGuide } from "@/src/client/components/roaming-whale-guide";
 
 export interface SpeakQLShellProps {
   data: DashboardData;
@@ -519,18 +518,6 @@ export default function SpeakQLShell({
         />
       )}
 
-      {/* 4. Living Companion Whale Guide */}
-      <RoamingWhaleGuide
-        activeGoal={currentGoalDescription}
-        currentTab={currentTab}
-        eventTrigger={
-          activeLessonId
-            ? "practice_started"
-            : unreviewedMistakes > 0
-            ? "mistake_support"
-            : "welcome"
-        }
-      />
     </div>
   );
 }
