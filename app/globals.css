@@ -3517,3 +3517,90 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 
 
 
+
+
+/* SpeakQL dashboard clarity pass: calm, legible, and task-first. */
+.duo-app-wrapper {
+  background: #f6f5f1 !important;
+  color: #172033 !important;
+}
+.duo-sidebar {
+  background: #ffffff !important;
+  border-right: 1px solid #e7e5e0 !important;
+  box-shadow: none !important;
+  color: #273244 !important;
+}
+.duo-sidebar-logo {
+  border-bottom: 1px solid #eeece7 !important;
+}
+.duo-nav-item {
+  color: #475569 !important;
+  border-radius: 10px !important;
+  box-shadow: none !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+  font-size: 14px !important;
+  font-weight: 650 !important;
+}
+.duo-nav-item:hover {
+  background: #f5f4f0 !important;
+}
+.duo-nav-item.nav-item-active {
+  background: #eef2ff !important;
+  border: 1px solid #dbe4ff !important;
+  color: #243b73 !important;
+}
+.duo-nav-item .nav-item-label {
+  text-transform: none !important;
+}
+.duo-main-canvas {
+  background: transparent !important;
+}
+.duo-topbar {
+  background: rgba(255, 255, 255, 0.96) !important;
+  border-bottom: 1px solid #e7e5e0 !important;
+  box-shadow: none !important;
+  backdrop-filter: blur(14px) !important;
+}
+.duo-tab-content {
+  max-width: 1120px !important;
+  margin-inline: auto !important;
+}
+.duo-command-center {
+  background: #ffffff !important;
+  border: 1px solid #e7e5e0 !important;
+  border-radius: 18px !important;
+  box-shadow: 0 8px 28px rgba(23, 32, 51, 0.06) !important;
+}
+.duo-sidebar-footer {
+  border-top: 1px solid #eeece7 !important;
+}
+.duo-footer-status {
+  color: #64748b !important;
+  font-size: 12px !important;
+}
+@media (max-width: 760px) {
+  .duo-sidebar {
+    width: 76px !important;
+  }
+  .duo-nav-item .nav-item-label,
+  .duo-sidebar-footer {
+    display: none !important;
+  }
+  .duo-nav-item {
+    justify-content: center !important;
+    padding-inline: 8px !important;
+  }
+  .duo-topbar {
+    padding-inline: 12px !important;
+  }
+}
+
+.duo-command-center h2,
+.duo-command-center p,
+.duo-command-center strong {
+  color: #172033 !important;
+}
+.duo-command-center p {
+  line-height: 1.65 !important;
+}
