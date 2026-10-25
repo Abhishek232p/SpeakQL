@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createSupabaseAuthProvider } from "@/src/server/auth/supabase";
 import type { DashboardData } from "@/src/server/goals/repository";
@@ -8,152 +9,179 @@ import LogoutButton from "./logout-button";
 import SpeakQLShell from "./speakql-shell";
 import { WhaleMascot, SpeakQLLogo } from "@/src/client/components/whale-mascot";
 
-function createVerifiedLearnerFallback(): DashboardData {
-  const goalId = "goal_demo_fallback_1";
-  const compId1 = "comp_demo_1";
-  const compId2 = "comp_demo_2";
-  const compId3 = "comp_demo_3";
-  const compId4 = "comp_demo_4";
-  const exId1 = "ex_demo_1";
-  const exId2 = "ex_demo_2";
-  const exId3 = "ex_demo_3";
-  const exId4 = "ex_demo_4";
+function DashboardUnavailable({ errorDetail }: { errorDetail?: string }) {
+  return (
+    <main
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        background: "radial-gradient(circle at 50% 10%, #0d1b38 0%, #060a14 100%)",
+        color: "#f8fafc",
+      }}
+    >
+      <nav className="nav shell dashboard-nav" aria-label="Primary navigation" style={{ padding: "20px 24px" }}>
+        <Link className="wordmark" href="/" aria-label="SpeakQL home" style={{ textDecoration: "none" }}>
+          <SpeakQLLogo size={36} showText={true} />
+        </Link>
+        <div className="nav-links dashboard-nav-links">
+          <LogoutButton />
+        </div>
+      </nav>
 
-  return {
-    goals: [
-      {
-        id: goalId,
-        description: "Deliver high-impact architectural proposals and cross-functional updates with executive presence",
-        status: "active",
-      },
-    ],
-    competencies: [
-      { id: compId1, goalId, description: "Standup Status & Progress Cadence", status: "mastered" },
-      { id: compId2, goalId, description: "Software Design Tradeoff Vocabulary", status: "mastered" },
-      { id: compId3, goalId, description: "Translating Engineering Debt to Business Value", status: "needs_work" },
-      { id: compId4, goalId, description: "Board-Level Strategic Architecture Pitching", status: "not_started" },
-    ],
-    exercises: [
-      {
-        id: exId1,
-        competencyId: compId1,
-        scenarioPrompt: "Your team has an unexpected cache invalidation spike. Give a crisp 30-second standup status update with mitigation ETA.",
-        expectedStructure: "State current impact, root cause hypothesis, immediate mitigation, and calibrated ETA.",
-      },
-      {
-        id: exId2,
-        competencyId: compId2,
-        scenarioPrompt: "Explain the latency and consistency tradeoffs of eventual consistency vs strong consistency to a product partner.",
-        expectedStructure: "Frame tradeoffs using concrete user experience metrics rather than pure database jargon.",
-      },
-      {
-        id: exId3,
-        competencyId: compId3,
-        scenarioPrompt: "The business wants to launch 2 weeks early. Defend necessary refactoring without sounding obstructionist.",
-        expectedStructure: "Align technical debt with financial risk, SLA degradation, and customer churn impact.",
-      },
-      {
-        id: exId4,
-        competencyId: compId4,
-        scenarioPrompt: "Pitch the migration to a distributed event-driven architecture to executive leadership.",
-        expectedStructure: "Executive summary, 3 strategic ROI pillars, operational risk mitigation, and capital efficiency.",
-      },
-    ],
-    evaluations: [
-      {
-        id: "eval_demo_1",
-        exerciseId: exId1,
-        score: "mastered",
-        feedback: "Crisp ownership, calm vocal cadence, and precise ETA calibration. High executive presence.",
-        evaluationSource: "provider",
-      },
-      {
-        id: "eval_demo_2",
-        exerciseId: exId2,
-        score: "mastered",
-        feedback: "Effective translation of abstract database properties into business user experience.",
-        evaluationSource: "provider",
-      },
-      {
-        id: "eval_demo_3",
-        exerciseId: exId3,
-        score: "needs_work",
-        feedback: "Good technical justification, but needs clearer quantification of customer downtime impact.",
-        evaluationSource: "provider",
-      },
-    ],
-    analytics: {
-      measured: {
-        completedEvaluations: 3,
-        masteredEvaluations: 2,
-        needsWorkEvaluations: 1,
-        unclassifiedEvaluations: 0,
-      },
-      estimate: {
-        progressPercentage: 50,
-        label: "Estimate",
-        basis: "Measured verified evaluations across active curriculum.",
-        competencyStatuses: [
-          {
-            competencyId: compId1,
-            status: "mastered",
-            completedEvaluations: 1,
-            masteredEvaluations: 1,
-            needsWorkEvaluations: 0,
-            practicedExercises: 1,
-            totalExercises: 1,
-            latestScore: "mastered",
-          },
-          {
-            competencyId: compId2,
-            status: "mastered",
-            completedEvaluations: 1,
-            masteredEvaluations: 1,
-            needsWorkEvaluations: 0,
-            practicedExercises: 1,
-            totalExercises: 1,
-            latestScore: "mastered",
-          },
-          {
-            competencyId: compId3,
-            status: "needs_work",
-            completedEvaluations: 1,
-            masteredEvaluations: 0,
-            needsWorkEvaluations: 1,
-            practicedExercises: 1,
-            totalExercises: 1,
-            latestScore: "needs_work",
-          },
-          {
-            competencyId: compId4,
-            status: "not_started",
-            completedEvaluations: 0,
-            masteredEvaluations: 0,
-            needsWorkEvaluations: 0,
-            practicedExercises: 0,
-            totalExercises: 1,
-            latestScore: null,
-          },
-        ],
-      },
-      nextAction: {
-        exerciseId: exId3,
-        competencyId: compId3,
-        scenarioPrompt: "The business wants to launch 2 weeks early. Defend necessary refactoring without sounding obstructionist.",
-        practiceCount: 1,
-        latestScore: "needs_work",
-        kind: "weakest",
-        rationale: "Remediating communicative pushback under executive time pressure.",
-      },
-      mistakeMemory: [
-        {
-          exerciseId: exId3,
-          summary: "Frame engineering debt in terms of revenue risk and customer retention rather than developer convenience.",
-          nextAction: "Re-record response focusing on executive stakeholder empathy.",
-        },
-      ],
-    },
-  };
+      <section
+        className="shell apple-glass-card"
+        style={{
+          maxWidth: "600px",
+          margin: "8vh auto 0",
+          padding: "clamp(24px, 5vw, 40px)",
+          borderRadius: "20px",
+          background: "rgba(15, 23, 42, 0.8)",
+          border: "1px solid rgba(56, 189, 248, 0.2)",
+          boxShadow: "0 20px 50px rgba(0, 0, 0, 0.5)",
+          textAlign: "center",
+        }}
+      >
+        <WhaleMascot mood="thinking" size={72} animated={true} />
+        <div style={{ marginTop: "24px" }}>
+          <span
+            style={{
+              fontSize: "11px",
+              fontWeight: 800,
+              letterSpacing: "0.08em",
+              color: "#38bdf8",
+              textTransform: "uppercase",
+            }}
+          >
+            Connection Notice
+          </span>
+          <h1 style={{ fontSize: "24px", fontWeight: 800, margin: "8px 0 12px", color: "#f8fafc" }}>
+            Unable to load learning records
+          </h1>
+          <p style={{ margin: "0 0 24px", fontSize: "14px", color: "#94a3b8", lineHeight: 1.6 }}>
+            Your progress is securely preserved. We encountered a connection delay while reaching your database.
+            Please check your network connection and retry.
+          </p>
+
+          {errorDetail && (
+            <div
+              style={{
+                fontSize: "12px",
+                color: "#fca5a5",
+                background: "rgba(239, 68, 68, 0.1)",
+                border: "1px solid rgba(239, 68, 68, 0.25)",
+                borderRadius: "8px",
+                padding: "8px 12px",
+                marginBottom: "20px",
+                fontFamily: "monospace",
+              }}
+            >
+              Diagnostic: {errorDetail}
+            </div>
+          )}
+
+          <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
+            <Link
+              href="/dashboard"
+              className="button button-primary"
+              style={{
+                padding: "10px 22px",
+                fontSize: "14px",
+                fontWeight: 700,
+                borderRadius: "12px",
+                textDecoration: "none",
+                background: "linear-gradient(135deg, #38bdf8, #818cf8)",
+                color: "#0f172a",
+              }}
+            >
+              Retry Connection ↺
+            </Link>
+            <Link
+              href="/login"
+              style={{
+                padding: "10px 20px",
+                fontSize: "14px",
+                fontWeight: 600,
+                borderRadius: "12px",
+                textDecoration: "none",
+                background: "rgba(30, 41, 59, 0.6)",
+                border: "1px solid rgba(255, 255, 255, 0.1)",
+                color: "#f8fafc",
+              }}
+            >
+              Return to Sign In
+            </Link>
+          </div>
+        </div>
+      </section>
+    </main>
+  );
+}
+
+function OnboardingScreen({ identitySubject }: { identitySubject: string }) {
+  return (
+    <main
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        paddingBottom: "10vh",
+        background: "radial-gradient(circle at 50% 10%, #0d1b38 0%, #060a14 100%)",
+        color: "#f8fafc",
+      }}
+    >
+      <nav className="nav shell dashboard-nav" aria-label="Primary navigation" style={{ padding: "20px 24px" }}>
+        <Link className="wordmark" href="/" aria-label="SpeakQL home" style={{ textDecoration: "none" }}>
+          <SpeakQLLogo size={36} showText={true} />
+        </Link>
+        <div className="nav-links dashboard-nav-links">
+          <span style={{ fontSize: "12px", fontWeight: 700, color: "#38bdf8" }}>
+            Explorer: {identitySubject.slice(0, 8)}&hellip;
+          </span>
+          <LogoutButton />
+        </div>
+      </nav>
+
+      <section
+        className="shell apple-glass-card"
+        style={{
+          maxWidth: "680px",
+          margin: "4vh auto 0",
+          padding: "clamp(24px, 5vw, 40px)",
+          borderRadius: "24px",
+          background: "rgba(15, 23, 42, 0.85)",
+          border: "1px solid rgba(56, 189, 248, 0.25)",
+          boxShadow: "0 25px 60px rgba(0, 0, 0, 0.6)",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "24px", marginBottom: "32px" }}>
+          <WhaleMascot mood="happy" size={76} animated={true} />
+          <div>
+            <span
+              style={{
+                fontSize: "11px",
+                fontWeight: 800,
+                letterSpacing: "0.1em",
+                color: "#38bdf8",
+                textTransform: "uppercase",
+              }}
+            >
+              WELCOME TO THE ABYSS · STEP 1 OF 1
+            </span>
+            <h1 style={{ fontSize: "28px", fontWeight: 800, margin: "4px 0 8px", color: "#ffffff" }}>
+              Define your communication goal.
+            </h1>
+            <p style={{ margin: 0, fontSize: "14px", color: "#94a3b8", lineHeight: 1.5 }}>
+              Choose a real workplace scenario (e.g. Munich Engineering Standup or Tokyo Horenso).
+              We will construct your bespoke curriculum, voice simulations, and diagnostic memory.
+            </p>
+          </div>
+        </div>
+
+        <OnboardingGoalForm />
+      </section>
+    </main>
+  );
 }
 
 export default async function DashboardPage() {
@@ -165,12 +193,10 @@ export default async function DashboardPage() {
     identity = null;
   }
 
-  // Gracefully fallback to verified demo learner if unauthenticated or database unconfigured
-  // This guarantees /dashboard always renders flawlessly without edge 500 crashes
-  const activeIdentity = identity ?? {
-    issuer: "https://hwqdufgiiufyknuoierh.supabase.co",
-    subject: "9b2efedb-8811-4bd9-abfb-b00af983f02b",
-  };
+  // Never substitute a fake demo identity. Unauthenticated users are redirected to sign-in.
+  if (!identity) {
+    redirect("/login");
+  }
 
   let data: DashboardData;
   try {
@@ -178,14 +204,18 @@ export default async function DashboardPage() {
     const { createGoalsRepository } = await import("@/src/server/goals/repository");
     const db = getDb();
     const repo = createGoalsRepository(db);
-    data = (await repo.getDashboardData(activeIdentity)) as DashboardData;
+    data = (await repo.getDashboardData(identity)) as DashboardData;
   } catch (error) {
-    console.warn("[Dashboard] Database offline or unconfigured, utilizing verified learner fallback:", error);
-    data = createVerifiedLearnerFallback();
+    console.error("[Dashboard] Database offline or failed to load learner data:", error);
+    return <DashboardUnavailable errorDetail={error instanceof Error ? error.message : "Database connection issue"} />;
   }
 
-  if (!data || !data.goals || data.goals.length === 0) {
-    data = createVerifiedLearnerFallback();
+  if (!data || !Array.isArray(data.goals)) {
+    return <DashboardUnavailable errorDetail="Invalid dashboard response structure" />;
+  }
+
+  if (data.goals.length === 0) {
+    return <OnboardingScreen identitySubject={identity.subject} />;
   }
 
   let gamification;
@@ -199,74 +229,10 @@ export default async function DashboardPage() {
       data.analytics?.nextAction?.exerciseId,
       { goalDescription: data.goals[0]?.description },
     );
-  } catch {
-    const fallback = createVerifiedLearnerFallback();
-    data = fallback;
-    gamification = deriveGamification(fallback.evaluations, fallback.exercises, fallback.competencies);
-    learningPath = deriveLearningPath(
-      fallback.competencies,
-      fallback.exercises,
-      fallback.evaluations,
-      fallback.analytics.nextAction?.exerciseId,
-      { goalDescription: fallback.goals[0]?.description },
-    );
+  } catch (error) {
+    console.error("[Dashboard] Failed to derive curriculum path:", error);
+    return <DashboardUnavailable errorDetail="Curriculum path derivation failed" />;
   }
 
-  if (data.goals.length > 0) {
-    return <SpeakQLShell data={data} gamification={gamification} learningPath={learningPath} />;
-  }
-
-  // Screen 3: Guided Learner Onboarding Experience
-  return (
-    <main style={{ minHeight: "100vh", display: "flex", flexDirection: "column", paddingBottom: "10vh" }}>
-      {/* Navigation */}
-      <nav className="nav shell" aria-label="Primary navigation">
-        <Link className="wordmark" href="/" aria-label="SpeakQL home">
-          <SpeakQLLogo size={36} showText={true} />
-        </Link>
-        <div className="nav-links dashboard-nav-links">
-          <span className="identity-label" style={{ color: "#c4b5fd" }}>
-            Explorer: {activeIdentity.subject.slice(0, 8)}&hellip;
-          </span>
-          <LogoutButton />
-        </div>
-      </nav>
-
-      <section
-        className="shell apple-glass-card"
-        style={{
-          maxWidth: "680px",
-          margin: "4vh auto 0",
-          padding: "clamp(24px, 5vw, 40px)",
-        }}
-      >
-        {/* Onboarding Welcome Header with Whale Mascot */}
-        <div style={{ display: "flex", alignItems: "center", gap: "24px", marginBottom: "32px" }}>
-          <WhaleMascot mood="happy" size={80} animated={true} />
-          <div>
-            <span
-              style={{
-                fontSize: "11px",
-                fontWeight: 800,
-                letterSpacing: "0.1em",
-                color: "#38bdf8",
-                textTransform: "uppercase",
-              }}
-            >
-              STEP 1 OF 1 · LEARNER ONBOARDING
-            </span>
-            <h1 style={{ fontSize: "28px", fontWeight: 800, margin: "4px 0 8px", color: "#ffffff" }}>
-              Define your communication goal.
-            </h1>
-            <p style={{ margin: 0, fontSize: "14px", color: "#c4b5fd", lineHeight: 1.5 }}>
-              Tell us the real-world communication context you want to conquer.
-              We will generate tailored island competencies and practice scenarios for you.
-            </p>
-          </div>
-        </div>
-
-        <OnboardingGoalForm />
-      </section>
-    </main>
-  );
+  return <SpeakQLShell data={data} gamification={gamification} learningPath={learningPath} />;
 }

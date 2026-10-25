@@ -8,11 +8,11 @@ export type NavTab =
   | "learn"
   | "practice"
   | "conversation"
+  | "profile"
   | "leaderboard"
   | "quests"
   | "shop"
-  | "achievements"
-  | "profile";
+  | "achievements";
 
 interface SidebarProps {
   currentTab: NavTab;
@@ -25,21 +25,33 @@ export default function SpeakQLSidebar({
   onSelectTab,
   unreviewedMistakesCount,
 }: SidebarProps) {
-  const tabs = [
-    { id: "learn" as NavTab, label: "MAP", icon: "🗺️", hint: "Islands Curriculum Path" },
+  // Four clear primary destinations: Learn, Practice, Conversations, Settings
+  const primaryTabs = [
+    {
+      id: "learn" as NavTab,
+      label: "Learn",
+      icon: "🗺️",
+      hint: "Curriculum Map & Depth Progression",
+    },
     {
       id: "practice" as NavTab,
-      label: "PRACTICE",
+      label: "Practice",
       icon: "🎯",
-      hint: "Mistakes & Key Expressions",
+      hint: "Targeted Exercises & Mistake Review",
       badge: unreviewedMistakesCount > 0 ? unreviewedMistakesCount : undefined,
     },
-    { id: "conversation" as NavTab, label: "DIALOGUE", icon: "💬", hint: "Conversation & AI Mentor" },
-    { id: "leaderboard" as NavTab, label: "LEAGUES", icon: "🏆", hint: "Ocean Leaderboards" },
-    { id: "quests" as NavTab, label: "QUESTS", icon: "🎁", hint: "Daily Challenges" },
-    { id: "shop" as NavTab, label: "SHOP", icon: "💎", hint: "Rewards Vault & Hearts" },
-    { id: "achievements" as NavTab, label: "TROPHIES", icon: "⭐", hint: "Badges & Milestones" },
-    { id: "profile" as NavTab, label: "PROFILE", icon: "👤", hint: "Settings & Account" },
+    {
+      id: "conversation" as NavTab,
+      label: "Conversations",
+      icon: "💬",
+      hint: "AI Workplace Voice Call Simulator",
+    },
+    {
+      id: "profile" as NavTab,
+      label: "Settings",
+      icon: "⚙️",
+      hint: "Profile, Goals & Language Track",
+    },
   ];
 
   const handleTabClick = (tab: NavTab) => {
@@ -56,9 +68,9 @@ export default function SpeakQLSidebar({
         </Link>
       </div>
 
-      {/* Navigation Buttons */}
-      <nav className="duo-nav-list" role="tablist" aria-label="Learning platform tabs">
-        {tabs.map((tab) => {
+      {/* Primary Navigation Buttons */}
+      <nav className="duo-nav-list" role="tablist" aria-label="Main learning navigation">
+        {primaryTabs.map((tab) => {
           const isActive = currentTab === tab.id;
           return (
             <button
@@ -70,13 +82,19 @@ export default function SpeakQLSidebar({
               aria-controls={`tabpanel-${tab.id}`}
               className={`duo-nav-item ${isActive ? "nav-item-active" : ""}`}
               onClick={() => handleTabClick(tab.id)}
+              title={tab.hint}
             >
               <span className="nav-item-icon" aria-hidden="true">
                 {tab.icon}
               </span>
               <span className="nav-item-label">{tab.label}</span>
               {tab.badge !== undefined && (
-                <span className="nav-item-badge" role="status" aria-label={`${tab.badge} unreviewed mistakes`} title={`${tab.badge} mistakes in review queue`}>
+                <span
+                  className="nav-item-badge"
+                  role="status"
+                  aria-label={`${tab.badge} unreviewed mistakes`}
+                  title={`${tab.badge} mistakes in review queue`}
+                >
                   {tab.badge}
                 </span>
               )}
@@ -85,9 +103,9 @@ export default function SpeakQLSidebar({
         })}
       </nav>
 
-      {/* Footer Settings / Sound Info */}
+      {/* Footer Status */}
       <div className="duo-sidebar-footer">
-        <span className="duo-footer-status">● Ocean World Active</span>
+        <span className="duo-footer-status">● Ocean Depth Active</span>
         <Link
           href="/scale"
           className="duo-footer-link"
@@ -95,9 +113,9 @@ export default function SpeakQLSidebar({
             display: "block",
             marginTop: "0.5rem",
             fontSize: "0.75rem",
-            color: "#a855f7",
+            color: "#38bdf8",
             textDecoration: "none",
-            fontWeight: 600,
+            fontWeight: 650,
           }}
         >
           🤝 Scale With Us ↗

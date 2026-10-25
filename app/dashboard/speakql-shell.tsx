@@ -18,7 +18,6 @@ import ProfileSettingsView from "./profile-settings-view";
 import LogoutButton from "./logout-button";
 import { sound } from "@/src/client/sound/synthesizer";
 import { WhaleMascot } from "@/src/client/components/whale-mascot";
-import { RoamingWhaleGuide } from "@/src/client/components/roaming-whale-guide";
 
 export interface SpeakQLShellProps {
   data: DashboardData;
@@ -198,31 +197,21 @@ export default function SpeakQLShell({
           </div>
 
           <div className="duo-topbar-right">
-            {/* Streak Counter */}
-            <div className={`duo-stat-pill duo-streak-pill ${gamification.streakActiveToday ? "streak-live" : ""}`}>
-              <span className="stat-emoji" aria-hidden="true">🔥</span>
-              <span className="stat-number">{gamification.streakDays}</span>
-            </div>
-
-            {/* Gems Counter */}
-            <div className="duo-stat-pill duo-gems-pill">
-              <span className="stat-emoji" aria-hidden="true">💎</span>
-              <span className="stat-number">{gems}</span>
-            </div>
-
-            {/* Hearts Counter */}
-            <button
-              type="button"
-              className="duo-stat-pill duo-hearts-pill"
-              onClick={() => setCurrentTab("shop")}
-              title="Click to view hearts in shop"
-              aria-label={`${hearts} of 5 hearts remaining`}
+            <span
+              style={{
+                fontSize: "12px",
+                fontWeight: 700,
+                color: "#38bdf8",
+                background: "rgba(56, 189, 248, 0.1)",
+                border: "1px solid rgba(56, 189, 248, 0.25)",
+                padding: "6px 14px",
+                borderRadius: "99px",
+                letterSpacing: "0.02em",
+              }}
+              title="Verified Mastery Rate from Completed Evaluations"
             >
-              <span className="stat-emoji" aria-hidden="true">❤️</span>
-              <span className="stat-number">{hearts}</span>
-            </button>
-
-            {/* Logout Control */}
+              🌊 {data.analytics.estimate.progressPercentage}% Mastered
+            </span>
             <LogoutButton />
           </div>
         </header>
@@ -518,19 +507,6 @@ export default function SpeakQLShell({
           onClose={() => setActiveLessonId(null)}
         />
       )}
-
-      {/* 4. Living Companion Whale Guide */}
-      <RoamingWhaleGuide
-        activeGoal={currentGoalDescription}
-        currentTab={currentTab}
-        eventTrigger={
-          activeLessonId
-            ? "practice_started"
-            : unreviewedMistakes > 0
-            ? "mistake_support"
-            : "welcome"
-        }
-      />
     </div>
   );
 }
