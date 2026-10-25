@@ -1,4 +1,4 @@
-"import Link from "next/link";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createSupabaseAuthProvider } from "@/src/server/auth/supabase";
 import { deriveGamification } from "@/src/server/goals/gamification";
@@ -21,7 +21,7 @@ function DashboardUnavailable() {
   );
 }
 
-function OnboardingScreen({ subject }: { subject: string }) {
+function OnboardingScreen() {
   return (
     <main style={{ minHeight: "100vh", display: "flex", flexDirection: "column", paddingBottom: "10vh" }}>
       <nav className="nav shell dashboard-nav" aria-label="Primary navigation">
@@ -70,7 +70,7 @@ export default async function DashboardPage() {
   }
 
   if (!data || !Array.isArray(data.goals)) return <DashboardUnavailable />;
-  if (data.goals.length === 0) return <OnboardingScreen subject={identity.subject} />;
+  if (data.goals.length === 0) return <OnboardingScreen />;
 
   try {
     const gamification = deriveGamification(data.evaluations, data.exercises, data.competencies);
