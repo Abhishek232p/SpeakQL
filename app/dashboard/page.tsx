@@ -72,18 +72,23 @@ export default async function DashboardPage() {
   if (!data || !Array.isArray(data.goals)) return <DashboardUnavailable />;
   if (data.goals.length === 0) return <OnboardingScreen />;
 
+  let gamification;
+  let learningPath;
+  let derivationFailed = false;
   try {
-    const gamification = deriveGamification(data.evaluations, data.exercises, data.competencies);
-    const learningPath = deriveLearningPath(
+    gamification = deriveGamification(data.evaluations, data.exercises, data.competencies);
+    learningPath = deriveLearningPath(
       data.competencies,
       data.exercises,
       data.evaluations,
       data.analytics?.nextAction?.exerciseId,
       { goalDescription: data.goals[0]?.description },
     );
-    return <SpeakQLShell data={data} gamification={gamification} learningPath={learningPath} />;
   } catch (error) {
     console.error("[Dashboard] Could not derive the learner's next step.", error);
-    return <DashboardUnavailable />;
+    derivationFailed = true;
   }
+
+  if (derivationFailed) return <DashboardUnavailable />;
+  return <SpeakQLShell data={data} gamification={gamification} learningPath={learningPath} />;
 }
