@@ -84,20 +84,6 @@ export default function SpeakQLSidebar({
       {/* Footer Settings / Sound Info */}
       <div className="duo-sidebar-footer">
         <span className="duo-footer-status">Your learning space</span>
-        <Link
-          href="/scale"
-          className="duo-footer-link"
-          style={{
-            display: "block",
-            marginTop: "0.5rem",
-            fontSize: "0.75rem",
-            color: "#a855f7",
-            textDecoration: "none",
-            fontWeight: 600,
-          }}
-        >
-          About SpeakQL ↗
-        </Link>
       </div>
     </aside>
   );
