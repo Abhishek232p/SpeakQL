@@ -3595,3 +3595,12 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
     padding-inline: 12px !important;
   }
 }
+
+.duo-command-center h2,
+.duo-command-center p,
+.duo-command-center strong {
+  color: #172033 !important;
+}
+.duo-command-center p {
+  line-height: 1.65 !important;
+}
