@@ -15,7 +15,14 @@ export function getDb() {
   } catch {
     throw new Error("DATABASE_URL must be a PostgreSQL URI with an explicit user, host, and database name.");
   }
-  pool ??= new Pool({ connectionString: DATABASE_URL, max: 5 });
+  if (!pool) {
+    pool = new Pool({ connectionString: DATABASE_URL, max: 5 });
+    if (typeof pool.on === "function") {
+      pool.on("error", (err) => {
+        console.warn("[Database Pool]", err?.message || err);
+      });
+    }
+  }
   return drizzle(pool);
 }
 

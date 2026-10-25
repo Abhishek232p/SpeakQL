@@ -19,7 +19,7 @@ function jsonResponse(body: unknown, status = 200) {
 
 export async function POST(
   request: Request,
-  context: { params: Promise<{ id: string }> | { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const identity = await requireIdentity(createSupabaseAuthProvider());
