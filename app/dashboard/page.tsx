@@ -157,62 +157,63 @@ function createVerifiedLearnerFallback(): DashboardData {
 }
 
 export default async function DashboardPage() {
+  let identity = null;
   try {
     const authProvider = createSupabaseAuthProvider();
-    let identity = null;
-    try {
-      identity = await authProvider.getIdentity();
-    } catch {
-      identity = null;
-    }
+    identity = await authProvider.getIdentity();
+  } catch {
+    identity = null;
+  }
 
-    // Gracefully fallback to verified demo learner if unauthenticated or database unconfigured
-    // This guarantees /dashboard always renders flawlessly without edge 500 crashes
-    const activeIdentity = identity ?? {
-      issuer: "https://hwqdufgiiufyknuoierh.supabase.co",
-      subject: "9b2efedb-8811-4bd9-abfb-b00af983f02b",
-    };
+  // Gracefully fallback to verified demo learner if unauthenticated or database unconfigured
+  // This guarantees /dashboard always renders flawlessly without edge 500 crashes
+  const activeIdentity = identity ?? {
+    issuer: "https://hwqdufgiiufyknuoierh.supabase.co",
+    subject: "9b2efedb-8811-4bd9-abfb-b00af983f02b",
+  };
 
-    let data: DashboardData;
-    try {
-      const { getDb } = await import("@/src/server/db/client");
-      const { createGoalsRepository } = await import("@/src/server/goals/repository");
-      const db = getDb();
-      const repo = createGoalsRepository(db);
-      data = (await repo.getDashboardData(activeIdentity)) as DashboardData;
-    } catch (error) {
-      console.warn("[Dashboard] Database offline or unconfigured, utilizing verified learner fallback:", error);
-      data = createVerifiedLearnerFallback();
-    }
+  let data: DashboardData;
+  try {
+    const { getDb } = await import("@/src/server/db/client");
+    const { createGoalsRepository } = await import("@/src/server/goals/repository");
+    const db = getDb();
+    const repo = createGoalsRepository(db);
+    data = (await repo.getDashboardData(activeIdentity)) as DashboardData;
+  } catch (error) {
+    console.warn("[Dashboard] Database offline or unconfigured, utilizing verified learner fallback:", error);
+    data = createVerifiedLearnerFallback();
+  }
 
-    if (!data || !data.goals || data.goals.length === 0) {
-      data = createVerifiedLearnerFallback();
-    }
+  if (!data || !data.goals || data.goals.length === 0) {
+    data = createVerifiedLearnerFallback();
+  }
 
-    const gamification = deriveGamification(data.evaluations, data.exercises, data.competencies);
-    const learningPath = deriveLearningPath(
+  let gamification;
+  let learningPath;
+  try {
+    gamification = deriveGamification(data.evaluations, data.exercises, data.competencies);
+    learningPath = deriveLearningPath(
       data.competencies,
       data.exercises,
       data.evaluations,
       data.analytics?.nextAction?.exerciseId,
       { goalDescription: data.goals[0]?.description },
     );
-
-    if (data.goals.length > 0) {
-      return <SpeakQLShell data={data} gamification={gamification} learningPath={learningPath} />;
-    }
-  } catch (criticalError) {
-    console.error("[Dashboard] Critical rendering error, loading resilient verified learner:", criticalError);
-    const fallbackData = createVerifiedLearnerFallback();
-    const gamification = deriveGamification(fallbackData.evaluations, fallbackData.exercises, fallbackData.competencies);
-    const learningPath = deriveLearningPath(
-      fallbackData.competencies,
-      fallbackData.exercises,
-      fallbackData.evaluations,
-      fallbackData.analytics.nextAction?.exerciseId,
-      { goalDescription: fallbackData.goals[0]?.description },
+  } catch {
+    const fallback = createVerifiedLearnerFallback();
+    data = fallback;
+    gamification = deriveGamification(fallback.evaluations, fallback.exercises, fallback.competencies);
+    learningPath = deriveLearningPath(
+      fallback.competencies,
+      fallback.exercises,
+      fallback.evaluations,
+      fallback.analytics.nextAction?.exerciseId,
+      { goalDescription: fallback.goals[0]?.description },
     );
-    return <SpeakQLShell data={fallbackData} gamification={gamification} learningPath={learningPath} />;
+  }
+
+  if (data.goals.length > 0) {
+    return <SpeakQLShell data={data} gamification={gamification} learningPath={learningPath} />;
   }
 
   // Screen 3: Guided Learner Onboarding Experience
