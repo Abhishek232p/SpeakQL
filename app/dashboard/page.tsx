@@ -295,7 +295,8 @@ export default async function DashboardPage() {
   try {
     const authProvider = createSupabaseAuthProvider();
     identity = await authProvider.getIdentity();
-  } catch {
+  } catch (authError) {
+    console.warn("[Dashboard] Auth verification error:", authError);
     identity = null;
   }
 
@@ -304,7 +305,8 @@ export default async function DashboardPage() {
     return <UnauthenticatedScreen />;
   }
 
-  let data: DashboardData;
+  let data: DashboardData | null = null;
+  let loadErrorDetail: string | null = null;
   try {
     const { getDb } = await import("@/src/server/db/client");
     const { createGoalsRepository } = await import("@/src/server/goals/repository");
@@ -313,11 +315,11 @@ export default async function DashboardPage() {
     data = (await repo.getDashboardData(identity)) as DashboardData;
   } catch (error) {
     console.error("[Dashboard] Database offline or failed to load learner data:", error);
-    return <DashboardUnavailable errorDetail={error instanceof Error ? error.message : "Database connection issue"} />;
+    loadErrorDetail = error instanceof Error ? error.message : "Database connection issue";
   }
 
-  if (!data || !Array.isArray(data.goals)) {
-    return <DashboardUnavailable errorDetail="Invalid dashboard response structure" />;
+  if (loadErrorDetail || !data || !Array.isArray(data.goals)) {
+    return <DashboardUnavailable errorDetail={loadErrorDetail ?? "Invalid dashboard response structure"} />;
   }
 
   if (data.goals.length === 0) {
@@ -326,6 +328,7 @@ export default async function DashboardPage() {
 
   let gamification;
   let learningPath;
+  let derivationFailed = false;
   try {
     gamification = deriveGamification(data.evaluations, data.exercises, data.competencies);
     learningPath = deriveLearningPath(
@@ -337,6 +340,10 @@ export default async function DashboardPage() {
     );
   } catch (error) {
     console.error("[Dashboard] Failed to derive curriculum path:", error);
+    derivationFailed = true;
+  }
+
+  if (derivationFailed || !gamification || !learningPath) {
     return <DashboardUnavailable errorDetail="Curriculum path derivation failed" />;
   }
 
