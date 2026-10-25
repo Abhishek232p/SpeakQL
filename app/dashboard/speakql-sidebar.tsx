@@ -26,20 +26,20 @@ export default function SpeakQLSidebar({
   unreviewedMistakesCount,
 }: SidebarProps) {
   const tabs = [
-    { id: "learn" as NavTab, label: "MAP", icon: "🗺️", hint: "Islands Curriculum Path" },
+    { id: "learn" as NavTab, label: "Learn", icon: "📘", hint: "Your next lesson and learning path" },
     {
       id: "practice" as NavTab,
-      label: "PRACTICE",
+      label: "Practice",
       icon: "🎯",
-      hint: "Mistakes & Key Expressions",
+      hint: "Exercises and corrections",
       badge: unreviewedMistakesCount > 0 ? unreviewedMistakesCount : undefined,
     },
-    { id: "conversation" as NavTab, label: "DIALOGUE", icon: "💬", hint: "Conversation & AI Mentor" },
-    { id: "leaderboard" as NavTab, label: "LEAGUES", icon: "🏆", hint: "Ocean Leaderboards" },
-    { id: "quests" as NavTab, label: "QUESTS", icon: "🎁", hint: "Daily Challenges" },
-    { id: "shop" as NavTab, label: "SHOP", icon: "💎", hint: "Rewards Vault & Hearts" },
-    { id: "achievements" as NavTab, label: "TROPHIES", icon: "⭐", hint: "Badges & Milestones" },
-    { id: "profile" as NavTab, label: "PROFILE", icon: "👤", hint: "Settings & Account" },
+    { id: "conversation" as NavTab, label: "Conversations", icon: "💬", hint: "Guided speaking practice" },
+    { id: "leaderboard" as NavTab, label: "Progress", icon: "📈", hint: "Your learning progress" },
+    { id: "quests" as NavTab, label: "Challenges", icon: "✓", hint: "Optional practice goals" },
+    { id: "shop" as NavTab, label: "Rewards", icon: "✦", hint: "Optional rewards" },
+    { id: "achievements" as NavTab, label: "Achievements", icon: "★", hint: "Milestones you have earned" },
+    { id: "profile" as NavTab, label: "Settings", icon: "⚙", hint: "Account and preferences" },
   ];
 
   const handleTabClick = (tab: NavTab) => {
@@ -57,7 +57,7 @@ export default function SpeakQLSidebar({
       </div>
 
       {/* Navigation Buttons */}
-      <nav className="duo-nav-list" role="tablist" aria-label="Learning platform tabs">
+      <nav className="duo-nav-list" role="tablist" aria-label="Main learning navigation">
         {tabs.map((tab) => {
           const isActive = currentTab === tab.id;
           return (
@@ -87,7 +87,7 @@ export default function SpeakQLSidebar({
 
       {/* Footer Settings / Sound Info */}
       <div className="duo-sidebar-footer">
-        <span className="duo-footer-status">● Ocean World Active</span>
+        <span className="duo-footer-status">Your learning space</span>
         <Link
           href="/scale"
           className="duo-footer-link"
@@ -100,7 +100,7 @@ export default function SpeakQLSidebar({
             fontWeight: 600,
           }}
         >
-          🤝 Scale With Us ↗
+          About SpeakQL ↗
         </Link>
       </div>
     </aside>
