@@ -50,7 +50,7 @@ jobs:
       - name: Deploy to Cloudflare (OpenNext)
         if: ${{ env.CF_API_TOKEN != '' }}
         run: |
-          npx opennextjs-cloudflare deploy
+          npx opennextjs-cloudflare deploy || npx wrangler deploy
 
       - name: Post-deploy smoke test
         if: ${{ env.CF_API_TOKEN != '' }}

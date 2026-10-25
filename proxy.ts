@@ -21,5 +21,3 @@ export const config = {
   ],
 };
 
-export default proxy;
-
