@@ -36,6 +36,10 @@ jobs:
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://hwqdufgiiufyknuoierh.supabase.co' }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_U9HkatlRa8qBAgtp_UzrJg_YsNftsTm' }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          RESEND_FROM_EMAIL: ${{ secrets.RESEND_FROM_EMAIL }}
+          PARTNER_NOTIFICATION_EMAIL: ${{ secrets.PARTNER_NOTIFICATION_EMAIL }}
         run: npm run build
 
       - name: Check Cloudflare credentials
@@ -49,6 +53,11 @@ jobs:
 
       - name: Deploy to Cloudflare (OpenNext)
         if: ${{ env.CF_API_TOKEN != '' }}
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          RESEND_FROM_EMAIL: ${{ secrets.RESEND_FROM_EMAIL }}
+          PARTNER_NOTIFICATION_EMAIL: ${{ secrets.PARTNER_NOTIFICATION_EMAIL }}
         run: |
           npx opennextjs-cloudflare deploy || npx wrangler deploy
 
