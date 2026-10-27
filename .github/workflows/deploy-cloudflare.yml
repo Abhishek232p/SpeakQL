@@ -52,6 +52,11 @@ jobs:
         run: |
           npx opennextjs-cloudflare deploy || npx wrangler deploy
 
+      - name: Sync Database Secret to Cloudflare
+        if: ${{ env.CF_API_TOKEN != '' && secrets.DATABASE_URL != '' }}
+        run: |
+          echo "${{ secrets.DATABASE_URL }}" | npx wrangler secret put DATABASE_URL --name ${{ env.CF_WORKER_NAME }}
+
       - name: Post-deploy smoke test
         if: ${{ env.CF_API_TOKEN != '' }}
         run: |

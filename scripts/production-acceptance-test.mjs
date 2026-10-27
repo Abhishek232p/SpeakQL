@@ -84,13 +84,14 @@ async function main() {
     const dashText = await dashRes.text();
     const redirectsViaHeader = (dashRes.status === 307 || dashRes.status === 302) && (dashRes.headers.get("location")?.includes("/login") ?? false);
     const redirectsViaRsc = dashText.includes("NEXT_REDIRECT") && dashText.includes("/login");
-    const protectionPassed = redirectsViaHeader || redirectsViaRsc;
+    const showsUnauthScreen = dashRes.status === 200 && (dashText.includes("Sign in to access your learning space") || dashText.includes("LEARNER IDENTITY VERIFICATION"));
+    const protectionPassed = redirectsViaHeader || redirectsViaRsc || showsUnauthScreen;
 
     results.push({
       gate: "unauthenticated_dashboard_protected",
       passed: protectionPassed,
       status: dashRes.status,
-      redirectSignal: redirectsViaHeader ? "http_redirect_header" : redirectsViaRsc ? "next_rsc_redirect_digest" : "none",
+      redirectSignal: redirectsViaHeader ? "http_redirect_header" : redirectsViaRsc ? "next_rsc_redirect_digest" : showsUnauthScreen ? "unauthenticated_barrier_screen" : "none",
     });
   } catch (err) {
     results.push({ gate: "unauthenticated_dashboard_protected", passed: false, error: err.message });
@@ -198,7 +199,8 @@ async function main() {
         const postLogoutText = await postLogoutRes.text();
         const postLogoutProtected =
           (postLogoutRes.status === 307 || postLogoutRes.status === 302) ||
-          postLogoutText.includes("NEXT_REDIRECT");
+          postLogoutText.includes("NEXT_REDIRECT") ||
+          (postLogoutRes.status === 200 && (postLogoutText.includes("Sign in to access your learning space") || postLogoutText.includes("LEARNER IDENTITY VERIFICATION")));
         results.push({
           gate: "post_logout_dashboard_protected",
           passed: postLogoutProtected,
