@@ -523,17 +523,21 @@ export default function ScaleWithUsPage() {
                 <br />
                 Our partnership team will follow up at <strong>{formData.email}</strong>.
               </p>
-              <div style={{ marginTop: "1.5rem" }}>
+              <div style={{ marginTop: "1.5rem", display: "flex", flexDirection: "column", gap: "6px", alignItems: "center" }}>
                 <a
-                  href="mailto:partners@speakql.ai"
+                  href="mailto:Abhishek@speakql.tech"
                   style={{
                     color: "#38bdf8",
-                    fontSize: "0.9rem",
+                    fontSize: "0.95rem",
+                    fontWeight: 700,
                     textDecoration: "underline",
                   }}
                 >
-                  Direct email: partners@speakql.ai
+                  Founder Direct: Abhishek@speakql.tech
                 </a>
+                <span style={{ fontSize: "0.85rem", color: "#94a3b8" }}>
+                  Institutional Partnerships: <a href="mailto:partners@speakql.ai" style={{ color: "#94a3b8" }}>partners@speakql.ai</a>
+                </span>
               </div>
             </div>
           ) : (
@@ -730,6 +734,12 @@ export default function ScaleWithUsPage() {
       >
         <p style={{ margin: "0 0 0.5rem", color: "#94a3b8" }}>
           SpeakQL — Better communication. Greater possibilities.
+        </p>
+        <p style={{ margin: "0 0 0.5rem", color: "#cbd5e1" }}>
+          Founder: <strong>Abhishek</strong> · Direct:{" "}
+          <a href="mailto:Abhishek@speakql.tech" style={{ color: "#38bdf8", textDecoration: "none" }}>
+            Abhishek@speakql.tech
+          </a>
         </p>
         <p style={{ margin: 0 }}>
           © {new Date().getFullYear()} SpeakQL. Adaptive Communication Intelligence. All rights reserved.
