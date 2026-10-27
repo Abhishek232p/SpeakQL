@@ -35,7 +35,8 @@ describe("Feature 2: Scale With Us Partnership Page Contracts", () => {
 
     // Check value proposition and honest submission behavior
     expect(content).toContain("The future of communication is personal.");
-    expect(content).toContain("partners@speakql.ai");
+    expect(content).toContain("Abhishek@speakql.tech");
+    expect(content).not.toContain("partners@speakql.ai");
     expect(content).toContain("Inquiry Logged Successfully");
   });
 

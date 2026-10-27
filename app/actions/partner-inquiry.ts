@@ -72,7 +72,7 @@ export async function submitPartnershipInquiry(rawInput: unknown): Promise<Partn
     console.error("[Partnership Inquiry] Processing error:", err);
     return {
       success: false,
-      error: "Unable to submit your inquiry at this time. Please email partners@speakql.ai directly.",
+      error: "Unable to submit your inquiry at this time. Please email Abhishek@speakql.tech directly.",
     };
   }
 }

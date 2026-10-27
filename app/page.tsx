@@ -330,6 +330,12 @@ export default function Home() {
           <Link href="/scale" style={{ color: "#c4b5fd" }}>Institutions &amp; Scale</Link>
           <Link href={startLearningHref} style={{ color: "#38bdf8" }}>Learner Platform</Link>
         </div>
+        <p style={{ margin: "0.4rem 0", color: "#cbd5e1", fontSize: "13px" }}>
+          Founder: <strong>Abhishek</strong> · Official Contact:{" "}
+          <a href="mailto:Abhishek@speakql.tech" style={{ color: "#38bdf8", textDecoration: "none" }}>
+            Abhishek@speakql.tech
+          </a>
+        </p>
         <p>Natural language &amp; capability, practiced in context.</p>
         <p>© {new Date().getFullYear()} SpeakQL · Ocean World</p>
       </footer>

@@ -148,7 +148,7 @@ export default function ScaleWithUsSection() {
       }
     } catch {
       sound.playIncorrect();
-      setErrorMessage("Network error connecting to the inquiry service. Please email partners@speakql.ai directly.");
+      setErrorMessage("Network error connecting to the inquiry service. Please email Abhishek@speakql.tech directly.");
     } finally {
       setIsSubmitting(false);
     }
@@ -404,9 +404,9 @@ export default function ScaleWithUsSection() {
               {submitSuccess}
             </p>
             <div style={{ fontSize: "13px", color: "#94a3b8" }}>
-              Direct email link:{" "}
-              <a href="mailto:partners@speakql.ai" style={{ color: "#38bdf8", textDecoration: "underline" }}>
-                partners@speakql.ai
+              Official contact:{" "}
+              <a href="mailto:Abhishek@speakql.tech" style={{ color: "#38bdf8", textDecoration: "underline" }}>
+                Abhishek@speakql.tech
               </a>
             </div>
             <button
@@ -711,7 +711,10 @@ export default function ScaleWithUsSection() {
               <p style={{ margin: "12px 0 0", fontSize: "11px", color: "#64748b", textAlign: "center", lineHeight: 1.5 }}>
                 🔒 Inquiries are reviewed directly by SpeakQL executive leadership. Data is never sold or shared.
                 <br />
-                Direct executive communication: <strong>partners@speakql.ai</strong>
+                Official contact:{" "}
+                <a href="mailto:Abhishek@speakql.tech" style={{ color: "#38bdf8", textDecoration: "none" }}>
+                  <strong>Abhishek@speakql.tech</strong>
+                </a>
               </p>
             </div>
           </form>

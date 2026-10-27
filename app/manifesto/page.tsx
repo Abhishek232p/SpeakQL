@@ -184,6 +184,12 @@ export default function ManifestoPage() {
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <SpeakQLLogo size={28} showText={true} />
         </div>
+        <p style={{ margin: "0.4rem 0", color: "#cbd5e1", fontSize: "13px" }}>
+          Founder: <strong>Abhishek</strong> · Official Contact:{" "}
+          <a href="mailto:Abhishek@speakql.tech" style={{ color: "#38bdf8", textDecoration: "none" }}>
+            Abhishek@speakql.tech
+          </a>
+        </p>
         <p>A human philosophy of presence, fluency, and vocal sovereignty.</p>
         <p>© {new Date().getFullYear()} SpeakQL. All rights reserved.</p>
       </footer>

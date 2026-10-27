@@ -6,6 +6,9 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "SpeakQL — Capability, practiced in context",
   description: "Professional learning for the language, role, culture, and environment you choose.",
+  authors: [{ name: "Abhishek", url: "mailto:Abhishek@speakql.tech" }],
+  creator: "Abhishek",
+  publisher: "SpeakQL",
   manifest: "/manifest.webmanifest",
   icons: {
     icon: "/icon.svg",

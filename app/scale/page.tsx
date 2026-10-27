@@ -100,7 +100,7 @@ export default function ScaleWithUsPage() {
       }
     } catch {
       sound.playIncorrect();
-      setValidationError("Failed to submit inquiry. Please reach out to partners@speakql.ai directly.");
+      setValidationError("Failed to submit inquiry. Please reach out to Abhishek@speakql.tech directly.");
     } finally {
       setIsSubmitting(false);
     }
@@ -523,7 +523,7 @@ export default function ScaleWithUsPage() {
                 <br />
                 Our partnership team will follow up at <strong>{formData.email}</strong>.
               </p>
-              <div style={{ marginTop: "1.5rem", display: "flex", flexDirection: "column", gap: "6px", alignItems: "center" }}>
+              <div style={{ marginTop: "1.5rem" }}>
                 <a
                   href="mailto:Abhishek@speakql.tech"
                   style={{
@@ -533,11 +533,8 @@ export default function ScaleWithUsPage() {
                     textDecoration: "underline",
                   }}
                 >
-                  Founder Direct: Abhishek@speakql.tech
+                  Official Contact: Abhishek@speakql.tech
                 </a>
-                <span style={{ fontSize: "0.85rem", color: "#94a3b8" }}>
-                  Institutional Partnerships: <a href="mailto:partners@speakql.ai" style={{ color: "#94a3b8" }}>partners@speakql.ai</a>
-                </span>
               </div>
             </div>
           ) : (
@@ -736,7 +733,7 @@ export default function ScaleWithUsPage() {
           SpeakQL — Better communication. Greater possibilities.
         </p>
         <p style={{ margin: "0 0 0.5rem", color: "#cbd5e1" }}>
-          Founder: <strong>Abhishek</strong> · Direct:{" "}
+          Founder: <strong>Abhishek</strong> · Official Contact:{" "}
           <a href="mailto:Abhishek@speakql.tech" style={{ color: "#38bdf8", textDecoration: "none" }}>
             Abhishek@speakql.tech
           </a>
