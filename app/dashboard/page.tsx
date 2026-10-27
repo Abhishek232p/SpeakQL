@@ -8,6 +8,8 @@ import LogoutButton from "./logout-button";
 import SpeakQLShell from "./speakql-shell";
 import { WhaleMascot, SpeakQLLogo } from "@/src/client/components/whale-mascot";
 
+export const dynamic = "force-dynamic";
+
 function DashboardUnavailable({ errorDetail }: { errorDetail?: string }) {
   return (
     <main
@@ -279,6 +281,9 @@ export default async function DashboardPage() {
     const authProvider = createSupabaseAuthProvider();
     identity = await authProvider.getIdentity();
   } catch (authError) {
+    if (authError && typeof authError === "object" && "digest" in authError) {
+      throw authError;
+    }
     console.warn("[Dashboard] Auth verification error:", authError);
     identity = null;
   }
