@@ -135,6 +135,22 @@ export default function SpeakQLShell({
   const currentGoalDescription = data.goals[0]?.description || "Mastering Natural Communication";
   const targetLessonId = learningPath.activeLessonId || data.analytics?.nextAction?.exerciseId || data.exercises[0]?.id;
 
+  const detectLanguageInfo = (desc: string) => {
+    const lower = desc.toLowerCase();
+    if (lower.includes("japanese") || lower.includes("日本語") || lower.includes("nihongo")) return { name: "Japanese", flag: "🇯🇵" };
+    if (lower.includes("german") || lower.includes("deutsch")) return { name: "German", flag: "🇩🇪" };
+    if (lower.includes("spanish") || lower.includes("español")) return { name: "Spanish", flag: "🇪🇸" };
+    if (lower.includes("hindi") || lower.includes("हिंदी")) return { name: "Hindi", flag: "🇮🇳" };
+    if (lower.includes("french") || lower.includes("français")) return { name: "French", flag: "🇫🇷" };
+    return { name: "Workplace Track", flag: "🌐" };
+  };
+  const langInfo = detectLanguageInfo(currentGoalDescription);
+
+  const activeLessonNode = learningPath.modules
+    .flatMap((m) => m.lessons)
+    .find((l) => l.id === targetLessonId)
+    || learningPath.modules[0]?.lessons[0];
+
   return (
     <div className="duo-app-wrapper">
       {/* 1. Left Sidebar Navigation */}
@@ -174,23 +190,42 @@ export default function SpeakQLShell({
           </aside>
         )}
 
-        {/* Top Floating Stats Bar */}
+        {/* Top Floating Stats Bar - Restrained & Clean */}
         <header className="duo-topbar" role="banner" aria-label="Learning stats">
           <div className="duo-topbar-left" style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
-            {/* Professional Track Switcher */}
+            {/* Target Language Indicator */}
             <div
               className="duo-goal-pill"
               style={{
                 display: "flex",
                 alignItems: "center",
                 gap: "8px",
-                background: "rgba(30, 41, 59, 0.85)",
-                border: "1px solid rgba(168, 85, 247, 0.4)",
-                padding: "6px 12px",
-                borderRadius: "16px",
+                background: "rgba(15, 23, 42, 0.7)",
+                border: "1px solid rgba(56, 189, 248, 0.2)",
+                padding: "6px 14px",
+                borderRadius: "12px",
               }}
             >
-              <span className="goal-flag" aria-hidden="true">{activeTrack.icon}</span>
+              <span aria-hidden="true">{langInfo.flag}</span>
+              <span style={{ fontSize: "13px", fontWeight: 700, color: "#f8fafc" }}>
+                {langInfo.name} · Beginner
+              </span>
+            </div>
+
+            {/* Professional Track Switcher */}
+            <div
+              className="duo-goal-pill"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                background: "rgba(15, 23, 42, 0.6)",
+                border: "1px solid rgba(148, 163, 184, 0.2)",
+                padding: "6px 12px",
+                borderRadius: "12px",
+              }}
+            >
+              <span aria-hidden="true">{activeTrack.icon}</span>
               <select
                 value={selectedTrackId}
                 onChange={(e) => {
@@ -201,9 +236,9 @@ export default function SpeakQLShell({
                 style={{
                   background: "transparent",
                   border: "none",
-                  color: "#f8fafc",
-                  fontSize: "13px",
-                  fontWeight: 700,
+                  color: "#94a3b8",
+                  fontSize: "12px",
+                  fontWeight: 600,
                   cursor: "pointer",
                   outline: "none",
                 }}
@@ -219,28 +254,25 @@ export default function SpeakQLShell({
                 ))}
               </select>
             </div>
-
-            <div className="duo-goal-pill" title={`Active Goal: ${currentGoalDescription}`}>
-              <span className="goal-flag" aria-hidden="true">🌐</span>
-              <span className="goal-name">{currentGoalDescription}</span>
-            </div>
           </div>
 
           <div className="duo-topbar-right">
+            {/* Honest Lesson Progress Pill */}
             <span
               style={{
                 fontSize: "12px",
-                fontWeight: 700,
-                color: "#38bdf8",
-                background: "rgba(56, 189, 248, 0.1)",
-                border: "1px solid rgba(56, 189, 248, 0.25)",
-                padding: "6px 14px",
-                borderRadius: "99px",
-                letterSpacing: "0.02em",
+                fontWeight: 600,
+                color: "#94a3b8",
+                background: "rgba(30, 41, 59, 0.5)",
+                border: "1px solid rgba(255, 255, 255, 0.08)",
+                padding: "6px 12px",
+                borderRadius: "10px",
               }}
-              title="Verified Mastery Rate from Completed Evaluations"
+              title="Lessons completed across your current curriculum"
             >
-              🌊 {data.analytics.estimate.progressPercentage}% Mastered
+              {data.evaluations.length === 0
+                ? `0 of ${data.exercises.length} Lessons`
+                : `${data.analytics.measured.masteredEvaluations} of ${data.exercises.length} Mastered`}
             </span>
             <LogoutButton />
           </div>
@@ -303,133 +335,189 @@ export default function SpeakQLShell({
         >
           {currentTab === "learn" && (
             <div className="duo-learn-stage">
-              {/* Learning Command Center: Goal, Why It Matters, & Next Mission */}
-              {targetLessonId && (
+              {/* Primary Recommended Lesson Hero Card - Unmistakable, Calm, Dominant */}
+              {activeLessonNode && (
                 <div
                   className="duo-command-center"
                   style={{
-                    background: "linear-gradient(135deg, rgba(24, 32, 75, 0.95), rgba(15, 23, 42, 0.98))",
-                    border: "2px solid rgba(168, 85, 247, 0.35)",
-                    borderRadius: "24px",
+                    background: "linear-gradient(145deg, #0f172a 0%, #1e293b 100%)",
+                    border: "1px solid rgba(56, 189, 248, 0.25)",
+                    borderRadius: "20px",
                     padding: "24px 28px",
-                    marginBottom: "32px",
-                    boxShadow: "0 16px 36px -8px rgba(0, 0, 0, 0.5)",
+                    marginBottom: "28px",
+                    boxShadow: "0 10px 30px -10px rgba(0, 0, 0, 0.4)",
                   }}
                 >
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "16px", marginBottom: "18px" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-                      <WhaleMascot mood="coach" size={64} animated={true} />
-                      <div>
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-                          <span
-                            style={{
-                              fontSize: "11px",
-                              fontWeight: 800,
-                              letterSpacing: "0.08em",
-                              textTransform: "uppercase",
-                              color: "#38bdf8",
-                              background: "rgba(56, 189, 248, 0.12)",
-                              border: "1px solid rgba(56, 189, 248, 0.3)",
-                              padding: "2px 8px",
-                              borderRadius: "99px",
-                            }}
-                          >
-                            RECOMMENDED NEXT MISSION
-                          </span>
-                          <span style={{ fontSize: "12px", color: "#94a3b8" }}>
-                            ⏱️ ~3 min mission
-                          </span>
-                        </div>
-                        <h2 style={{ fontSize: "22px", fontWeight: 800, color: "#ffffff", margin: "4px 0 6px" }}>
-                          {data.analytics?.nextAction?.kind === "weakest" ? "Targeted Skill Reinforcement" : "Active Dialogue Mission"}
-                        </h2>
-                        <p style={{ margin: 0, fontSize: "14px", color: "#cbd5e1", lineHeight: 1.5, maxWidth: "560px" }}>
-                          <strong>Why this matters:</strong> {data.analytics?.nextAction?.rationale || "Builds prerequisite vocabulary and communicative phrasing for your goal."}
-                        </p>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "flex-start",
+                      flexWrap: "wrap",
+                      gap: "20px",
+                    }}
+                  >
+                    <div style={{ flex: "1 1 500px" }}>
+                      {/* Eyebrow badge */}
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          marginBottom: "8px",
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontSize: "11px",
+                            fontWeight: 800,
+                            letterSpacing: "0.06em",
+                            textTransform: "uppercase",
+                            color: "#38bdf8",
+                            background: "rgba(56, 189, 248, 0.12)",
+                            border: "1px solid rgba(56, 189, 248, 0.25)",
+                            padding: "3px 10px",
+                            borderRadius: "99px",
+                          }}
+                        >
+                          PRIMARY RECOMMENDED ACTION
+                        </span>
+                        <span style={{ fontSize: "12px", color: "#94a3b8" }}>
+                          ⏱️ ~{activeLessonNode.estimatedMinutes || 3} min · {activeLessonNode.difficulty}
+                        </span>
+                      </div>
+
+                      {/* Dominant Lesson Title */}
+                      <h2
+                        style={{
+                          fontSize: "24px",
+                          fontWeight: 800,
+                          color: "#ffffff",
+                          margin: "0 0 8px 0",
+                          letterSpacing: "-0.01em",
+                        }}
+                      >
+                        Lesson {activeLessonNode.order} — {activeLessonNode.title}
+                      </h2>
+
+                      {/* Clear What You Will Learn Objective */}
+                      <p
+                        style={{
+                          margin: "0 0 14px 0",
+                          fontSize: "15px",
+                          color: "#cbd5e1",
+                          lineHeight: 1.5,
+                        }}
+                      >
+                        {activeLessonNode.objective}
+                      </p>
+
+                      {/* Subtle Why This Matters Context */}
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          fontSize: "13px",
+                          color: "#94a3b8",
+                        }}
+                      >
+                        <span aria-hidden="true">💡</span>
+                        <span>
+                          <strong>Why this matters:</strong>{" "}
+                          {data.analytics?.nextAction?.rationale ||
+                            "Builds prerequisite vocabulary and communicative phrasing for your goal."}
+                        </span>
                       </div>
                     </div>
 
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "6px" }}>
+                    {/* Dominant Start Lesson Action */}
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "flex-end",
+                        gap: "8px",
+                      }}
+                    >
                       <button
                         type="button"
                         className="button button-primary"
                         onClick={() => {
                           sound.playPop();
-                          setActiveLessonId(targetLessonId);
+                          setActiveLessonId(activeLessonNode.id);
                         }}
                         style={{
-                          padding: "12px 24px",
+                          padding: "14px 28px",
                           fontSize: "15px",
                           fontWeight: 800,
                           borderRadius: "14px",
-                          boxShadow: "0 6px 20px rgba(168, 85, 247, 0.4)",
+                          background: "linear-gradient(135deg, #38bdf8, #6366f1)",
+                          color: "#0f172a",
+                          border: "none",
+                          cursor: "pointer",
+                          boxShadow: "0 8px 24px rgba(56, 189, 248, 0.3)",
                         }}
                       >
-                        CONTINUE MISSION ▶
+                        START LESSON {activeLessonNode.order} ▶
                       </button>
-                      <span style={{ fontSize: "11px", color: "#94a3b8" }}>
-                        🎯 Goal: {data.goals[0]?.description || "Workplace communication"}
+                      <span style={{ fontSize: "12px", color: "#64748b" }}>
+                        Single recommended next step
                       </span>
                     </div>
                   </div>
 
-                  {/* Diagnostic Skills Breakdown Pills */}
+                  {/* Contextual Progress: Truthful & Encouraging for Beginners vs Advanced */}
                   <div
                     style={{
-                      display: "grid",
-                      gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-                      gap: "12px",
+                      marginTop: "20px",
                       paddingTop: "16px",
                       borderTop: "1px solid rgba(255, 255, 255, 0.08)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      flexWrap: "wrap",
+                      gap: "12px",
                     }}
                   >
-                    <div style={{ background: "rgba(30, 41, 59, 0.6)", padding: "10px 14px", borderRadius: "10px" }}>
-                      <span style={{ fontSize: "11px", color: "#94a3b8", textTransform: "uppercase", fontWeight: 700 }}>
-                        Mastered Evaluations
-                      </span>
-                      <div style={{ fontSize: "16px", fontWeight: 800, color: "#ffffff", marginTop: "2px" }}>
-                        {data.analytics.measured.masteredEvaluations} / {data.analytics.measured.completedEvaluations || data.exercises.length}
+                    {data.evaluations.length === 0 ? (
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+                        <span style={{ fontSize: "18px" }}>🌱</span>
+                        <div>
+                          <span style={{ fontSize: "13px", fontWeight: 700, color: "#f8fafc" }}>
+                            Your first lesson is ready
+                          </span>
+                          <span style={{ fontSize: "13px", color: "#94a3b8", marginLeft: "8px" }}>
+                            · Lessons completed: 0 of {learningPath.totalLessons || data.exercises.length} · Next step: {activeLessonNode.title}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-
-                    <div style={{ background: "rgba(30, 41, 59, 0.6)", padding: "10px 14px", borderRadius: "10px" }}>
-                      <span style={{ fontSize: "11px", color: "#94a3b8", textTransform: "uppercase", fontWeight: 700 }}>
-                        Active Curriculum Units
-                      </span>
-                      <div style={{ fontSize: "16px", fontWeight: 800, color: "#38bdf8", marginTop: "2px" }}>
-                        {data.competencies.length} Competencies
+                    ) : (
+                      <div style={{ display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
+                        <span style={{ fontSize: "13px", color: "#94a3b8" }}>
+                          Lessons completed:{" "}
+                          <strong style={{ color: "#f8fafc" }}>
+                            {learningPath.completedLessons} of {learningPath.totalLessons || data.exercises.length}
+                          </strong>
+                        </span>
+                        <span style={{ fontSize: "13px", color: "#94a3b8" }}>
+                          Mastered evaluations:{" "}
+                          <strong style={{ color: "#38bdf8" }}>
+                            {data.analytics.measured.masteredEvaluations}
+                          </strong>
+                        </span>
+                        <span style={{ fontSize: "13px", color: "#94a3b8" }}>
+                          Demonstrated mastery:{" "}
+                          <strong style={{ color: "#4ade80" }}>
+                            {data.analytics.estimate.progressPercentage}%
+                          </strong>
+                        </span>
                       </div>
-                    </div>
+                    )}
 
-                    <div style={{ background: "rgba(30, 41, 59, 0.6)", padding: "10px 14px", borderRadius: "10px" }}>
-                      <span style={{ fontSize: "11px", color: "#94a3b8", textTransform: "uppercase", fontWeight: 700 }}>
-                        Demonstrated Mastery
-                      </span>
-                      <div style={{ fontSize: "16px", fontWeight: 800, color: "#4ade80", marginTop: "2px" }}>
-                        {data.analytics.estimate.progressPercentage}%
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Due Reviews Notification */}
-                  {data.evaluations.filter((ev) => ev.score.trim().toLowerCase() === "needs_work").length > 0 && (
-                    <div
-                      style={{
-                        marginTop: "14px",
-                        background: "rgba(239, 68, 68, 0.12)",
-                        border: "1px solid rgba(239, 68, 68, 0.3)",
-                        borderRadius: "10px",
-                        padding: "10px 14px",
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        flexWrap: "wrap",
-                        gap: "10px",
-                      }}
-                    >
-                      <span style={{ fontSize: "13px", color: "#fca5a5" }}>
-                        ⚠️ You have {data.evaluations.filter((ev) => ev.score.trim().toLowerCase() === "needs_work").length} item(s) due for review. Revising them restores lost hearts.
-                      </span>
+                    {/* Due Reviews Notification (only when learner has errors in queue) */}
+                    {data.evaluations.filter((ev) => ev.score.trim().toLowerCase() === "needs_work").length > 0 && (
                       <button
                         type="button"
                         onClick={() => {
@@ -437,20 +525,20 @@ export default function SpeakQLShell({
                           setCurrentTab("practice");
                         }}
                         style={{
-                          background: "rgba(239, 68, 68, 0.2)",
-                          border: "1px solid #ef4444",
-                          borderRadius: "6px",
-                          padding: "4px 10px",
+                          background: "rgba(239, 68, 68, 0.15)",
+                          border: "1px solid rgba(239, 68, 68, 0.35)",
+                          borderRadius: "8px",
+                          padding: "5px 12px",
                           fontSize: "12px",
-                          color: "#ffffff",
+                          color: "#fca5a5",
                           fontWeight: 700,
                           cursor: "pointer",
                         }}
                       >
-                        Review in Hub ↺
+                        Review Mistakes (+1 Heart) ↺
                       </button>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               )}
 

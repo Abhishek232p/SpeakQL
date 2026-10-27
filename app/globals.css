@@ -1096,47 +1096,52 @@ h1 { font-size: clamp(48px, 7vw, 86px); letter-spacing: -.03em; line-height: .98
 }
 
 .unit-theme-1 {
-  background: var(--duo-green);
-  box-shadow: 0 6px 0 var(--duo-green-dark);
+  background: linear-gradient(135deg, #1e293b, #0f172a);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
 }
 
 .unit-theme-2 {
-  background: var(--duo-blue);
-  box-shadow: 0 6px 0 var(--duo-blue-dark);
+  background: linear-gradient(135deg, #1e1b4b, #0f172a);
+  border: 1px solid rgba(129, 140, 248, 0.25);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
 }
 
 .unit-theme-3 {
-  background: var(--duo-purple);
-  box-shadow: 0 6px 0 var(--duo-purple-dark);
+  background: linear-gradient(135deg, #1e293b, #090d16);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
 }
 
 .duo-unit-kicker {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.08em;
-  opacity: 0.85;
+  color: #38bdf8;
+  opacity: 0.95;
 }
 
 .duo-unit-title {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 800;
   margin: 4px 0;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
+  color: #ffffff;
 }
 
 .duo-unit-subtitle {
   margin: 0;
   font-size: 13px;
-  opacity: 0.9;
+  color: #94a3b8;
 }
 
 .duo-guidebook-btn {
-  background: rgba(255, 255, 255, 0.25);
-  border: 2px solid rgba(255, 255, 255, 0.4);
-  color: #ffffff;
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #f8fafc;
   font-size: 12px;
-  font-weight: 800;
-  padding: 10px 18px;
+  font-weight: 700;
+  padding: 8px 16px;
   border-radius: 12px;
   cursor: pointer;
   display: flex;
@@ -1147,15 +1152,17 @@ h1 { font-size: clamp(48px, 7vw, 86px); letter-spacing: -.03em; line-height: .98
 }
 
 .duo-guidebook-btn:hover {
-  background: rgba(255, 255, 255, 0.4);
+  background: rgba(56, 189, 248, 0.15);
+  border-color: rgba(56, 189, 248, 0.4);
 }
 
 .duo-guidebook-drawer {
-  background: #ffffff;
-  border: 2px solid var(--duo-border);
+  background: #0f172a;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 16px;
   padding: 20px 24px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  color: #f8fafc;
 }
 
 .duo-guidebook-header {
@@ -1169,6 +1176,7 @@ h1 { font-size: clamp(48px, 7vw, 86px); letter-spacing: -.03em; line-height: .98
   margin: 0;
   font-size: 16px;
   font-weight: 800;
+  color: #ffffff;
 }
 
 .duo-guidebook-close {
@@ -1176,7 +1184,7 @@ h1 { font-size: clamp(48px, 7vw, 86px); letter-spacing: -.03em; line-height: .98
   border: none;
   font-size: 16px;
   cursor: pointer;
-  color: #999;
+  color: #94a3b8;
 }
 
 .duo-guidebook-tips {
@@ -1187,7 +1195,7 @@ h1 { font-size: clamp(48px, 7vw, 86px); letter-spacing: -.03em; line-height: .98
   flex-direction: column;
   gap: 8px;
   font-size: 13px;
-  color: #555;
+  color: #94a3b8;
 }
 
 /* Stepping Stone Zigzag Nodes */

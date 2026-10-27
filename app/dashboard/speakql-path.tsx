@@ -135,92 +135,213 @@ export default function SpeakQLPath({ learningPath, onStartLesson }: SpeakQLPath
               </div>
             )}
 
-            {/* Glowing Stepping Stone Pathway ("The Ocean Current") */}
-            <div className="duo-stepping-track">
+            {/* Structured, Accessible Lesson Cards */}
+            <div
+              className="duo-lesson-list"
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "14px",
+                padding: "8px 0",
+              }}
+            >
               {module.lessons.map((lesson: PathLessonNode, lessonIdx: number) => {
                 const isActive = lesson.id === activeLessonId;
                 const isCompleted = lesson.state === "completed";
                 const isLocked = lesson.state === "locked";
-                const offsetClass = getOffsetClass(lessonIdx);
 
                 return (
-                  <div key={lesson.id} className={`duo-node-row ${offsetClass}`}>
-                    {/* Active Floating Beacon Tooltip with Mascot */}
-                    {isActive && (
-                      <div className="duo-beacon-tooltip" aria-hidden="true">
-                        <WhaleMascot mood="happy" size={20} animated={true} />
-                        <span>START LESSON ▶</span>
-                        <div className="beacon-arrow" />
-                      </div>
-                    )}
+                  <div
+                    key={lesson.id}
+                    className={`duo-lesson-card ${
+                      isActive
+                        ? "lesson-card-active"
+                        : isCompleted
+                        ? "lesson-card-completed"
+                        : isLocked
+                        ? "lesson-card-locked"
+                        : "lesson-card-available"
+                    }`}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      flexWrap: "wrap",
+                      gap: "16px",
+                      background: isActive
+                        ? "linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.98))"
+                        : isCompleted
+                        ? "rgba(15, 23, 42, 0.75)"
+                        : isLocked
+                        ? "rgba(15, 23, 42, 0.4)"
+                        : "rgba(15, 23, 42, 0.6)",
+                      border: isActive
+                        ? "2px solid #38bdf8"
+                        : isCompleted
+                        ? "1px solid rgba(74, 222, 128, 0.35)"
+                        : isLocked
+                        ? "1px solid rgba(255, 255, 255, 0.05)"
+                        : "1px solid rgba(255, 255, 255, 0.12)",
+                      borderRadius: "16px",
+                      padding: "18px 22px",
+                      transition: "all 0.15s ease",
+                      boxShadow: isActive ? "0 8px 24px -4px rgba(56, 189, 248, 0.2)" : "none",
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: "16px", flex: "1 1 340px" }}>
+                      {/* Backward-compatible .duo-stone-button selector for testing & keyboard accessibility */}
+                      <button
+                        type="button"
+                        className={`duo-stone-button ${
+                          isCompleted
+                            ? "stone-completed"
+                            : isActive
+                            ? "stone-active"
+                            : isLocked
+                            ? "stone-locked"
+                            : "stone-available"
+                        }`}
+                        onClick={() => handleNodeClick(lesson)}
+                        disabled={isLocked}
+                        aria-label={`${lesson.title} - ${
+                          isCompleted ? "Completed" : isActive ? "Current lesson" : isLocked ? "Locked" : "Available"
+                        }`}
+                        title={isLocked ? "Complete previous lesson to unlock" : lesson.title}
+                        style={{
+                          width: "50px",
+                          height: "50px",
+                          borderRadius: "14px",
+                          flexShrink: 0,
+                          border: "none",
+                          cursor: isLocked ? "not-allowed" : "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: "20px",
+                          background: isCompleted
+                            ? "linear-gradient(135deg, #22c55e, #16a34a)"
+                            : isActive
+                            ? "linear-gradient(135deg, #38bdf8, #6366f1)"
+                            : isLocked
+                            ? "#1e293b"
+                            : "#334155",
+                          color: isLocked ? "#64748b" : "#ffffff",
+                          boxShadow: isCompleted
+                            ? "0 4px 12px rgba(34, 197, 94, 0.3)"
+                            : isActive
+                            ? "0 4px 14px rgba(56, 189, 248, 0.35)"
+                            : "none",
+                          opacity: isLocked ? 0.6 : 1,
+                        }}
+                      >
+                        <div className="stone-inner-face">
+                          {isCompleted ? "✓" : isActive ? "⭐" : isLocked ? "🔒" : "▶"}
+                        </div>
+                      </button>
 
-                    {/* Stepping Stone 3D Glowing Button */}
-                    <button
-                      type="button"
-                      className={`duo-stone-button ${
-                        isCompleted
-                          ? "stone-completed"
-                          : isActive
-                          ? "stone-active"
-                          : isLocked
-                          ? "stone-locked"
-                          : "stone-available"
-                      }`}
-                      onClick={() => handleNodeClick(lesson)}
-                      disabled={isLocked}
-                      aria-label={`${lesson.title} - ${
-                        isCompleted ? "Completed" : isActive ? "Current lesson" : isLocked ? "Locked" : "Available"
-                      }`}
-                      title={isLocked ? "Complete previous lesson to unlock" : lesson.title}
-                    >
-                      <div className="stone-inner-face">
-                        {isCompleted ? (
-                          <span className="stone-icon crown-icon" aria-hidden="true">
-                            👑
+                      <div>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", marginBottom: "4px" }}>
+                          <span
+                            style={{
+                              fontSize: "11px",
+                              fontWeight: 800,
+                              letterSpacing: "0.06em",
+                              textTransform: "uppercase",
+                              color: isCompleted ? "#4ade80" : isActive ? "#38bdf8" : isLocked ? "#64748b" : "#94a3b8",
+                            }}
+                          >
+                            {isCompleted ? "MASTERED ✓" : isActive ? "CURRENT LESSON" : isLocked ? "LOCKED 🔒" : "AVAILABLE"}
                           </span>
-                        ) : isActive ? (
-                          <span className="stone-icon star-icon" aria-hidden="true">
-                            ⭐
+                          <span style={{ fontSize: "12px", color: "#64748b" }}>·</span>
+                          <span style={{ fontSize: "12px", color: "#94a3b8" }}>
+                            ⏱️ {lesson.estimatedMinutes || 3} min · {lesson.difficulty}
                           </span>
-                        ) : isLocked ? (
-                          <span className="stone-icon lock-icon" aria-hidden="true">
-                            🔒
-                          </span>
-                        ) : (
-                          <span className="stone-icon book-icon" aria-hidden="true">
-                            🌊
-                          </span>
-                        )}
-                      </div>
-                    </button>
+                        </div>
 
-                    <div className="duo-node-caption">
-                      <span className="caption-title">{lesson.title}</span>
+                        <h4 style={{ margin: "0 0 4px 0", fontSize: "17px", fontWeight: 700, color: isLocked ? "#94a3b8" : "#ffffff" }}>
+                          Lesson {lesson.order || (lessonIdx + 1)} — {lesson.title}
+                        </h4>
+
+                        <p style={{ margin: 0, fontSize: "14px", color: isLocked ? "#64748b" : "#cbd5e1", lineHeight: 1.45 }}>
+                          {lesson.objective}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                      {isLocked ? (
+                        <span
+                          style={{
+                            fontSize: "12px",
+                            color: "#64748b",
+                            fontWeight: 600,
+                            background: "rgba(255, 255, 255, 0.03)",
+                            padding: "8px 14px",
+                            borderRadius: "10px",
+                            border: "1px solid rgba(255, 255, 255, 0.06)",
+                          }}
+                        >
+                          Complete Lesson {lesson.order > 1 ? lesson.order - 1 : 1} to unlock
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          className="button button-primary"
+                          onClick={() => handleNodeClick(lesson)}
+                          style={{
+                            padding: "10px 20px",
+                            fontSize: "13px",
+                            fontWeight: 800,
+                            borderRadius: "12px",
+                            background: isActive
+                              ? "linear-gradient(135deg, #38bdf8, #6366f1)"
+                              : "rgba(30, 41, 59, 0.8)",
+                            color: isActive ? "#0f172a" : "#f8fafc",
+                            border: isActive ? "none" : "1px solid rgba(255, 255, 255, 0.15)",
+                            cursor: "pointer",
+                          }}
+                        >
+                          {isCompleted ? "PRACTICE AGAIN ↺" : "START LESSON ▶"}
+                        </button>
+                      )}
                     </div>
                   </div>
                 );
               })}
+            </div>
 
-              {/* Unit Milestone Trophy / Ocean Chest */}
-              <div className="duo-node-row node-center duo-trophy-row">
-                <div
-                  className={`duo-milestone-chest ${module.completed ? "chest-unlocked" : "chest-locked"}`}
-                  role="status"
-                  aria-label={`${islandTheme.name} milestone: ${module.completed ? "Unlocked and mastered" : "Locked"}`}
-                  title={
-                    module.completed
-                      ? "Unit Mastered! Milestone Unlocked."
-                      : "Complete all unit lessons to open milestone chest"
-                  }
-                >
-                  <span className="chest-emoji" aria-hidden="true">
-                    {module.completed ? "🏆" : "🎁"}
+            {/* Unit Milestone Status Card */}
+            <div
+              className="duo-milestone-footer"
+              role="status"
+              aria-label={`${islandTheme.name} milestone: ${module.completed ? "Unlocked and mastered" : "In progress"}`}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                flexWrap: "wrap",
+                gap: "12px",
+                padding: "14px 20px",
+                background: "rgba(15, 23, 42, 0.5)",
+                border: "1px solid rgba(255, 255, 255, 0.06)",
+                borderRadius: "14px",
+                marginTop: "8px",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <span style={{ fontSize: "20px" }}>{module.completed ? "🏆" : "🎁"}</span>
+                <div>
+                  <span style={{ fontSize: "13px", fontWeight: 700, color: module.completed ? "#4ade80" : "#f8fafc" }}>
+                    {module.completed ? `Unit ${module.moduleNumber} Mastered!` : `Unit ${module.moduleNumber} Milestone: ${islandTheme.name}`}
                   </span>
-                  <span className="chest-label">
-                    {islandTheme.name} Milestone
+                  <span style={{ fontSize: "12px", color: "#94a3b8", display: "block" }}>
+                    {module.completed ? "All foundational lessons completed." : "Complete all unit lessons to unlock unit completion."}
                   </span>
                 </div>
               </div>
+              <span style={{ fontSize: "12px", fontWeight: 700, color: module.completed ? "#4ade80" : "#94a3b8" }}>
+                {module.lessons.filter((l) => l.state === "completed").length} of {module.lessons.length} Lessons Completed
+              </span>
             </div>
           </section>
         );
