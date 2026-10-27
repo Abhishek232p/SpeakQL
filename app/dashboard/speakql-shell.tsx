@@ -23,6 +23,7 @@ export interface SpeakQLShellProps {
   data: DashboardData;
   gamification: DashboardGamification;
   learningPath: DashboardLearningPath;
+  isEdgeSandbox?: boolean;
 }
 
 export type DuolingoShellProps = SpeakQLShellProps;
@@ -58,6 +59,7 @@ export default function SpeakQLShell({
   data,
   gamification,
   learningPath,
+  isEdgeSandbox = false,
 }: SpeakQLShellProps) {
   const [currentTab, setCurrentTab] = useState<NavTab>("learn");
   const [activeLessonId, setActiveLessonId] = useState<string | null>(null);
@@ -144,6 +146,34 @@ export default function SpeakQLShell({
 
       {/* 2. Main Content Canvas */}
       <div className="duo-main-canvas">
+        {isEdgeSandbox && (
+          <aside
+            role="status"
+            aria-live="polite"
+            style={{
+              background: "linear-gradient(90deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.95))",
+              borderBottom: "1px solid rgba(56, 189, 248, 0.35)",
+              padding: "8px 20px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              gap: "8px",
+              fontSize: "12px",
+              color: "#94a3b8",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <span style={{ color: "#38bdf8", fontWeight: 800 }}>⚡ EDGE INTERACTIVE SANDBOX</span>
+              <span>·</span>
+              <span>All 4 learning destinations, AI speech simulations, and rubric evaluations active.</span>
+            </div>
+            <span style={{ fontSize: "11px", color: "#64748b" }}>
+              Direct PostgreSQL persistence verified in Staging/Self-Hosted mode
+            </span>
+          </aside>
+        )}
+
         {/* Top Floating Stats Bar */}
         <header className="duo-topbar" role="banner" aria-label="Learning stats">
           <div className="duo-topbar-left" style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>

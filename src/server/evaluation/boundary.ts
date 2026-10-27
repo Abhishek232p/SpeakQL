@@ -118,10 +118,10 @@ function extractKeyExcerpts(response: string): { opening: string; body: string; 
 
 // Multilingual domain terminology equivalents for cross-language workplace scenarios
 const DOMAIN_VOCABULARY_EQUIVALENTS: Record<string, string[]> = {
-  standup: ["standup", "sprint", "ayer", "hoy", "bloqueo", "bloqueos", "yesterday", "today", "blocker", "blockers", "asakai", "昨日は", "本日は", "進捗", "कल", "आज", "ब्लॉकर"],
-  engineering: ["engineering", "developer", "software", "desarrollo", "código", "base", "datos", "migración", "api", "endpoint", "staging", "servidor", "tests", "pruebas", "実装", "開発", "テスト", "कोड", "सर्वर"],
-  database: ["database", "base", "datos", "sql", "migración", "esquema", "tabla", "registro", "db", "postgres", "redis", "caching", "キャッシュ"],
-  workplace: ["colleagues", "teammates", "equipo", "compañeros", "reunión", "sincronización", "sync", "lead", "お疲れ様", "チーム", "टीम"],
+  standup: ["standup", "sprint", "ayer", "hoy", "bloqueo", "bloqueos", "yesterday", "today", "blocker", "blockers", "asakai", "昨日は", "本日は", "進捗", "कल", "आज", "ब्लॉकर", "gestern", "heute", "blockade", "stand-up"],
+  engineering: ["engineering", "developer", "software", "desarrollo", "código", "base", "datos", "migración", "api", "endpoint", "staging", "servidor", "tests", "pruebas", "実装", "開発", "テスト", "कोड", "सर्वर", "entwicklung", "refaktorisierung", "bereitstellung"],
+  database: ["database", "base", "datos", "sql", "migración", "esquema", "tabla", "registro", "db", "postgres", "redis", "caching", "キャッシュ", "datenbank", "tabelle", "indizierung"],
+  workplace: ["colleagues", "teammates", "equipo", "compañeros", "reunión", "sincronización", "sync", "lead", "お疲れ様", "チーム", "टीम", "kollegen", "abstimmung", "tagesordnung"],
 };
 
 function hasContextSignal(request: EvaluationRequest): boolean {

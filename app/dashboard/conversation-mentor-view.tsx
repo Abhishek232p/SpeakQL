@@ -206,13 +206,17 @@ export default function ConversationMentorView({
       };
 
       recognition.onresult = (event: SpeechRecognitionEventLike) => {
-        const transcript = event.results[0][0].transcript;
-        setInputText((prev) => (prev ? `${prev} ${transcript}` : transcript));
+        const transcript = event.results[0]?.[0]?.transcript;
+        if (transcript) {
+          setInputText((prev) => (prev ? `${prev} ${transcript}` : transcript));
+        }
         setIsRecording(false);
       };
 
       recognition.onerror = () => {
-        setSpeechError("Speech recognition error. Please check your microphone permissions.");
+        setSpeechError(
+          "Microphone access blocked or unavailable. Click the lock/permission icon in your browser address bar to allow microphone access, or switch to typing mode below."
+        );
         setIsRecording(false);
       };
 
@@ -222,7 +226,9 @@ export default function ConversationMentorView({
 
       recognition.start();
     } catch {
-      setSpeechError("Could not access microphone.");
+      setSpeechError(
+        "Could not access microphone. Ensure your browser has microphone permission enabled, or type your response below."
+      );
       setIsRecording(false);
     }
   };
@@ -791,14 +797,36 @@ export default function ConversationMentorView({
               style={{
                 background: "rgba(239, 68, 68, 0.15)",
                 border: "1px solid rgba(239, 68, 68, 0.4)",
-                padding: "8px 14px",
-                borderRadius: "10px",
+                padding: "10px 16px",
+                borderRadius: "12px",
                 color: "#fca5a5",
-                fontSize: "12px",
+                fontSize: "13px",
                 marginBottom: "12px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                flexWrap: "wrap",
+                gap: "8px",
               }}
+              role="alert"
             >
-              ⚠️ {speechError}
+              <span>⚠️ {speechError}</span>
+              <button
+                type="button"
+                onClick={handleVoiceToggle}
+                style={{
+                  background: "rgba(239, 68, 68, 0.3)",
+                  border: "1px solid rgba(239, 68, 68, 0.5)",
+                  borderRadius: "8px",
+                  padding: "4px 10px",
+                  color: "#ffffff",
+                  fontSize: "12px",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                }}
+              >
+                Retry Mic ↺
+              </button>
             </div>
           )}
 

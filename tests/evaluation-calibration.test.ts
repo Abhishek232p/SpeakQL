@@ -5,8 +5,8 @@ import calibrationSet from "./fixtures/evaluation-calibration-set.json";
 
 describe("Pedagogical Evaluation Calibration & Rubric Test Set", () => {
   it("loads the versioned calibration test set with all required categories", () => {
-    expect(calibrationSet.version).toBe("1.1.0");
-    expect(calibrationSet.items.length).toBe(10);
+    expect(calibrationSet.version).toBe("1.2.0");
+    expect(calibrationSet.items.length).toBe(15);
 
     const categories = calibrationSet.items.map((i) => i.category);
     expect(categories).toContain("clearly_successful");

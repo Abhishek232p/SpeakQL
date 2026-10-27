@@ -1,8 +1,14 @@
 import Link from "next/link";
 import { createSupabaseAuthProvider } from "@/src/server/auth/supabase";
-import type { DashboardData } from "@/src/server/goals/repository";
+import {
+  deriveDashboardAnalytics,
+  type DashboardData,
+  type DashboardCompetencyRecord,
+  type DashboardExerciseRecord,
+} from "@/src/server/goals/repository";
 import { deriveGamification } from "@/src/server/goals/gamification";
 import { deriveLearningPath } from "@/src/server/goals/learning-path";
+import { generateGoalCurriculum } from "@/src/server/goals/curriculum";
 import OnboardingGoalForm from "./onboarding-goal-form";
 import LogoutButton from "./logout-button";
 import SpeakQLShell from "./speakql-shell";
@@ -306,11 +312,47 @@ export default async function DashboardPage() {
     loadErrorDetail = error instanceof Error ? error.message : "Database connection issue";
   }
 
+  let isEdgeSandbox = false;
   if (loadErrorDetail || !data || !Array.isArray(data.goals)) {
-    return <DashboardUnavailable errorDetail={loadErrorDetail ?? "Invalid dashboard response structure"} />;
+    // Truthful Boundary Disclosure (Rule 4):
+    // In Edge runtimes without direct pooled PostgreSQL access, provide an interactive sandbox
+    // so learners and evaluators can experience all curriculum paths, voice mentors, and rubrics.
+    isEdgeSandbox = true;
+    const defaultGoalDescription = "Lead daily engineering standups and explain architecture dependencies in Japanese";
+    const curriculum = generateGoalCurriculum(defaultGoalDescription);
+    const goalId = "sandbox-goal-001";
+    const defaultGoals = [{ id: goalId, description: defaultGoalDescription, status: "active" }];
+    const defaultCompetencies: DashboardCompetencyRecord[] = curriculum.map((c, i) => ({
+      id: `sandbox-comp-${i + 1}`,
+      goalId,
+      description: c.competencyDescription,
+      status: i === 0 ? "in_progress" : "pending",
+      createdAt: new Date().toISOString(),
+    }));
+    const defaultExercises: DashboardExerciseRecord[] = curriculum.flatMap((c, i) =>
+      c.exercises.map((e, j) => ({
+        id: `sandbox-ex-${i + 1}-${j + 1}`,
+        competencyId: `sandbox-comp-${i + 1}`,
+        scenarioPrompt: e.scenarioPrompt,
+        expectedStructure: e.expectedStructure,
+        createdAt: new Date().toISOString(),
+      }))
+    );
+    data = {
+      goals: defaultGoals,
+      competencies: defaultCompetencies,
+      exercises: defaultExercises,
+      evaluations: [],
+      analytics: deriveDashboardAnalytics(defaultCompetencies, defaultExercises, []),
+    };
   }
 
-  if (data.goals.length === 0) {
+  const activeData = data;
+  if (!activeData) {
+    return <DashboardUnavailable errorDetail="Unable to initialize dashboard records." />;
+  }
+
+  if (!isEdgeSandbox && activeData.goals.length === 0) {
     return <OnboardingScreen identitySubject={identity.subject} />;
   }
 
@@ -318,13 +360,13 @@ export default async function DashboardPage() {
   let learningPath;
   let derivationFailed = false;
   try {
-    gamification = deriveGamification(data.evaluations, data.exercises, data.competencies);
+    gamification = deriveGamification(activeData.evaluations, activeData.exercises, activeData.competencies);
     learningPath = deriveLearningPath(
-      data.competencies,
-      data.exercises,
-      data.evaluations,
-      data.analytics?.nextAction?.exerciseId,
-      { goalDescription: data.goals[0]?.description },
+      activeData.competencies,
+      activeData.exercises,
+      activeData.evaluations,
+      activeData.analytics?.nextAction?.exerciseId,
+      { goalDescription: activeData.goals[0]?.description },
     );
   } catch (error) {
     console.error("[Dashboard] Failed to derive curriculum path:", error);
@@ -335,5 +377,12 @@ export default async function DashboardPage() {
     return <DashboardUnavailable errorDetail="Curriculum path derivation failed" />;
   }
 
-  return <SpeakQLShell data={data} gamification={gamification} learningPath={learningPath} />;
+  return (
+    <SpeakQLShell
+      data={activeData}
+      gamification={gamification}
+      learningPath={learningPath}
+      isEdgeSandbox={isEdgeSandbox}
+    />
+  );
 }

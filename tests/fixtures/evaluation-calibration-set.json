@@ -1,5 +1,5 @@
 {
-  "version": "1.1.0",
+  "version": "1.2.0",
   "dataset": "speakql-pedagogical-calibration-v1",
   "rubricCriteria": ["context", "structure", "specificity"],
   "items": [
@@ -191,6 +191,101 @@
           "specificity": true
         },
         "rationale": "Repetitive meaningless filler tokens lacking context and terminal punctuation. Correctly graded as needs_work."
+      }
+    },
+    {
+      "id": "calib-11-german-standup-acceptable-alternative",
+      "category": "clearly_successful",
+      "description": "German engineering standup with authentic syntax and terminology: completed work, focus, no blockers.",
+      "request": {
+        "scenarioPrompt": "{\"scenario\":\"During the daily engineering standup, share your update with your German colleagues.\",\"instructions\":\"State yesterday's completed work, today's focus, and any blockers using standard workplace terminology.\",\"context\":\"Daily engineering standup\"}",
+        "expectedStructure": "Yesterday's progress, today's priority, and blocker status.",
+        "response": "Gestern habe ich das API-Caching in Staging abgeschlossen. Heute arbeite ich an der Datenbank-Indizierung. Ich habe derzeit keine Blockaden."
+      },
+      "expected": {
+        "score": "mastered",
+        "criteria": {
+          "context": true,
+          "structure": true,
+          "specificity": true
+        },
+        "rationale": "Authentic German engineering terminology ('Gestern', 'API-Caching', 'abgeschlossen', 'Heute', 'Datenbank', 'keine Blockaden') across 3 punctuated sentences."
+      }
+    },
+    {
+      "id": "calib-12-german-minor-grammar-inflection",
+      "category": "grammatically_imperfect_understandable",
+      "description": "German standup with minor grammatical inflection slip but communicative intent and components are clear.",
+      "request": {
+        "scenarioPrompt": "{\"scenario\":\"During the daily engineering standup, share your update with your German colleagues.\",\"instructions\":\"State yesterday's completed work, today's focus, and any blockers using standard workplace terminology.\",\"context\":\"Daily engineering standup\"}",
+        "expectedStructure": "Yesterday's progress, today's priority, and blocker status.",
+        "response": "Gestern ich habe fertig die Migration für Datenbank. Heute ich machen neue Tests für Endpoint. Keine Blocker heute."
+      },
+      "expected": {
+        "score": "mastered",
+        "criteria": {
+          "context": true,
+          "structure": true,
+          "specificity": true
+        },
+        "rationale": "Communicative pedagogy prioritizes practical intent. The learner conveys completed work, today's plan, and blocker status across 3 sentences despite auxiliary verb placement errors."
+      }
+    },
+    {
+      "id": "calib-13-spanish-colloquial-tech-loanwords",
+      "category": "clearly_successful",
+      "description": "Spanish workplace standup using natural tech industry loanwords (deploy, merge, backend).",
+      "request": {
+        "scenarioPrompt": "{\"scenario\":\"During the daily engineering standup, share your update with your Latin American colleagues.\",\"instructions\":\"State yesterday's completed work, today's focus, and any blockers using standard workplace terminology.\",\"context\":\"Daily engineering standup\"}",
+        "expectedStructure": "Yesterday's progress, today's priority, and blocker status.",
+        "response": "Ayer hice el merge del PR de autenticación y el deploy a staging. Hoy estoy refactorizando los endpoints del backend. Todo va en orden sin bloqueos."
+      },
+      "expected": {
+        "score": "mastered",
+        "criteria": {
+          "context": true,
+          "structure": true,
+          "specificity": true
+        },
+        "rationale": "Accurate, modern tech engineering dialect widely used across Latin American software engineering teams."
+      }
+    },
+    {
+      "id": "calib-14-borderline-fragmentary-incomplete",
+      "category": "partially_successful",
+      "description": "Mentions blocker but completely lacks past progress and current plan.",
+      "request": {
+        "scenarioPrompt": "{\"scenario\":\"During the daily engineering standup, share your update with your Latin American colleagues.\",\"instructions\":\"State yesterday's completed work, today's focus, and any blockers using standard workplace terminology.\",\"context\":\"Daily engineering standup\"}",
+        "expectedStructure": "Yesterday's progress, today's priority, and blocker status.",
+        "response": "Tengo un bloqueo con AWS."
+      },
+      "expected": {
+        "score": "needs_work",
+        "criteria": {
+          "context": true,
+          "structure": true,
+          "specificity": false
+        },
+        "rationale": "Only 5 words; mentions blocker but provides zero information about yesterday's completed work or today's priorities."
+      }
+    },
+    {
+      "id": "calib-15-conversational-alternative-phrasing",
+      "category": "clearly_successful",
+      "description": "Alternative communicative structure opening with blockers before outlining completed tasks.",
+      "request": {
+        "scenarioPrompt": "{\"scenario\":\"During the daily engineering standup, share your update with your Latin American colleagues.\",\"instructions\":\"State yesterday's completed work, today's focus, and any blockers using standard workplace terminology.\",\"context\":\"Daily engineering standup\"}",
+        "expectedStructure": "Yesterday's progress, today's priority, and blocker status.",
+        "response": "Quick update for the standup: zero blockers on my end today. Yesterday I delivered the schema migration and verified the replica lag. Today I will review open pull requests with the team."
+      },
+      "expected": {
+        "score": "mastered",
+        "criteria": {
+          "context": true,
+          "structure": true,
+          "specificity": true
+        },
+        "rationale": "Non-traditional sentence order that nonetheless addresses all 3 required communicative criteria fully."
       }
     }
   ]
