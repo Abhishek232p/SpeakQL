@@ -1,7 +1,7 @@
 import { updateSupabaseSession } from "@/src/server/auth/supabase-proxy";
 import { NextResponse, type NextRequest } from "next/server";
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const isDashboard = request.nextUrl.pathname.startsWith("/dashboard");
 
   try {
