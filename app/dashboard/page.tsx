@@ -62,23 +62,6 @@ function DashboardUnavailable({ errorDetail }: { errorDetail?: string }) {
             Please check your network connection and retry.
           </p>
 
-          {errorDetail && (
-            <div
-              style={{
-                fontSize: "12px",
-                color: "#fca5a5",
-                background: "rgba(239, 68, 68, 0.1)",
-                border: "1px solid rgba(239, 68, 68, 0.25)",
-                borderRadius: "8px",
-                padding: "8px 12px",
-                marginBottom: "20px",
-                fontFamily: "monospace",
-              }}
-            >
-              Diagnostic: {errorDetail}
-            </div>
-          )}
-
           <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
             <Link
               href="/dashboard"

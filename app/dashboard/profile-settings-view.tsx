@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import { useClientStorage } from "@/src/client/hooks/use-client-storage";
 import { WhaleMascot } from "@/src/client/components/whale-mascot";
 import { sound } from "@/src/client/sound/synthesizer";
+import type { GamificationAchievement } from "@/src/server/goals/gamification";
 import LogoutButton from "./logout-button";
 
 interface ProfileSettingsViewProps {
@@ -12,6 +13,7 @@ interface ProfileSettingsViewProps {
   streakDays: number;
   gems: number;
   hearts: number;
+  achievements?: readonly GamificationAchievement[];
 }
 
 export default function ProfileSettingsView({
@@ -20,6 +22,7 @@ export default function ProfileSettingsView({
   streakDays,
   gems,
   hearts,
+  achievements = [],
 }: ProfileSettingsViewProps) {
   const [dailyTargetXp, setDailyTargetXp] = useClientStorage<number>(
     "speakql_daily_target_xp",
@@ -262,7 +265,101 @@ export default function ProfileSettingsView({
         </div>
       </div>
 
-      {/* 3. Session & Account Security Controls */}
+      {/* 3. Milestones & Achievements Badges */}
+      {achievements.length > 0 && (
+        <div
+          style={{
+            background: "linear-gradient(135deg, rgba(20, 24, 60, 0.9) 0%, rgba(15, 23, 42, 0.95) 100%)",
+            border: "1px solid rgba(139, 92, 246, 0.35)",
+            borderRadius: "24px",
+            padding: "28px 32px",
+            boxShadow: "0 8px 30px rgba(0, 0, 0, 0.35)",
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "12px" }}>
+            <div>
+              <span style={{ fontSize: "11px", fontWeight: 800, letterSpacing: "0.08em", color: "#38bdf8", textTransform: "uppercase" }}>
+                MILESTONES &amp; BADGES
+              </span>
+              <h3 style={{ fontSize: "20px", fontWeight: 800, margin: "4px 0 0", color: "#ffffff" }}>
+                Hall of Achievements
+              </h3>
+            </div>
+            <span
+              style={{
+                fontSize: "12px",
+                fontWeight: 700,
+                color: "#c084fc",
+                background: "rgba(168, 85, 247, 0.15)",
+                border: "1px solid rgba(168, 85, 247, 0.3)",
+                padding: "6px 14px",
+                borderRadius: "12px",
+              }}
+            >
+              🏆 {achievements.filter((a) => a.unlocked).length} / {achievements.length} Unlocked
+            </span>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "16px" }}>
+            {achievements.map((item) => (
+              <div
+                key={item.id}
+                style={{
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: "14px",
+                  padding: "16px",
+                  borderRadius: "16px",
+                  background: item.unlocked ? "rgba(139, 92, 246, 0.12)" : "rgba(30, 41, 59, 0.4)",
+                  border: item.unlocked ? "1px solid rgba(168, 85, 247, 0.35)" : "1px solid rgba(255, 255, 255, 0.05)",
+                  opacity: item.unlocked ? 1 : 0.65,
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: "24px",
+                    width: "44px",
+                    height: "44px",
+                    borderRadius: "12px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background: item.unlocked ? "rgba(168, 85, 247, 0.25)" : "rgba(255, 255, 255, 0.05)",
+                    flexShrink: 0,
+                  }}
+                  aria-hidden="true"
+                >
+                  {item.icon}
+                </div>
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+                    <h4 style={{ margin: 0, fontSize: "14px", fontWeight: 700, color: item.unlocked ? "#ffffff" : "#94a3b8" }}>
+                      {item.title}
+                    </h4>
+                    <span
+                      style={{
+                        fontSize: "10px",
+                        fontWeight: 700,
+                        padding: "2px 6px",
+                        borderRadius: "6px",
+                        background: item.unlocked ? "rgba(34, 197, 94, 0.2)" : "rgba(100, 116, 139, 0.2)",
+                        color: item.unlocked ? "#4ade80" : "#94a3b8",
+                      }}
+                    >
+                      {item.unlocked ? "Unlocked" : "Locked"}
+                    </span>
+                  </div>
+                  <p style={{ margin: 0, fontSize: "12px", color: "#94a3b8", lineHeight: 1.4 }}>
+                    {item.description}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 4. Session & Account Security Controls */}
       <div
         style={{
           background: "rgba(16, 22, 58, 0.85)",

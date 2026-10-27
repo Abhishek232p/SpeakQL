@@ -489,6 +489,7 @@ export default function SpeakQLShell({
               streakDays={gamification.streakDays}
               gems={gems}
               hearts={hearts}
+              achievements={gamification.achievements}
             />
           )}
         </main>
