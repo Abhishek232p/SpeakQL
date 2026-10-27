@@ -43,6 +43,13 @@
       "when": 1791630000002,
       "tag": "0005_force_learning_rls",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791630000003,
+      "tag": "0006_partner_inquiries",
+      "breakpoints": true
     }
   ]
 }

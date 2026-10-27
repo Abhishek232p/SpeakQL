@@ -28,6 +28,7 @@
     "pg-cloudflare": "^1.4.1",
     "react": "19.3.0",
     "react-dom": "19.3.0",
+    "resend": "^6.35.0",
     "sonner": "^2.0.8",
     "zod": "4.6.0"
   },

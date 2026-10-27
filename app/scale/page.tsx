@@ -4,7 +4,11 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { SpeakQLLogo, WhaleMascot } from "@/src/client/components/whale-mascot";
 import { sound } from "@/src/client/sound/synthesizer";
-import { submitPartnershipInquiry } from "@/app/actions/partner-inquiry";
+import {
+  submitPartnershipInquiry,
+  retryInquiryNotification,
+  type PartnershipInquiryResult,
+} from "@/app/actions/partner-inquiry";
 
 interface PathwayCard {
   number: string;
@@ -61,9 +65,11 @@ export default function ScaleWithUsPage() {
   });
 
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
+  const [submissionResult, setSubmissionResult] = useState<PartnershipInquiryResult | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
-
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [isRetrying, setIsRetrying] = useState<boolean>(false);
+  const [retryMessage, setRetryMessage] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,6 +86,7 @@ export default function ScaleWithUsPage() {
     }
 
     setValidationError(null);
+    setRetryMessage(null);
     setIsSubmitting(true);
     try {
       const res = await submitPartnershipInquiry({
@@ -94,6 +101,7 @@ export default function ScaleWithUsPage() {
       if (res.success) {
         sound.playFanfare();
         setIsSubmitted(true);
+        setSubmissionResult(res);
       } else {
         sound.playIncorrect();
         setValidationError(res.error);
@@ -103,6 +111,29 @@ export default function ScaleWithUsPage() {
       setValidationError("Failed to submit inquiry. Please reach out to Abhishek@speakql.tech directly.");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleRetryNotification = async () => {
+    if (!submissionResult || !submissionResult.success) return;
+    sound.playPop();
+    setIsRetrying(true);
+    setRetryMessage(null);
+    try {
+      const res = await retryInquiryNotification(submissionResult.inquiryId);
+      if (res.success) {
+        sound.playFanfare();
+        setSubmissionResult(res);
+        setRetryMessage("Notification dispatched to Abhishek@speakql.tech successfully!");
+      } else {
+        sound.playIncorrect();
+        setRetryMessage(res.error);
+      }
+    } catch {
+      sound.playIncorrect();
+      setRetryMessage("Retry request failed. Please email Abhishek@speakql.tech directly.");
+    } finally {
+      setIsRetrying(false);
     }
   };
 
@@ -519,10 +550,71 @@ export default function ScaleWithUsPage() {
               </h4>
               <p style={{ margin: 0, color: "#cbd5e1", lineHeight: 1.6 }}>
                 Thank you, <strong>{formData.name}</strong>. Your partnership inquiry for{" "}
-                <strong>{formData.organization}</strong> ({formData.interest}) has been registered.
+                <strong>{formData.organization}</strong> ({formData.interest}) has been registered and durably saved in the SpeakQL database.
                 <br />
-                Our partnership team will follow up at <strong>{formData.email}</strong>.
+                Reference: <code style={{ color: "#38bdf8", background: "rgba(56, 189, 248, 0.1)", padding: "2px 6px", borderRadius: "4px" }}>
+                  {submissionResult?.success ? submissionResult.inquiryId : "inq_registered"}
+                </code>
               </p>
+
+              <div
+                style={{
+                  margin: "1.25rem auto 0",
+                  padding: "0.75rem 1rem",
+                  background: submissionResult?.success && submissionResult.notificationStatus === "sent"
+                    ? "rgba(34, 197, 94, 0.15)"
+                    : "rgba(234, 179, 8, 0.15)",
+                  border: submissionResult?.success && submissionResult.notificationStatus === "sent"
+                    ? "1px solid rgba(34, 197, 94, 0.4)"
+                    : "1px solid rgba(234, 179, 8, 0.4)",
+                  borderRadius: "0.5rem",
+                  maxWidth: "480px",
+                  fontSize: "0.85rem",
+                  color: submissionResult?.success && submissionResult.notificationStatus === "sent"
+                    ? "#86efac"
+                    : "#fde047",
+                  textAlign: "left",
+                }}
+              >
+                {submissionResult?.success && submissionResult.notificationStatus === "sent" ? (
+                  <div>
+                    ✓ <strong>Direct Notification Delivered:</strong> Dispatched to Abhishek@speakql.tech
+                    {submissionResult.dispatchId && ` (Dispatch ID: ${submissionResult.dispatchId})`}.
+                  </div>
+                ) : (
+                  <div>
+                    ℹ️ <strong>Inquiry Durably Saved:</strong> Saved in SpeakQL database. Direct email notification to leadership is currently queued.
+                  </div>
+                )}
+              </div>
+
+              {submissionResult?.success &&
+                submissionResult.notificationStatus !== "sent" &&
+                submissionResult.canRetryNotification && (
+                  <div style={{ marginTop: "1rem" }}>
+                    <button
+                      type="button"
+                      disabled={isRetrying}
+                      onClick={handleRetryNotification}
+                      style={{
+                        background: "rgba(56, 189, 248, 0.15)",
+                        border: "1px solid #38bdf8",
+                        color: "#38bdf8",
+                        padding: "6px 14px",
+                        borderRadius: "6px",
+                        fontSize: "0.8rem",
+                        cursor: isRetrying ? "wait" : "pointer",
+                        fontWeight: 600,
+                      }}
+                    >
+                      {isRetrying ? "Dispatching..." : "⚡ Retry Notification Dispatch"}
+                    </button>
+                    {retryMessage && (
+                      <p style={{ margin: "6px 0 0", fontSize: "0.8rem", color: "#cbd5e1" }}>{retryMessage}</p>
+                    )}
+                  </div>
+                )}
+
               <div style={{ marginTop: "1.5rem" }}>
                 <a
                   href="mailto:Abhishek@speakql.tech"

@@ -96,9 +96,22 @@ describe("journaled runtime security artifacts (not integration verification)", 
   it("keeps the learning tables behind forced RLS before integration use", () => {
     const learningMigration = readFileSync("drizzle/migrations/0005_force_learning_rls.sql", "utf8");
     const journal = JSON.parse(readFileSync("drizzle/migrations/meta/_journal.json", "utf8"));
-    expect(journal.entries.at(-1)).toEqual({ idx: 5, version: "7", when: 1791630000002, tag: "0005_force_learning_rls", breakpoints: true });
+    const entry5 = journal.entries.find((entry: { tag: string }) => entry.tag === "0005_force_learning_rls");
+    expect(entry5).toEqual({ idx: 5, version: "7", when: 1791630000002, tag: "0005_force_learning_rls", breakpoints: true });
     for (const name of ["learning_goals", "competencies", "practice_exercises", "practice_evaluations"]) {
       expect(learningMigration).toContain(`ALTER TABLE "public"."${name}" FORCE ROW LEVEL SECURITY`);
     }
+  });
+
+  it("enforces RLS and least-privilege permissions on partner_inquiries", () => {
+    const inquiryMigration = readFileSync("drizzle/migrations/0006_partner_inquiries.sql", "utf8");
+    const journal = JSON.parse(readFileSync("drizzle/migrations/meta/_journal.json", "utf8"));
+    const entry6 = journal.entries.find((entry: { tag: string }) => entry.tag === "0006_partner_inquiries");
+    expect(entry6).toMatchObject({ idx: 6, tag: "0006_partner_inquiries", breakpoints: true });
+    expect(inquiryMigration).toContain('CREATE TABLE IF NOT EXISTS "partner_inquiries"');
+    expect(inquiryMigration).toContain('ALTER TABLE "public"."partner_inquiries" ENABLE ROW LEVEL SECURITY');
+    expect(inquiryMigration).toContain('ALTER TABLE "public"."partner_inquiries" FORCE ROW LEVEL SECURITY');
+    expect(inquiryMigration).toContain('REVOKE ALL PRIVILEGES ON TABLE "public"."partner_inquiries" FROM PUBLIC');
+    expect(inquiryMigration).toContain('GRANT INSERT, SELECT, UPDATE ON TABLE "public"."partner_inquiries" TO "speakql_runtime"');
   });
 });

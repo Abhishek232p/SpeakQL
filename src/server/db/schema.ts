@@ -133,3 +133,31 @@ export const practiceEvaluations = pgTable('practice_evaluations', {
     pgPolicy('evaluations_insert_own', { for: 'insert', to: runtimeRole, withCheck: ownEvaluation }),
   ];
 }).enableRLS();
+
+export const partnerInquiries = pgTable("partner_inquiries", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  inquiryReference: text("inquiry_reference").notNull().unique(),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  organization: text("organization").notNull(),
+  role: text("role").notNull(),
+  category: text("category").notNull(),
+  stageOrScale: text("stage_or_scale"),
+  message: text("message").notNull(),
+  notificationStatus: text("notification_status").notNull().default("pending"),
+  notificationError: text("notification_error"),
+  notificationDispatchId: text("notification_dispatch_id"),
+  notificationSentAt: timestamp("notification_sent_at", { withTimezone: true }),
+  idempotencyKey: text("idempotency_key").unique(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  index("partner_inquiries_email_idx").on(table.email),
+  index("partner_inquiries_org_idx").on(table.organization),
+  index("partner_inquiries_created_at_idx").on(table.createdAt),
+  index("partner_inquiries_status_idx").on(table.notificationStatus),
+  pgPolicy("partner_inquiries_runtime_insert", { for: "insert", to: runtimeRole, withCheck: sql`true` }),
+  pgPolicy("partner_inquiries_runtime_select", { for: "select", to: runtimeRole, using: sql`true` }),
+  pgPolicy("partner_inquiries_runtime_update", { for: "update", to: runtimeRole, using: sql`true`, withCheck: sql`true` }),
+]).enableRLS();
+
